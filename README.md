@@ -2,6 +2,7 @@
 For the biggest thing you have ever created and the first step to video game developers' world
 
 ## Task List
+- [ ] Read the documentation
 - [ ] Create an UML map for the project
 - [ ] Discuss approach and design pattern
 
