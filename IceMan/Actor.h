@@ -8,8 +8,6 @@
 
 //Movement Strategy
 class IMovementBehavior{
-private:
-	int squareToMove;
 public:
 	virtual void moveThatAss() = 0;
 };
@@ -46,27 +44,37 @@ public:
 	void moveThatAss() override;
 };
 
+class SquirtMovement :public IMovementBehavior {
+private:
+
+public:
+	//This is for the Squirt to travel
+	void moveThatAss() override;
+};
+
 //////////////////////////
 
 //Collision Strategy
 class IActorResponse{
-private:
 public:
 	virtual void response() = 0;
 };
 
 class Block : public IActorResponse {
 private:
-
+	shared_ptr<Actor>target;
 public:
+	Block(shared_ptr<Actor>& t_target) : target(t_target) {}
 	//Object will be force to stand still
 	void response() override;
 };
 
 class Destroy : public IActorResponse {
 private:
-
+	shared_ptr<Actor>target;
+	int dmgTaken;
 public:
+	Destroy(shared_ptr<Actor>& t_target, int dmgTook) : target(t_target), dmgTaken(dmgTook) {};
 	//Object will be force to reduce their health by an amount
 	void response() override;
 };
@@ -130,15 +138,21 @@ public:
 class Actor : public GraphObject{
 private:
 	int hitpoints;
+	int strength;
+
 protected:
 	//Type
-	enum ActorType { player, npc, worldStatic, hazard, destructible };
+	enum ActorType { player, npc, worldStatic, hazard, ice, dropByPlayer, collect };
 	ActorType type;
 
 	std::unique_ptr<IMovementBehavior> movementBehavior;
+	//Calculate the collision result base on the type that collided into
+	std::unique_ptr<IActorResponse> collide(shared_ptr<Actor>& receiver);
+	//Store the result in this
 	std::unique_ptr<IActorResponse> collisionResult;
+
 public:
-	Actor(ActorType type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 0, int t_hp = 1) : GraphObject(imgID, startX, startY, dir, size, depth), hitpoints(t_hp){
+	Actor(ActorType type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 0, int t_hp = 1, int t_strength = 0) : GraphObject(imgID, startX, startY, dir, size, depth), hitpoints(t_hp), strength(t_strength){
 		setVisible(visibility);
 	};
 	virtual ~Actor() {};
@@ -146,12 +160,18 @@ public:
 	bool isAlive() {
 		return hitpoints > 0;
 	}
-	void doIfNotDead() {
-		if (isAlive())
-			doSomething();
-	}
+
 	//Don't use it before derived
 	virtual void doSomething() = 0;
+
+	int getStrength() {
+		return strength;
+	}
+
+	void dmgActor(int amt) {
+		hitpoints -= amt;
+	}
+
 	void changeActorType(ActorType t_type) {
 		type = t_type;
 	}
@@ -162,9 +182,7 @@ class Characters : public Actor {
 protected:
 	std::unique_ptr<IDetectionBehavior>detectBehavior;
 public:
-	//Calculate the collision result base on the type that collided into
-	std::unique_ptr<IActorResponse> collide(std::unique_ptr<Actor> receiver);
-	Characters(ActorType type, int imgID, int startX, int startY, Direction dir, int t_hp) : Actor(type, true, imgID, startX, startY, dir, 1.0, 0, t_hp) {};
+	Characters(ActorType type, int imgID, int startX, int startY, Direction dir, int t_hp, int t_str = 0) : Actor(type, true, imgID, startX, startY, dir, 1.0, 0, t_hp, t_str) {};
 	virtual ~Characters() {};
 };
 
@@ -172,7 +190,7 @@ class IceMan : public Characters{
 private:
 	
 public:
-	IceMan(int startX = 30, int startY = 60) : Characters(player, IID_PLAYER, startX, startY, right, 10) {
+	IceMan(int startX = 30, int startY = 60) : Characters(player, IID_PLAYER, startX, startY, right, 10, 1) {
 		movementBehavior = std::make_unique<ControlledMovement>();
 		detectBehavior = std::make_unique<DetectInanimateBehavior>(true);
 	};
@@ -183,7 +201,7 @@ class Protesters : public Characters{
 private:
 	bool outOfField = false;
 public:
-	Protesters(int imgID = IID_PROTESTER, int startX = 60, int startY = 60, int hp = 5) : Characters(npc, imgID, startX, startY, left, hp){
+	Protesters(int imgID = IID_PROTESTER, int startX = 60, int startY = 60, int hp = 5, int t_str = 2) : Characters(npc, imgID, startX, startY, left, hp, t_str){
 		movementBehavior = std::make_unique<FreeMovement>();
 		detectBehavior = std::make_unique<DetectPlayerBehavior>(false);
 	}
@@ -195,7 +213,6 @@ public:
 		movementBehavior = std::make_unique<PursuingMovement>();
 	}
 	void shout(Direction dir);
-	void takeDmg(int amount);
 	bool annoyed() {
 		if (isAlive())
 			outOfField = true;
@@ -213,7 +230,7 @@ class HardcoreProtesters: public Protesters{
 private:
 
 public:
-	HardcoreProtesters(int startX = 60, int startY = 60) : Protesters(IID_HARD_CORE_PROTESTER, startX, startY, 20) {
+	HardcoreProtesters(int startX = 60, int startY = 60, int hp = 20, int strength = 2) : Protesters(IID_HARD_CORE_PROTESTER, startX, startY, hp, strength) {
 		movementBehavior = std::make_unique<FreeMovement>();
 		detectBehavior = std::make_unique<DetectPlayerBehavior>(true);
 	}
@@ -224,7 +241,7 @@ class Inanimated : public Actor {
 private:
 
 public:
-	Inanimated(ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 2, int hp = 1) : Actor(t_type, visibility, imgID, startX, startY, dir, size, depth, hp) {};
+	Inanimated(ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 2, int hp = 1, int strength = 0) : Actor(t_type, visibility, imgID, startX, startY, dir, size, depth, hp, strength) {};
 
 	virtual ~Inanimated() {};
 };
@@ -235,7 +252,7 @@ private:
 protected:
 	std::unique_ptr<IExistenceBehavior> existBehavior;
 public:
-	Collectable(bool visibility, int imgID, int startX, int startY) : Inanimated(destructible, visibility, imgID, startX, startY), isHidden(!visibility) {};
+	Collectable(bool visibility, int imgID, int startX, int startY) : Inanimated(collect, visibility, imgID, startX, startY), isHidden(!visibility) {};
 	virtual ~Collectable() {};
 	void showSelf();
 };
@@ -262,8 +279,10 @@ public:
 	GoldNuggets(int startX, int startY, bool t_pickable = true) : Collectable(false, IID_GOLD, startX, startY), pickableByPlayer(t_pickable) {
 		if(pickableByPlayer)
 			existBehavior = std::make_unique<ExistPermanently>();
-		else
+		else {
 			existBehavior = std::make_unique<ExistTemporary>();
+			changeActorType(dropByPlayer);
+		}
 	};
 	void drop();
 	bool getStage() {
@@ -293,11 +312,13 @@ public:
 	void doSomething() override;
 };
 
+//Hazard is anything that moves into "your" position
+//So make a function to determine if a world static is going to "overlap" any characters, then it will turn into "hazard" type
 class Hazard : public Inanimated{
 private:
 
 public:
-	Hazard(bool visibility, int imgID, int startX, int startY, Direction dir) : Inanimated(worldStatic, visibility, imgID, startX, startY, dir, 1.0, 1) {};
+	Hazard(bool visibility, int imgID, int startX, int startY, Direction dir, int dmgDeal = 0) : Inanimated(hazard, visibility, imgID, startX, startY, dir, 1.0, 1) {};
 	virtual ~Hazard() {};
 };
 
@@ -310,7 +331,7 @@ private:
 	void shoot();
 	void doSomething() override;
 public:
-	Squirt(int startX, int startY, Direction dir) : Hazard(true, IID_WATER_SPURT, startX, startY, dir) {};
+	Squirt(int startX, int startY, Direction dir, int strength = 2) : Hazard(true, IID_WATER_SPURT, startX, startY, dir, strength) {};
 
 };
 
@@ -324,16 +345,17 @@ private:
 	bool checkIceBelow();
 	void doSomething() override;
 public:
-	Boulder(int startX, int startY) : Hazard(true, IID_BOULDER, startX, startY, down){}
-
+	Boulder(int startX, int startY, Direction dir = down, int strength = 9999) : Hazard(true, IID_BOULDER, startX, startY, dir, strength){
+		movementBehavior = std::make_unique<FallMovement>(); 
+	}
 };
 
 class Ice : public Inanimated{
 private:
-	ActorType type = destructible;
-	void doSomething() override;
+	
 public:
-	Ice(bool visibility, int startX, int startY) : Inanimated(destructible, visibility, IID_ICE, startX, startY, right, 0.25, 3) {};
+	Ice(bool visibility, int startX, int startY, Direction dir = right, int hp = 1) : Inanimated(ice, visibility, IID_ICE, startX, startY, dir, 0.25, 3, hp) {};
+	void doSomething() override;
 };
 
 #endif // ACTOR_H_
