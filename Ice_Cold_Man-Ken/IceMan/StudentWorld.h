@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "Actor.h"
+
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
 
 //You may add as many other public or private methods and private member variables to
@@ -43,7 +44,7 @@ public:
 	virtual int move()
 	{
 		//For example, if a Boulder has completed its fall and disintegrated in the Ice
-		//	below, then its state should be set to Ågdead, Åhand the after all of the actors in the game
+		//	below, then its state should be set to Ådead, Åhand the after all of the actors in the game
 		//	get a chance to do something during the tick, the move() method should remove that
 		//	Boulder from the game world(by deleting its object and removing any reference to the
 		//		object from the StudentWorldÅfs data structures)
@@ -54,6 +55,7 @@ public:
 
 		//decLives();
 		//return GWSTATUS_PLAYER_DIED;
+
 	}
 
 	//The cleanup() method is responsible for
@@ -64,16 +66,18 @@ public:
 	{
 	}
 
-	int updateStatus() {} // Updates the status at the top of the screen. (Health, lives, gold, etc.)
 
-	int doThings() {} // Asks the player and actor objects to doSomething() each tick.
-
-	int deleteFinishedObjects() {} // Checks to see if an object has finished its task. (Eg. if a boulder has fallen, delete it from game.)
 
 private:
-	std::vector<Actor*>ice_vec; // Holds all ice on the screen
-	std::vector<std::shared_ptr<Actor>>actors_vec; // Holds all actor objects (ie. boulders, gold, protesters)
-	Actor* player;
+	Ice ice_arr[60][60]; // 2D array holding ice on screen. One holding columns, one holding rows.
+	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
+	IceMan* player;
+	int oilsLeft;
+	int updateStatus() {} // Updates the status at the top of the screen. (Health, lives, gold, etc.)
+	int doThings() {} // Asks the player and actor objects to doSomething() each tick.
+	void deleteFinishedObjects() {} // Checks to see if an object has finished its task. (Eg. if a boulder has fallen, delete it from game.)
+
+
 };
 
 #endif // STUDENTWORLD_H_
