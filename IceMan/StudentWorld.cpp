@@ -132,7 +132,7 @@ void StudentWorld::mainCreateObjects() {
 		Move on to spawn the next actor
 	*****************************/
 	int currentLV = getLevel();
-	int numBoulder = min(currentLV / 2, 9);
+	int numBoulder = min(currentLV / 2 + 2, 9);
 	int numGold = max(5 - currentLV / 2, 2);
 	int numOil = min(2 + currentLV, 21);
 

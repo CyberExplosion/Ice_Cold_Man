@@ -139,7 +139,6 @@ void CollisionDetection::collide(std::shared_ptr<Actor> source, std::shared_ptr<
 		}
 
 		//World static doesn't count because it's never move or destroy
-
 		if (source->type == Actor::hazard) {
 			switch (receiver->type) {
 			case Actor::Actor::worldStatic:
@@ -175,6 +174,14 @@ void CollisionDetection::collide(std::shared_ptr<Actor> source, std::shared_ptr<
 			case Actor::player:
 				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
 				break;
+			default:
+				break;
+			}
+		}
+		if (source->type == Actor::ice) {
+			switch (receiver->type) {
+			case Actor::worldStatic:
+				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
 			default:
 				break;
 			}

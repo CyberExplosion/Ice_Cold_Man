@@ -396,7 +396,7 @@ class Hazard : public Inanimated{
 private:
 
 public:
-	Hazard(StudentWorld* world, bool visibility, int imgID, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, int col_range = 0, int detect_range = 9999) : Inanimated(world, hazard, visibility, imgID, startX, startY, dir, 1.0, 1, hp, strength, col_range, detect_range) {};
+	Hazard(StudentWorld* world, bool visibility, int imgID, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 0, int col_range = 0, int detect_range = 9999) : Inanimated(world, hazard, visibility, imgID, startX, startY, dir, 1.0, 1, hp, strength, col_range, detect_range) {};
 	virtual ~Hazard() {};
 };
 
@@ -407,7 +407,7 @@ private:
 	void shoot();
 	void doSomething() override;
 public:
-	Squirt(StudentWorld* world, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 2, int col_range = 4, int detect_range = 9999) : Hazard(world, true, IID_WATER_SPURT, startX, startY, dir, size, depth, hp, strength, col_range, detect_range) {};
+	Squirt(StudentWorld* world, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 2, int col_range = 4, int detect_range = 9999) : Hazard(world, true, IID_WATER_SPURT, startX, startY, dir, size, depth, hp, strength, col_range, detect_range) {};
 
 };
 
@@ -421,7 +421,7 @@ private:
 	bool checkIceBelow();
 	void doSomething() override;
 public:
-	Boulder(StudentWorld* world, int startX, int startY, Direction dir = down, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 9999, int col_range = 3, int detect_range = 9999) : Hazard(world, true, IID_BOULDER, startX, startY, dir, size, depth, hp, strength, col_range, detect_range){
+	Boulder(StudentWorld* world, int startX, int startY, Direction dir = down, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 9999, int col_range = 3, int detect_range = 9999) : Hazard(world, true, IID_BOULDER, startX, startY, dir, size, depth, hp, strength, col_range, detect_range){
 		movementBehavior = std::make_unique<FallMovement>(); 
 	}
 };

@@ -101,8 +101,20 @@ inline bool StudentWorld::createObjects(int x, int y) {
 	if (temp->collisionDetection->getIntruder() && temp->collisionDetection->getIntruder()->type != Actor::ActorType::ice)	//There's an intruder and it's not ice
 		return false;
 
+	/*TODO: ICE IS NOT RECOGNIZED AS AN INTRUDER, FIX THIS SHIT*/
+
+
 	//If reach this meaning that's there is an intruder and it's ice
-	actor_vec.emplace_back(std::make_shared<T>(this, x, y));	//Create a proper boulder at the location picked
+	std::shared_ptr<T> object = std::make_shared <T>(this, x, y);	//Make the object
+	object->collisionDetection = std::make_unique<CollisionDetection>(object, object->getCollisionRange());	//See if the object collide with any ice
+	object->collisionDetection->behaveBitches();	//This going to gives us the intruder if he exist
+	if (object->collisionDetection->getIntruder()) {
+		//Get the intruder to check its' own collision detection
+		object->collisionDetection->getIntruder()->collisionDetection = std::make_unique<CollisionDetection>(object->collisionDetection->getIntruder(), object->collisionDetection->getIntruder()->getCollisionRange());
+		object->collisionResult->response();	//Demand a response from the source
+		object->collisionDetection->getIntruder()->collisionResult->response();	//Demand a response from the intruder
+	}
+	actor_vec.push_back(object);	//Create a proper boulder at the location picked
 	return true;
 }
 
