@@ -4,18 +4,20 @@
 #include <iostream>
 #include "StudentWorld.h"
 #include "GraphObject.h"
+#include "GameController.h"
 #include <vector>
 // Students:  Add code to this file, Actor.cpp, StudentWorld.h, and StudentWorld.cpp
 
 class IMovementBehavior;
 class IActorResponse;
 class IDetectionBehavior;
+class IExistenceBehavior;
 class RadarLikeDetection;
 class SonarKit;
 class GoldNuggets;
 class Squirt;
 class Boulder;
-
+class StudentWorld;
 
 
 class Actor : public GraphObject {
@@ -37,7 +39,7 @@ public:
 	};
 	virtual ~Actor() {};
 
-
+	std::unique_ptr<IExistenceBehavior> displayBehavior;
 	std::unique_ptr<IMovementBehavior> movementBehavior;
 	//Store the result in this
 	std::unique_ptr<IActorResponse> collisionResult;
@@ -108,10 +110,7 @@ private:
 	int key;
 	std::shared_ptr<Actor> pawn;
 public:
-	ControlledMovement(std::shared_ptr<Actor> t_pawn) : pawn(t_pawn) {
-		if (!pawn->getWorld()->getKey(key))
-			key = INVALID_KEY;
-	}
+	ControlledMovement(std::shared_ptr<Actor> t_pawn) : pawn(t_pawn) {}
 	//This is for the player
 	void moveThatAss() override;
 };
@@ -226,7 +225,9 @@ protected:
 	std::shared_ptr<Actor> intruder;
 	std::shared_ptr<Actor> sensedActor();
 public:
-	RadarLikeDetection(std::shared_ptr<Actor>& t_source, int t_range) : source(t_source), range(t_range) {};
+	RadarLikeDetection(std::shared_ptr<Actor>& t_source, int t_range) : source(t_source), range(t_range) {
+		sensedActor();
+	};
 	int getRange() {
 		return range;
 	}
@@ -235,11 +236,12 @@ public:
 
 class CollisionDetection : public RadarLikeDetection {
 private:
-	//Calculate the collision result base on the type that collided into
+	//This functions determine the result of collision between 2 actors. The source will have <Block> or <Destroy> behavior
+	//depend on what it collides into
 	void collide(std::shared_ptr<Actor>& source, std::shared_ptr<Actor>& receiver);
 	bool collisionHappen();
 public:
-	CollisionDetection(std::shared_ptr<Actor>& t_source, int t_range, std::shared_ptr<Actor>& t_intruder) : RadarLikeDetection(t_source, t_range, t_intruder){}
+	CollisionDetection(std::shared_ptr<Actor>& t_source, int t_range) : RadarLikeDetection(t_source, t_range){}
 	void behaveBitches() override;
 };
 
@@ -248,8 +250,6 @@ public:
 
 //People
 class Characters : public Actor {
-protected:
-	std::unique_ptr<IDetectionBehavior>characterCollisionBehavior;
 public:
 	Characters(StudentWorld*& world, ActorType type, int imgID, int startX, int startY, Direction dir, int t_hp, int t_str, int col_ran, int detect_range) : Actor(world, type, true, imgID, startX, startY, dir, 1.0, 0, t_hp, t_str, col_ran, detect_range) {};
 	virtual ~Characters() {};
@@ -260,9 +260,14 @@ private:
 	std::vector<std::shared_ptr<SonarKit>>sonarVec;
 	std::vector<std::shared_ptr<GoldNuggets>>goldVec;
 	std::vector<std::shared_ptr<Squirt>>squirtVec;
+	//This is bad and can cause problem later on because it has some kind of circular dependent. Too bad
+	std::shared_ptr<Actor>findPlayer();
 public:
 	IceMan(StudentWorld*& world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 1, 4, 12) {
-		movementBehavior = std::make_unique<ControlledMovement>();
+		//This certainly will cause problem in the future. TOO BAD
+		std::shared_ptr<Actor> possible_player = findPlayer();
+		if (possible_player->type == player)
+			movementBehavior = std::make_unique<ControlledMovement>(possible_player);
 	};
 	void doSomething() override;
 	int getSonarNum() {

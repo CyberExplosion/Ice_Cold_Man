@@ -19,6 +19,16 @@ void FreeMovement::moveThatAss() {
 void FallMovement::moveThatAss() {
 }
 
+//This function find the player actor type in the whole list of actors
+shared_ptr<Actor> IceMan::findPlayer() {
+	vector<shared_ptr<Actor>> acVec = *(getWorld()->getAllActors());
+	auto re = std::find_if(rbegin(acVec), rend(acVec),
+		[](shared_ptr<Actor>& val) {
+			if (val->type == player)
+				return true;
+		});
+	return *re;
+}
 
 void IceMan::doSomething() {
 	if (!isAlive())
@@ -45,10 +55,14 @@ std::shared_ptr<Actor> RadarLikeDetection::sensedActor() {
 		Then return the intruder, the player is "sensed"
 	If it's not then return nullptr
 *****************************/
-	int distance = sqrt(pow(source->getX() - intruder->getX(), 2) + pow(source->getY() - intruder->getY(), 2));
-	int spotZone = this->range + intruder->getDetectRange();
-	if (distance <= spotZone)
-		return intruder;
+	for (auto& intruder : *(source->getWorld()->getAllActors())) {
+		if (intruder == source)
+			continue;
+		int distance = sqrt(pow(source->getX() - intruder->getX(), 2) + pow(source->getY() - intruder->getY(), 2));
+			int spotZone = this->range + intruder->getDetectRange();
+			if (distance <= spotZone)
+				return intruder;
+	}
 	return nullptr;
 }
 
@@ -58,7 +72,9 @@ void RadarLikeDetection::behaveBitches() {
 
 
 void CollisionDetection::behaveBitches() {
-	collisionHappen();
+	if (collisionHappen()) {
+		source->collisionResult->response();
+	}
 }
 
 bool LineOfSightDetection::seePlayer() {
@@ -112,6 +128,7 @@ void CollisionDetection::collide(std::shared_ptr<Actor>& source, std::shared_ptr
 			break;
 		}
 	}
+
 	//World static doesn't count because it's never move or destroy
 
 	if (source->type == Actor::hazard) {
@@ -163,19 +180,16 @@ Then a collision happen and you should produce a collision result
 *****************************/
 	if (source->isAlive() && intruder->isAlive()) {
 		if (sensedActor())
+			//Produce a collision result right here
 			collide(source, intruder);
-		else 
-			return false;
-		if (source->collisionResult) {
-			source->collisionResult->response();
-			return true;
-		}
 	}
 	return false;
 }
 
 
 void Block::response() {
+	//Move to the same location == Standing still
+	target->moveTo(target->getX(), target->getY());
 }
 
 void Collectable::showSelf() {
@@ -247,25 +261,49 @@ void ControlledMovement::moveThatAss() {
 	This tells where the character that being controlled should move
 	First you have to turn the character to face the direction you move first
 	If the characters already facing the direction you move, then move it toward that direction 1 square
-	If the move destination ends up with a collide block, activate the Block behavior
-	If the move destination ends up with an ice or collectible, activate the Destroy behavior
+	If the move end up with a collision, produce a collision result to use
 	*****************************/
+	if (!pawn->getWorld()->getKey(key))
+		key = INVALID_KEY;
 	if (key != INVALID_KEY) {
 		switch (key) {
 		case KEY_PRESS_DOWN:
-			if (pawn->getDirection() != GraphObject::Direction::down) {
+			if (pawn->getDirection() != GraphObject::Direction::down)
 				pawn->setDirection(GraphObject::Direction::down);
-			}
-			else {
-				if (!pawn->collisionDetection) {
-					//This is bad, i should check the coordinate instead of making another actors to check it for me. But fuck it
-					
-					pawn->collisionDetection = make_unique<CollisionDetection>(pawn, pawn->getCollisionRange())
-				}
-			}
+			else
+				pawn->moveTo(pawn->getX(), pawn->getY() - 1);
+			break;
+		case KEY_PRESS_UP:
+			if (pawn->getDirection() != GraphObject::Direction::up)
+				pawn->setDirection(GraphObject::Direction::up);
+			else
+				pawn->moveTo(pawn->getX(), pawn->getY() + 1);
+			break;
+		case KEY_PRESS_RIGHT:
+			if (pawn->getDirection() != GraphObject::Direction::right)
+				pawn->setDirection(GraphObject::Direction::right);
+			else
+				pawn->moveTo(pawn->getX() + 1, pawn->getY());
+			break;
+		case KEY_PRESS_LEFT:
+			if (pawn->getDirection() != GraphObject::Direction::left)
+				pawn->setDirection(GraphObject::Direction::left);
+			else
+				pawn->moveTo(pawn->getX() - 1, pawn->getY());
 			break;
 		default:
 			break;
 		}
+		if (!pawn->collisionDetection) {
+			//This takes a serious long time, I really contemplating pull the trigger right now
+			pawn->collisionDetection = make_unique<CollisionDetection>(pawn, pawn->getCollisionRange());
+		}
+		pawn->collisionDetection->behaveBitches();
 	}
+}
+
+void PursuingMovement::moveThatAss() {
+}
+
+void SquirtMovement::moveThatAss() {
 }

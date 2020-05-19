@@ -5,19 +5,23 @@
 #include "GameConstants.h"
 #include <string>
 #include <vector>
+#include <array>
 #include "Actor.h"
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
 
 //You may add as many other public or private methods and private member variables to
 //your StudentWorld class as you like
+
+class Actor;
+class IceMan;
+
 class StudentWorld : public GameWorld
 {
 public:
 	StudentWorld(std::string assetDir)
-		: GameWorld(assetDir)
-	{
-	}
+		: GameWorld(assetDir) {
+	};
 
 	//Your init() method is responsible for creating the current levelÅfs oil field and populating
 	//	it with Ice, Boulders, Barrels of Oil, and Gold Nuggets(weÅfll show you how below),
@@ -66,10 +70,10 @@ public:
 	{
 	}
 
-
+	std::unique_ptr<std::vector<std::shared_ptr<Actor>>> StudentWorld::getAllActors();
 
 private:
-	Ice ice_arr[60][60]; // 2D array holding ice on screen. One holding columns, one holding rows.
+	std::array<std::array<std::shared_ptr<Actor>, 60>, 60> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
 	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
 	IceMan* player;
 	int oilsLeft;

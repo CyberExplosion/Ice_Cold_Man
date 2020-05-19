@@ -88,3 +88,7 @@ void StudentWorld::deleteFinishedObjects() {
 		return true;
 		}));
 }
+
+std::unique_ptr<vector<std::shared_ptr<Actor>>> StudentWorld::getAllActors() {
+	return std::unique_ptr<vector<std::shared_ptr<Actor>>>();
+}
