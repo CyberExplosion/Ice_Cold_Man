@@ -1,0 +1,55 @@
+﻿  Actor.cpp
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(47,12): error C2143: syntax error: missing ';' before '<'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(47,43): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(47,36): error C2065: 'Actor': undeclared identifier
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(47,25): error C2923: 'std::shared_ptr': 'Actor' is not a valid template type argument for parameter '_Ty'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(47,60): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(50,40): error C2065: 'Actor': undeclared identifier
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(50,29): error C2923: 'std::shared_ptr': 'Actor' is not a valid template type argument for parameter '_Ty'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(50,29): error C3203: 'shared_ptr': unspecialized class template can't be used as a template argument for template parameter '_Ty', expected a real type
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(50,66): error C2079: 'StudentWorld::ice_array' uses undefined class 'std::array<std::array<int,60>,60>'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(51,30): error C2065: 'Actor': undeclared identifier
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(51,19): error C2923: 'std::shared_ptr': 'Actor' is not a valid template type argument for parameter '_Ty'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(51,19): error C3203: 'shared_ptr': unspecialized class template can't be used as a template argument for template parameter '_Ty', expected a real type
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(52,8): error C2143: syntax error: missing ';' before '*'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(52,8): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(52,16): error C2238: unexpected token(s) preceding ';'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.cpp(24,62): error C2039: 'getAllActors': is not a member of 'StudentWorld'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.h(20): message : see declaration of 'StudentWorld'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.cpp(58,61): error C2039: 'getAllActors': is not a member of 'StudentWorld'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.h(20): message : see declaration of 'StudentWorld'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.cpp(58,61): error C2530: 'intruder': references must be initialized
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.cpp(58,61): error C3531: 'intruder': a symbol whose type contains 'auto' must have an initializer
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.cpp(58,22): error C2143: syntax error: missing ';' before ':'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.cpp(58,61): error C2143: syntax error: missing ';' before ')'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.cpp(59,25): error C2679: binary '==': no operator found which takes a right-hand operand of type 'std::shared_ptr<Actor>' (or there is no acceptable conversion)
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\shared\guiddef.h(192,15): message : could be 'bool operator ==(const GUID &,const GUID &)'
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.25.28610\include\memory(1327,17): message : or       'bool std::operator ==<Actor>(std::nullptr_t,const std::shared_ptr<Actor> &) noexcept'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.cpp(59,25): message : or       'built-in C++ operator==(int, bool)'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.cpp(59,25): message : while trying to match the argument list '(int, std::shared_ptr<Actor>)'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.cpp(64,19): error C2440: 'return': cannot convert from 'int' to 'std::shared_ptr<Actor>'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.cpp(64,19): message : No constructor could take the source type, or constructor overload resolution was ambiguous
+  StudentWorld.cpp
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(47,12): error C2143: syntax error: missing ';' before '<'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(47,43): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(47,60): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(50,66): error C2079: 'StudentWorld::ice_array' uses undefined class 'std::array<std::array<std::shared_ptr<Actor>,60>,60>'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.cpp(12,26): error C2084: function 'int StudentWorld::move(void)' already has a body
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(39): message : see previous definition of 'move'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.cpp(40,34): error C2084: function 'int StudentWorld::updateStatus(void)' already has a body
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(54): message : see previous definition of 'updateStatus'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.cpp(66,30): error C2084: function 'int StudentWorld::doThings(void)' already has a body
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(55): message : see previous definition of 'doThings'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.cpp(83,44): error C2084: function 'void StudentWorld::deleteFinishedObjects(void)' already has a body
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(56): message : see previous definition of 'deleteFinishedObjects'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.cpp(89,3): error C2259: 'Actor': cannot instantiate abstract class
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.h(23): message : see declaration of 'Actor'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.cpp(89,3): message : due to following members:
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.cpp(89,3): message : 'void Actor::doSomething(void)': is abstract
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\Actor.h(59): message : see declaration of 'Actor::doSomething'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.cpp(92,63): error C2039: 'getAllActors': is not a member of 'StudentWorld'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(12): message : see declaration of 'StudentWorld'
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.cpp(104,30): error C2084: function 'void StudentWorld::cleanUp(void)' already has a body
+C:\Users\Nelson PC\source\repos\git_p4\Ice_Cold_Man\IceMan\IceMan\StudentWorld.h(45): message : see previous definition of 'cleanUp'
+  main.cpp
+  Generating Code...
