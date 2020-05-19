@@ -15,6 +15,7 @@
 
 class Actor;
 class IceMan;
+class Ice;
 
 class StudentWorld : public GameWorld
 {
@@ -34,6 +35,9 @@ public:
 	//	and the game is ready to restart at the current level.
 	virtual int init()
 	{
+		populateIce();
+		createPlayer();
+		mainCreateObjects();
 		return GWSTATUS_CONTINUE_GAME;
 	}
 
@@ -45,8 +49,7 @@ public:
 	//	method is responsible for disposing of(i.e., deleting) actors(e.g., a Squirt from the
 	//		IcemanÅfs squirt gun that has run its course, a Regular Protester who has left the oil field,
 	//		a Boulder that has fallen and crashed into Ice below, etc.) that need to disappear during a given tick
-	virtual int move()
-	{
+	virtual int move();
 		//For example, if a Boulder has completed its fall and disintegrated in the Ice
 		//	below, then its state should be set to Ådead, Åhand the after all of the actors in the game
 		//	get a chance to do something during the tick, the move() method should remove that
@@ -60,7 +63,6 @@ public:
 		//decLives();
 		//return GWSTATUS_PLAYER_DIED;
 
-	}
 
 	//The cleanup() method is responsible for
 	//	freeing all actors that are currently active in the game. This includes all
@@ -71,17 +73,50 @@ public:
 	}
 
 	std::unique_ptr<std::vector<std::shared_ptr<Actor>>> StudentWorld::getAllActors();
-
+	std::shared_ptr<IceMan> getPlayer() {
+		return std::shared_ptr<IceMan>(player);
+	}
 private:
-	std::array<std::array<std::shared_ptr<Actor>, 60>, 60> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
+	std::array<std::array<std::shared_ptr<Ice>, 60>, 60> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
 	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
-	IceMan* player;
+	std::shared_ptr<IceMan> player;
 	int oilsLeft;
-	int updateStatus() {} // Updates the status at the top of the screen. (Health, lives, gold, etc.)
-	int doThings() {} // Asks the player and actor objects to doSomething() each tick.
-	void deleteFinishedObjects() {} // Checks to see if an object has finished its task. (Eg. if a boulder has fallen, delete it from game.)
+	int updateStatus(); // Updates the status at the top of the screen. (Health, lives, gold, etc.)
+	int doThings(); // Asks the player and actor objects to doSomething() each tick.
+	void deleteFinishedObjects(); // Checks to see if an object has finished its task. (Eg. if a boulder has fallen, delete it from game.)
 
-
+	//Functions for init
+	void populateIce();
+	void createPlayer();
+	void mainCreateObjects();
+	template<typename T>
+	bool createObjects(int x, int y);
 };
+
+template<typename T>
+inline bool StudentWorld::createObjects(int x, int y) {
+	std::shared_ptr<T> temp = std::make_shared <T>(this, x, y, GraphObject::Direction::right, 1.0, 2, 1, 9999, 6);	//Collision range of 6 because that's the requirement for a new object to be made
+	temp->collisionDetection = std::make_unique<CollisionDetection>(temp, temp->getCollisionRange());
+	temp->collisionDetection->behaveBitches();	//Check for collision
+	if (temp->collisionDetection->getIntruder() && temp->collisionDetection->getIntruder()->type != Actor::ActorType::ice)	//There's an intruder and it's not ice
+		return false;
+
+	/*TODO: ICE IS NOT RECOGNIZED AS AN INTRUDER, FIX THIS SHIT*/
+
+
+	//If reach this meaning that's there is an intruder and it's ice
+	std::shared_ptr<T> object = std::make_shared <T>(this, x, y);	//Make the object
+	object->collisionDetection = std::make_unique<CollisionDetection>(object, object->getCollisionRange());	//See if the object collide with any ice
+	object->collisionDetection->behaveBitches();	//This going to gives us the intruder if he exist
+	if (object->collisionDetection->getIntruder()) {
+		//Get the intruder to check its' own collision detection
+		object->collisionDetection->getIntruder()->collisionDetection = std::make_unique<CollisionDetection>(object->collisionDetection->getIntruder(), object->collisionDetection->getIntruder()->getCollisionRange());
+		object->collisionResult->response();	//Demand a response from the source
+		object->collisionDetection->getIntruder()->collisionResult->response();	//Demand a response from the intruder
+	}
+	actor_vec.push_back(object);	//Create a proper boulder at the location picked
+	return true;
+}
+
 
 #endif // STUDENTWORLD_H_

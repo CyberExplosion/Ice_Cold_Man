@@ -1,18 +1,10 @@
 ﻿  Actor.cpp
-A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(61,16): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(66,17): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
   StudentWorld.cpp
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(12,26): error C2084: function 'int StudentWorld::move(void)' already has a body
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.h(48): message : see previous definition of 'move'
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(40,34): error C2084: function 'int StudentWorld::updateStatus(void)' already has a body
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.h(80): message : see previous definition of 'updateStatus'
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(66,30): error C2084: function 'int StudentWorld::doThings(void)' already has a body
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.h(81): message : see previous definition of 'doThings'
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(83,44): error C2084: function 'void StudentWorld::deleteFinishedObjects(void)' already has a body
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.h(82): message : see previous definition of 'deleteFinishedObjects'
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(89,3): error C2259: 'Actor': cannot instantiate abstract class
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.h(16): message : see declaration of 'Actor'
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(89,3): message : due to following members:
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(89,3): message : 'void Actor::doSomething(void)': is abstract
-A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(59): message : see declaration of 'Actor::doSomething'
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(106,24): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(107,25): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(140,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   Generating Code...
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(42): warning C4715: 'StudentWorld::move': not all control paths return a value
 A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(29): warning C4715: '<lambda_3213f61a0a8f1f9b00b74c32290a2beb>::operator()': not all control paths return a value
+  IceMan.vcxproj -> A:\Comp Sci\Ice_Cold_Man\Debug\IceMan.exe
