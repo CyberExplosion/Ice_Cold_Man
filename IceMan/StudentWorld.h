@@ -4,18 +4,24 @@
 #include "GameWorld.h"
 #include "GameConstants.h"
 #include <string>
+#include <vector>
+#include <array>
+#include "Actor.h"
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
 
 //You may add as many other public or private methods and private member variables to
 //your StudentWorld class as you like
+
+class Actor;
+class IceMan;
+
 class StudentWorld : public GameWorld
 {
 public:
 	StudentWorld(std::string assetDir)
-		: GameWorld(assetDir)
-	{
-	}
+		: GameWorld(assetDir) {
+	};
 
 	//Your init() method is responsible for creating the current levelÅfs oil field and populating
 	//	it with Ice, Boulders, Barrels of Oil, and Gold Nuggets(weÅfll show you how below),
@@ -33,7 +39,7 @@ public:
 
 
 	// Each time your move() method is called, it must run a single tick
-	//of the game.This means that it is responsible for asking each of the gameÅfs actors
+	//of the game.This means that it is responsible for asking each of the gameÅs actors
 	//to try to do
 	//	something: e.g., move themselves and/or perform their specified behavior. Finally, this
 	//	method is responsible for disposing of(i.e., deleting) actors(e.g., a Squirt from the
@@ -42,7 +48,7 @@ public:
 	virtual int move()
 	{
 		//For example, if a Boulder has completed its fall and disintegrated in the Ice
-		//	below, then its state should be set to Ågdead, Åhand the after all of the actors in the game
+		//	below, then its state should be set to Ådead, Åhand the after all of the actors in the game
 		//	get a chance to do something during the tick, the move() method should remove that
 		//	Boulder from the game world(by deleting its object and removing any reference to the
 		//		object from the StudentWorldÅfs data structures)
@@ -50,8 +56,10 @@ public:
 
 		// This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
 		// Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
-		decLives();
-		return GWSTATUS_PLAYER_DIED;
+
+		//decLives();
+		//return GWSTATUS_PLAYER_DIED;
+
 	}
 
 	//The cleanup() method is responsible for
@@ -62,7 +70,18 @@ public:
 	{
 	}
 
+	std::unique_ptr<std::vector<std::shared_ptr<Actor>>> StudentWorld::getAllActors();
+
 private:
+	std::array<std::array<std::shared_ptr<Actor>, 60>, 60> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
+	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
+	IceMan* player;
+	int oilsLeft;
+	int updateStatus() {} // Updates the status at the top of the screen. (Health, lives, gold, etc.)
+	int doThings() {} // Asks the player and actor objects to doSomething() each tick.
+	void deleteFinishedObjects() {} // Checks to see if an object has finished its task. (Eg. if a boulder has fallen, delete it from game.)
+
+
 };
 
 #endif // STUDENTWORLD_H_
