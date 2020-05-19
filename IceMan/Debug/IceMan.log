@@ -1,0 +1,4 @@
+﻿  Actor.cpp
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(58,15): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.25.28610\include\memory(2064,35): error C2512: 'ControlledMovement::ControlledMovement': no appropriate default constructor available
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(247): message : see reference to function template instantiation 'std::unique_ptr<ControlledMovement,std::default_delete<ControlledMovement>> std::make_unique<ControlledMovement,,0>(void)' being compiled
