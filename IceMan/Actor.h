@@ -32,9 +32,10 @@ private:
 	int collisionRange;
 	int detectionRange;
 	StudentWorld* m_sw;
+	int sound;
 
 public:
-	Actor(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 0, int t_hp = 1, int t_strength = 0, int col_range = 0, int detect_range = 0) : GraphObject(imgID, startX, startY, dir, size, depth), hitpoints(t_hp), strength(t_strength), collisionRange(col_range), detectionRange(detect_range), type(t_type), m_sw(world) {
+	Actor(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 0, int t_hp = 1, int t_strength = 0, int col_range = 0, int detect_range = 0, int t_sound = SOUND_NONE) : GraphObject(imgID, startX, startY, dir, size, depth), hitpoints(t_hp), strength(t_strength), collisionRange(col_range), detectionRange(detect_range), type(t_type), m_sw(world), sound(t_sound) {
 		setVisible(visibility);
 	};
 	virtual ~Actor() {};
@@ -49,6 +50,14 @@ public:
 
 	//This is for all the usage of shared_ptr in them behaviors. This is bad but I blame due date
 	virtual void resetAllBehaviors();
+
+	int getSound() {
+		return sound;
+	}
+
+	void setSound(int t_sound) {
+		sound = t_sound;
+	}
 
 	StudentWorld* getWorld() {
 		return m_sw;
@@ -269,7 +278,7 @@ public:
 //People
 class Characters : public Actor {
 public:
-	Characters(StudentWorld* world, ActorType type, int imgID, int startX, int startY, Direction dir, int t_hp, int t_str, int col_ran, int detect_range) : Actor(world, type, true, imgID, startX, startY, dir, 1.0, 0, t_hp, t_str, col_ran, detect_range) {};
+	Characters(StudentWorld* world, ActorType type, int imgID, int startX, int startY, Direction dir, int t_hp, int t_str, int col_ran, int detect_range, int t_sound) : Actor(world, type, true, imgID, startX, startY, dir, 1.0, 0, t_hp, t_str, col_ran, detect_range, t_sound) {};
 	virtual ~Characters() {};
 };
 
@@ -283,7 +292,7 @@ private:
 	//<NEVER CALLED>
 	std::shared_ptr<Actor>findPlayer();
 public:
-	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 1, 4, 0) {};
+	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 1, 4, 0, SOUND_PLAYER_ANNOYED) {};
 	void doSomething() override;
 	int getSonarNum() {
 		return sonarVec.size();
@@ -300,7 +309,7 @@ class Protesters : public Characters{
 private:
 	bool outOfField = false;
 public:
-	Protesters(StudentWorld* world, int imgID = IID_PROTESTER, int startX = 60, int startY = 60, int hp = 5, int t_str = 2, int col_range = 4, int detect_range = 0) : Characters(world, npc, imgID, startX, startY, left, hp, t_str, col_range, detect_range){
+	Protesters(StudentWorld* world, int imgID = IID_PROTESTER, int startX = 60, int startY = 60, int hp = 5, int t_str = 2, int col_range = 4, int detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED) : Characters(world, npc, imgID, startX, startY, left, hp, t_str, col_range, detect_range, t_sound){
 		movementBehavior = std::make_unique<FreeMovement>();
 	}
 	//Functions
@@ -327,7 +336,7 @@ class HardcoreProtesters: public Protesters{
 private:
 
 public:
-	HardcoreProtesters(StudentWorld* world, int startX, int startY, int hp, int strength, int col_range, int detect_range) : Protesters(world, IID_HARD_CORE_PROTESTER, startX, startY, hp, strength, col_range, detect_range) {
+	HardcoreProtesters(StudentWorld* world, int startX, int startY, int hp, int strength, int col_range, int detect_range, int t_sound) : Protesters(world, IID_HARD_CORE_PROTESTER, startX, startY, hp, strength, col_range, detect_range, t_sound) {
 		movementBehavior = std::make_unique<FreeMovement>();
 	}
 };
@@ -337,7 +346,7 @@ class Inanimated : public Actor {
 private:
 
 public:
-	Inanimated(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 2, int hp = 1, int strength = 0, int col_range = 4, int detect_range = 0) : Actor(world, t_type, visibility, imgID, startX, startY, dir, size, depth, hp, strength, col_range, detect_range) {};
+	Inanimated(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 2, int hp = 1, int strength = 0, int col_range = 4, int detect_range = 0, int t_sound = SOUND_NONE) : Actor(world, t_type, visibility, imgID, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound) {};
 
 	virtual ~Inanimated() {};
 };
@@ -414,7 +423,7 @@ class Hazard : public Inanimated{
 private:
 
 public:
-	Hazard(StudentWorld* world, bool visibility, int imgID, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 0, int col_range = 0, int detect_range = 9999) : Inanimated(world, hazard, visibility, imgID, startX, startY, dir, 1.0, 1, hp, strength, col_range, detect_range) {};
+	Hazard(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 0, int col_range = 0, int detect_range = 9999) : Inanimated(world, t_type, visibility, imgID, startX, startY, dir, 1.0, 1, hp, strength, col_range, detect_range) {};
 	virtual ~Hazard() {};
 };
 
@@ -425,7 +434,7 @@ private:
 	void shoot();
 	void doSomething() override;
 public:
-	Squirt(StudentWorld* world, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 2, int col_range = 4, int detect_range = 9999) : Hazard(world, true, IID_WATER_SPURT, startX, startY, dir, size, depth, hp, strength, col_range, detect_range) {};
+	Squirt(StudentWorld* world, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 2, int col_range = 4, int detect_range = 9999) : Hazard(world, hazard, true, IID_WATER_SPURT, startX, startY, dir, size, depth, hp, strength, col_range, detect_range) {};
 
 };
 
@@ -439,9 +448,9 @@ private:
 	bool checkIceBelow();
 	void doSomething() override;
 public:
-	Boulder(StudentWorld* world, int startX, int startY, Direction dir = down, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 9999, int col_range = 3, int detect_range = 9999) : Hazard(world, true, IID_BOULDER, startX, startY, dir, size, depth, hp, strength, col_range, detect_range){
+	Boulder(StudentWorld* world, int startX, int startY, Direction dir = down, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 9999, int col_range = 3, int detect_range = 9999) : Hazard(world, worldStatic, true, IID_BOULDER, startX, startY, dir, size, depth, hp, strength, col_range, detect_range){
 		//Not hazard yet when first spawn
-		changeActorType(worldStatic);
+		changeActorType(ActorType::worldStatic);
 		movementBehavior = std::make_unique<FallMovement>(); 
 	}
 };
@@ -450,7 +459,7 @@ class Ice : public Inanimated{
 private:
 	
 public:
-	Ice(StudentWorld* world, bool visibility, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 3.0, int hp = 1, int strength = 0, int col_range = 1, int detect_range = 9999) : Inanimated(world, ActorType::ice, visibility, IID_ICE, startX, startY, dir, 0.25, 3, hp, strength, col_range, detect_range) {};
+	Ice(StudentWorld* world, bool visibility, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 3.0, int hp = 1, int strength = 1, int col_range = 1, int detect_range = 9999, int t_sound = SOUND_DIG) : Inanimated(world, ActorType::ice, visibility, IID_ICE, startX, startY, dir, 0.25, 3, hp, strength, col_range, detect_range, t_sound) {};
 	void doSomething() override;
 };
 

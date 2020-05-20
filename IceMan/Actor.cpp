@@ -15,8 +15,10 @@ void Destroy::resetBehavior() {
 void Destroy::response() {
 	if(target && target->isAlive())
 		target->dmgActor(dmgTaken);
-	if (!target->isAlive())
+	if (target && !target->isAlive()) {
+		target->getWorld()->playSound(SOUND_DIG);
 		target->resetAllBehaviors();
+	}
 }
 
 void FreeMovement::moveThatAss() {
@@ -72,9 +74,6 @@ void IceMan::doSomething() {
 	movementBehavior->moveThatAss();
 	if (collisionResult)
 		collisionResult->response();
-}
-
-void Protesters::shout(Direction dir) {
 }
 
 
@@ -146,7 +145,7 @@ void LineOfSightDetection::behaveBitches() {
 
 
 void CollisionDetection::collide(std::shared_ptr<Actor> source, std::shared_ptr<Actor> receiver) {
-	if ((source && receiver) && (source->isVisible() && receiver->isVisible())) {	//Only enable collision for things that are shown
+	if ((source && receiver) && (source->isVisible() && receiver->isVisible()) && source != receiver) {	//Only enable collision for things that are shown
 		if (source->type == Actor::player) {
 			switch (receiver->type) {
 			case Actor::worldStatic:
@@ -468,8 +467,19 @@ void SquirtMovement::resetBehavior() {
 }
 
 void Actor::resetAllBehaviors() {
-	movementBehavior->resetBehavior();
-	collisionResult->resetBehavior();
-	detectBehavior->resetBehavior();
-	collisionDetection->resetBehavior();
+	if(movementBehavior)
+		movementBehavior->resetBehavior();
+	if(collisionResult)
+		collisionResult->resetBehavior();
+	if(detectBehavior)
+		detectBehavior->resetBehavior();
+	if(collisionDetection)
+		collisionDetection->resetBehavior();
+}
+
+void shout(Actor::Direction dir) {
+	
+}
+
+void doSomething() {
 }

@@ -53,17 +53,11 @@ int StudentWorld::updateStatus() {
 	//gld = to_string(player->getGoldNum());
 	//oil = to_string(oilsLeft);
 	//sonar = to_string(player->getSonarNum());
-	
-	current_status = 
-		  "Lvl: " + lvl 
-		+ "Lives: " + lives 
-		+ "Hlth: " + health 
-		+ "Wtr: " + wtr 
-		+ "Gld: " + gld 
-		+ "Oil Left: " + oil
-		+ "Sonar: " + sonar 
-		+ "Scr: " + score;
 
+	/********************************************
+	MAKE TEXT BE AT THE EDGE
+	*******************************************/
+	current_status += "Lvl:  " + lvl + " Lives:  " + lives + " Hlth:  " + health + " Wtr:  " + wtr + " Gld:  " + gld + " Oil Left:  " + oil + " Sonar:  " + sonar + " Score:  " + score;
 	setGameStatText(current_status);
 
 	//Return for testing reason, THIS IS NOT CORRECT
@@ -71,7 +65,6 @@ int StudentWorld::updateStatus() {
 }
 
 int StudentWorld::doThings() {
-	shared_ptr<Actor>p;
 	for (auto& actors : actor_vec) { // Iterates through entire vector of actor objects 
 									// and has them call their own doSomething() methods.
 		if (actors && actors->isAlive() && actors->type != Actor::ActorType::player) 
@@ -155,27 +148,27 @@ void StudentWorld::mainCreateObjects() {
 
 	for (; numBoulder > 0; numBoulder--) {
 		do {
-			localX = rand() % 61;	// 0 - 60
-			localY = rand() % 37 + 20; // 20 - 56
-			if ((localX >= 30 && localX <= 33) || (localY >= 4 || localY <= 59))
+			localX = rand() % 57;	// 0 - 60
+			localY = rand() % 33 + 20; // 20 - 56
+			if ((localX >= 26 && localX <= 29) || (localY >= 0 || localY <= 55))
 				continue;
 		} while (!createObjects<Boulder>(localX, localY));	//If object cannot create at the location then try again
 	}
 
 	for (; numGold > 0; numGold--) {
 		do {
-			localX = rand() % 61;
-			localY = rand() % 57;	// 0 - 56
-			if ((localX >= 30 && localX <= 33) || (localY >= 4 || localY <= 59))
+			localX = rand() % 57;
+			localY = rand() % 53;	// 0 - 56
+			if ((localX >= 26 && localX <= 29) || (localY >= 0 || localY <= 55))
 				continue;
 		} while (!createObjects<GoldNuggets>(localX, localY));
 	}
 
 	for (; numOil > 0; numOil--) {
 		do {
-			localX = rand() % 61;
-			localY = rand() % 57;
-			if ((localX >= 30 && localX <= 33) || (localY >= 4 || localY <= 59))
+			localX = rand() % 57;
+			localY = rand() % 53;
+			if ((localX >= 26 && localX <= 29) || (localY >= 0 || localY <= 55))
 				continue;
 		} while (!createObjects<OilBarrels>(localX, localY));
 	}
