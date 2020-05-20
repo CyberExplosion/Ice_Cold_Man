@@ -1,0 +1,6 @@
+﻿  StudentWorld.cpp
+C:\Users\Kenng\OneDrive\Desktop\Iceman Project\IceManFull\IceMan\IceMan\StudentWorld.cpp(125,24): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Kenng\OneDrive\Desktop\Iceman Project\IceManFull\IceMan\IceMan\StudentWorld.cpp(126,25): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Kenng\OneDrive\Desktop\Iceman Project\IceManFull\IceMan\IceMan\StudentWorld.cpp(159,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Kenng\OneDrive\Desktop\Iceman Project\IceManFull\IceMan\IceMan\StudentWorld.cpp(54): warning C4715: 'StudentWorld::move': not all control paths return a value
+  IceMan.vcxproj -> C:\Users\Kenng\OneDrive\Desktop\Iceman Project\IceManFull\IceMan\Debug\IceMan.exe
