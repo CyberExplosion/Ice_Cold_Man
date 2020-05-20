@@ -20,7 +20,7 @@ class Boulder;
 class StudentWorld;
 
 
-class Actor : public GraphObject {
+class Actor : public GraphObject, public std::enable_shared_from_this<Actor> {
 public:
 	//Type
 	enum ActorType { player, npc, worldStatic, hazard, ice, dropByPlayer, collect };
@@ -46,6 +46,14 @@ public:
 	//Determine what method of detection the actor would use
 	std::unique_ptr<IDetectionBehavior>detectBehavior;
 	std::unique_ptr<IDetectionBehavior>collisionDetection;
+
+	//This is for all the usage of shared_ptr in them behaviors. THis is bad but I blame due date
+	virtual void resetBehaviors() {
+		movementBehavior->resetBehavior();
+		collisionResult->resetBehavior();
+		detectBehavior->resetBehavior();
+		collisionDetection->resetBehavior();
+	}
 
 	StudentWorld* getWorld() {
 		return m_sw;
@@ -87,6 +95,7 @@ public:
 class IMovementBehavior {
 public:
 	virtual void moveThatAss() = 0;
+	virtual void resetBehavior() = 0;
 };
 
 class FreeMovement : public IMovementBehavior{
@@ -110,6 +119,7 @@ private:
 	int key = INVALID_KEY;
 	std::shared_ptr<Actor> pawn;
 public:
+	void resetBehavior() override;
 	ControlledMovement(std::shared_ptr<Actor> t_pawn) : pawn(t_pawn) {}
 	//This is for the player
 	void moveThatAss() override;
@@ -137,12 +147,14 @@ public:
 class IActorResponse{
 public:
 	virtual void response() = 0;
+	virtual void resetBehavior() = 0;
 };
 
 class Block : public IActorResponse {
 private:
 	std::shared_ptr<Actor>target;
 public:
+	void resetBehavior() override;
 	Block(std::shared_ptr<Actor> t_target) : target(t_target) {}
 	//Object will be force to stand still
 	void response() override;
@@ -153,6 +165,7 @@ private:
 	std::shared_ptr<Actor>target;
 	int dmgTaken;
 public:
+	void resetBehavior() override;
 	Destroy(std::shared_ptr<Actor> t_target, int dmgTook) : target(t_target), dmgTaken(dmgTook) {};
 	//Object will be force to reduce their health by an amount
 	void response() override;
@@ -166,6 +179,7 @@ class IExistenceBehavior{
 private:
 public:
 	virtual void showYourself() = 0;
+	virtual void resetBehavior() = 0;
 };
 
 class ExistTemporary : public IExistenceBehavior{
@@ -192,8 +206,12 @@ protected:
 	IDetectionBehavior(std::shared_ptr<Actor> t_source) : source(t_source) {};
 	IDetectionBehavior(std::shared_ptr<Actor> t_source, std::shared_ptr<Actor> t_intruder) : source(t_source), intruder(t_intruder) {};
 public:
-	//This is a bad idea, but i blame the due date
+	//All of this is bad and I'm meant it. I wish whoever look at this in the future best of luck
 	virtual void behaveBitches() = 0;
+	void virtual resetBehavior() {
+		source.reset();
+		intruder.reset();
+	}
 	std::shared_ptr<Actor> getSource() {
 		return source;
 	}

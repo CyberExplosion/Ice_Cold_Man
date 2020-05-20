@@ -1,9 +1,40 @@
 ﻿  Actor.cpp
-A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(68,17): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(52,1): error C2027: use of undefined type 'IMovementBehavior'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(11): message : see declaration of 'IMovementBehavior'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(52,1): error C2039: 'resetBehavior': is not a member of 'std::unique_ptr<IMovementBehavior,std::default_delete<IMovementBehavior>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(43): message : see declaration of 'std::unique_ptr<IMovementBehavior,std::default_delete<IMovementBehavior>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(53,1): error C2027: use of undefined type 'IActorResponse'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(12): message : see declaration of 'IActorResponse'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(53,1): error C2039: 'resetBehavior': is not a member of 'std::unique_ptr<IActorResponse,std::default_delete<IActorResponse>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(45): message : see declaration of 'std::unique_ptr<IActorResponse,std::default_delete<IActorResponse>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(54,1): error C2027: use of undefined type 'IDetectionBehavior'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(13): message : see declaration of 'IDetectionBehavior'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(54,1): error C2039: 'resetBehavior': is not a member of 'std::unique_ptr<IDetectionBehavior,std::default_delete<IDetectionBehavior>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(47): message : see declaration of 'std::unique_ptr<IDetectionBehavior,std::default_delete<IDetectionBehavior>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(55,1): error C2027: use of undefined type 'IDetectionBehavior'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(13): message : see declaration of 'IDetectionBehavior'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(55,1): error C2039: 'resetBehavior': is not a member of 'std::unique_ptr<IDetectionBehavior,std::default_delete<IDetectionBehavior>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(47): message : see declaration of 'std::unique_ptr<IDetectionBehavior,std::default_delete<IDetectionBehavior>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(96,17): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(176,4): warning C4065: switch statement contains 'default' but no 'case' labels
   StudentWorld.cpp
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(105,24): warning C4018: '<': signed/unsigned mismatch
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(106,25): warning C4018: '<': signed/unsigned mismatch
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(139,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(52,1): error C2027: use of undefined type 'IMovementBehavior'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(11): message : see declaration of 'IMovementBehavior'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(52,1): error C2039: 'resetBehavior': is not a member of 'std::unique_ptr<IMovementBehavior,std::default_delete<IMovementBehavior>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(43): message : see declaration of 'std::unique_ptr<IMovementBehavior,std::default_delete<IMovementBehavior>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(53,1): error C2027: use of undefined type 'IActorResponse'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(12): message : see declaration of 'IActorResponse'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(53,1): error C2039: 'resetBehavior': is not a member of 'std::unique_ptr<IActorResponse,std::default_delete<IActorResponse>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(45): message : see declaration of 'std::unique_ptr<IActorResponse,std::default_delete<IActorResponse>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(54,1): error C2027: use of undefined type 'IDetectionBehavior'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(13): message : see declaration of 'IDetectionBehavior'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(54,1): error C2039: 'resetBehavior': is not a member of 'std::unique_ptr<IDetectionBehavior,std::default_delete<IDetectionBehavior>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(47): message : see declaration of 'std::unique_ptr<IDetectionBehavior,std::default_delete<IDetectionBehavior>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(55,1): error C2027: use of undefined type 'IDetectionBehavior'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(13): message : see declaration of 'IDetectionBehavior'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(55,1): error C2039: 'resetBehavior': is not a member of 'std::unique_ptr<IDetectionBehavior,std::default_delete<IDetectionBehavior>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(47): message : see declaration of 'std::unique_ptr<IDetectionBehavior,std::default_delete<IDetectionBehavior>>'
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(119,24): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(120,25): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(153,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   Generating Code...
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(42): warning C4715: 'StudentWorld::move': not all control paths return a value
-  IceMan.vcxproj -> A:\Comp Sci\Ice_Cold_Man\Debug\IceMan.exe

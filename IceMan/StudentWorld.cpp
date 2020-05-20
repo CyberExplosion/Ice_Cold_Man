@@ -88,12 +88,22 @@ int StudentWorld::doThings() {
 }
 
 void StudentWorld::deleteFinishedObjects() {
-	actor_vec.erase(remove_if(actor_vec.begin(), actor_vec.end(), [](shared_ptr<Actor> temp) {
-		if (!temp->isAlive()) // If the object is not alive anymore, keep it at the back. 
-							 // Else, we shift it to the front of the vector and delete it.
-			return false;
-		return true;
-		}));
+	actor_vec.erase(remove_if(actor_vec.begin(), actor_vec.end(), [](shared_ptr<Actor>& temp) {
+		if (!temp->isAlive()) { // If the object is not alive anymore we delete it
+			temp.reset();
+			return true;
+		}
+		return false;
+		}), end(actor_vec));
+	
+	for (auto& rowIter : ice_array) {	//Remove the ice actor if not alive
+		for (auto& colIter : rowIter) {
+			if (!colIter->isAlive()) {
+				colIter->resetBehaviors();
+				colIter.reset();
+			}
+		}
+	}
 }
 
 //Return a pointer to the whole vector of actors
@@ -102,13 +112,17 @@ std::unique_ptr<vector<std::shared_ptr<Actor>>> StudentWorld::getAllActors() {
 }
 
 void StudentWorld::populateIce() {
+	/*********************************
+	Spawn ice in the coordinate specified
+	Put the Ice in the ice array and also put the pointer into another containers that holds every actors
+	*********************************/
 	for (int row = 0; row < ice_array.size(); row++) {
 		for (int col = 0; col < ice_array[row].size(); col++) {
 			if (col < 33 && col > 30 && row > 4 && row < 59) {
-				ice_array[row][col] = nullptr;
+				ice_array[row][col] = nullptr;	//Don't add ice in cols and rows between those range
 			}
 			else {
-				ice_array[row][col] = make_shared<Ice>(this, true, col, row);
+				ice_array[row][col] = make_shared<Ice>(this, true, col, row);	//Cols is the x location and row is the y location in Cartesian coordinate
 				actor_vec.emplace_back(ice_array[row][col]);
 			}
 		}
@@ -126,7 +140,7 @@ void StudentWorld::mainCreateObjects() {
 		Spawn an actor at the random location inside the restriction
 		Spawn another actor follow the restriction
 		If the newly spawn actor get in the detection range of the first actor then Destroy it
-			Keep respawning the new actor until the detection doesn't hit
+			Keep re-spawning the new actor until the detection doesn't hit
 		No detection hit -> decrement the count need to spawn on the corresponding actor
 		Move on to spawn the next actor
 	*****************************/
@@ -143,6 +157,8 @@ void StudentWorld::mainCreateObjects() {
 		do {
 			localX = rand() % 61;	// 0 - 60
 			localY = rand() % 37 + 20; // 20 - 56
+			if ((localX >= 30 && localX <= 33) || (localY >= 4 || localY <= 59))
+				continue;
 		} while (!createObjects<Boulder>(localX, localY));	//If object cannot create at the location then try again
 	}
 
@@ -150,6 +166,8 @@ void StudentWorld::mainCreateObjects() {
 		do {
 			localX = rand() % 61;
 			localY = rand() % 57;	// 0 - 56
+			if ((localX >= 30 && localX <= 33) || (localY >= 4 || localY <= 59))
+				continue;
 		} while (!createObjects<GoldNuggets>(localX, localY));
 	}
 
@@ -157,6 +175,8 @@ void StudentWorld::mainCreateObjects() {
 		do {
 			localX = rand() % 61;
 			localY = rand() % 57;
+			if ((localX >= 30 && localX <= 33) || (localY >= 4 || localY <= 59))
+				continue;
 		} while (!createObjects<OilBarrels>(localX, localY));
 	}
 }

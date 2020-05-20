@@ -94,7 +94,20 @@ private:
 };
 
 template<typename T>
-inline bool StudentWorld::createObjects(int x, int y) {
+bool StudentWorld::createObjects(int x, int y) {
+	/************************************
+	Create a dummy object at the specified location with its collision range set up to 6. It will tell us if we can put the object in the location or not
+	If there's a collision with any actors except ice, the location is compromised and thus should return false to get another location
+	The location is not compromise, move to next phase:
+		Create a real object with real collision and every attributes at the location
+		Make a collision detection with the object to find intruder (ice)
+		If there's an intruder
+			Then make the intruder to check its' own collision detection
+		If there's a collision happen in the source and the intruder
+			Demand a collision response from the source
+			Demand a collision response from the intruder
+	Finally put the newly made object into actor containers
+	************************************/
 	std::shared_ptr<T> temp = std::make_shared <T>(this, x, y, GraphObject::Direction::right, 1.0, 2, 1, 9999, 6);	//Collision range of 6 because that's the requirement for a new object to be made
 	temp->collisionDetection = std::make_unique<CollisionDetection>(temp, temp->getCollisionRange());
 	temp->collisionDetection->behaveBitches();	//Check for collision
@@ -103,7 +116,7 @@ inline bool StudentWorld::createObjects(int x, int y) {
 
 	/*TODO: ICE IS NOT RECOGNIZED AS AN INTRUDER, FIX THIS SHIT*/
 	/*THIS MAY HAPPEN BECAUSE THE ICE IS DEAD BUT SINCE WE NOT MOVE YET CLEAN UP HASN'T BEEN CALLED*/
-
+	////////// This is fixed, I THINK????!!!
 
 	//If reach this meaning that's there is an intruder and it's ice
 	std::shared_ptr<T> object = std::make_shared <T>(this, x, y);	//Make the object
@@ -112,12 +125,13 @@ inline bool StudentWorld::createObjects(int x, int y) {
 
 	std::shared_ptr<Actor>intruder = object->collisionDetection->getIntruder();
 	if (intruder) {
-		//Get the intruder to check its' own collision detection
-		intruder->collisionDetection = std::make_unique<CollisionDetection>(intruder, intruder->getCollisionRange());
+		intruder->collisionDetection = std::make_unique<CollisionDetection>(intruder, intruder->getCollisionRange());	//Get the intruder to check its' own collision detection
 		intruder->collisionDetection->behaveBitches();	//Force the intruder to acknowledge the source
+
 		if(object->collisionResult)	//If there's is a result for the said Collision
 			object->collisionResult->response();	//Demand a response from the source
-		if(intruder->collisionDetection->getIntruder())	//The intruder acknowledge the existence of the source
+
+		if(intruder->collisionDetection->getIntruder())	//The intruder acknowledged the existence of the source
 			if(intruder->collisionResult)
 				intruder->collisionResult->response();	//Demand a response from the intruder
 	}

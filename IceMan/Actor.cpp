@@ -7,10 +7,16 @@ using namespace std;
 // Students:  Add code to this file (if you wish), Actor.h, StudentWorld.h, and StudentWorld.cpp
 
 
+void Destroy::resetBehavior() {
+	target.reset();
+}
+
 //Destroy an object or deal damage to characters
 void Destroy::response() {
 	if(target && target->isAlive())
 		target->dmgActor(dmgTaken);
+	if (!target->isAlive())
+		target->resetBehaviors();
 }
 
 void FreeMovement::moveThatAss() {
@@ -19,7 +25,7 @@ void FreeMovement::moveThatAss() {
 void FallMovement::moveThatAss() {
 }
 
-
+/////////*** NOT USED ***/////////////
 shared_ptr<Actor> IceMan::findPlayer() {
 	vector<shared_ptr<Actor>> acVec = *(getWorld()->getAllActors());
 	auto re = std::find_if(rbegin(acVec), rend(acVec),	//Since this function is invoked right when created the player, there's a high chance the player is at the last place in the vector
@@ -32,12 +38,34 @@ shared_ptr<Actor> IceMan::findPlayer() {
 		*re = nullptr;
 	return *re;
 }
+/***********************************/
 
 void IceMan::doSomething() {
-	if (!isAlive())
+	/*******************************
+	Initialize the existence behavior, the movement behavior, the collision detection and the collision behavior
+	Check for collision detection and collision behavior with every call
+	Then do all the behavior
+	********************************/
+	if (!isAlive()) {
+		resetBehaviors();
 		return;
+	}
 	//This certainly will cause problem in the future. TOO BAD
-	movementBehavior = std::make_unique<ControlledMovement>(getWorld()->getPlayer());
+	shared_ptr<Actor> mySelf = shared_from_this();
+
+	if (!movementBehavior) {
+		movementBehavior = std::make_unique<ControlledMovement>(mySelf);
+	}
+	if (!displayBehavior)
+		displayBehavior = make_unique<ExistPermanently>();
+	if (!collisionDetection)
+		collisionDetection = make_unique<CollisionDetection>(mySelf, mySelf->getCollisionRange());
+
+	displayBehavior->showYourself();
+	collisionDetection->behaveBitches();
+	movementBehavior->moveThatAss();
+	if (collisionResult)
+		collisionResult->response();
 }
 
 void Protesters::shout(Direction dir) {
@@ -209,6 +237,10 @@ Then a collision happen and you should produce a collision result
 	return false;
 }
 
+void Block::resetBehavior() {
+	target.reset();
+}
+
 //***This would cause problem if the moveTo() function create animation.****
 void Block::response() {
 	//Move to the same location == Standing still
@@ -220,6 +252,26 @@ void Collectable::showSelf() {
 }
 
 void OilBarrels::doSomething() {
+	if (!isAlive()) {
+		resetBehaviors();
+		return;
+	}
+	
+	shared_ptr<Actor>self = shared_from_this();
+	//Create the behavior
+	if (!existBehavior)
+		existBehavior = make_unique<ExistPermanently>();
+	if (!detectBehavior)
+		detectBehavior = make_unique<RadarLikeDetection>(self, self->getDetectRange());
+	if (!collisionDetection)
+		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
+
+	//Use the behavior
+	collisionDetection->behaveBitches();
+	detectBehavior->behaveBitches();
+	existBehavior->showYourself();
+	if (collisionResult)
+		collisionResult->response();
 }
 
 bool GoldNuggets::tempTimeEnd() {
@@ -230,6 +282,32 @@ void GoldNuggets::drop() {
 }
 
 void GoldNuggets::doSomething() {
+	if (!isAlive()) {
+		resetBehaviors();
+		return;
+	}
+
+	shared_ptr<Actor> self = shared_from_this();
+
+	//Create behavior
+	if (!displayBehavior)
+		if (pickableByPlayer)
+			displayBehavior = make_unique<ExistPermanently>();
+		else {
+			displayBehavior.reset();
+			displayBehavior = make_unique<ExistTemporary>();
+		}
+	if (!detectBehavior)
+		detectBehavior = make_unique<RadarLikeDetection>(self, self->getDetectRange());
+	if (!collisionDetection)
+		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
+		
+	//Use the behavior
+	displayBehavior->showYourself();
+	detectBehavior->behaveBitches();
+	collisionDetection->behaveBitches();
+	if (collisionResult)
+		collisionResult->response();
 }
 
 int SonarKit::getAmmo() {
@@ -247,6 +325,26 @@ void SonarKit::doSomething() {
 }
 
 void Water::doSomething() {
+	if (!isAlive()) {
+		resetBehaviors();
+		return;
+	}
+
+	//Create behaviors
+	shared_ptr<Actor>self = shared_from_this();
+	if (!existBehavior)
+		existBehavior = make_unique<ExistTemporary>();
+	if (!detectBehavior)
+		detectBehavior = make_unique<RadarLikeDetection>(self, self->getDetectRange());
+	if (!collisionDetection)
+		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
+
+	//Use the behaviors
+	existBehavior->showYourself();
+	detectBehavior->behaveBitches();
+	collisionDetection->behaveBitches();
+	if (collisionResult)
+		collisionResult->response();
 }
 
 
@@ -270,6 +368,27 @@ void Boulder::doSomething() {
 }
 
 void Ice::doSomething() {
+	/********************************
+	Initialize the existence Behavior, the collision detection behavior and the collision result behavior
+	Check for collision detection and collision result with every call
+	Then do the behaviors
+	*********************************/
+	if (isAlive()) {
+		shared_ptr<Actor> self = shared_from_this();
+		//Create behaviors
+		if (!displayBehavior)
+			displayBehavior = make_unique<ExistPermanently>();
+		if (!collisionDetection)
+			collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
+
+		//Use behaviors
+		displayBehavior->showYourself();
+		collisionDetection->behaveBitches();
+		if (collisionResult)
+			collisionResult->response();
+	}
+	else
+		resetBehaviors();
 }
 
 void ExistTemporary::showYourself() {
@@ -278,14 +397,17 @@ void ExistTemporary::showYourself() {
 void ExistPermanently::showYourself() {
 }
 
+void ControlledMovement::resetBehavior() {
+	pawn.reset();
+}
+
 void ControlledMovement::moveThatAss() {
 	/****************************
 	This tells where the character that being controlled should move
 	First you have to turn the character to face the direction you move
 	If the characters already facing the direction you move, then move it toward that direction 1 square
-	If the move end up with a collision, produce a collision result to use
 	*****************************/
-	if (pawn) {
+	if (pawn && pawn->isAlive()) {
 		if (!pawn->getWorld()->getKey(key))
 			key = INVALID_KEY;
 		if (key != INVALID_KEY) {
@@ -317,11 +439,6 @@ void ControlledMovement::moveThatAss() {
 			default:
 				break;
 			}
-			if (!pawn->collisionDetection) {
-				//This takes a serious long time, I really contemplating pull the trigger right now
-				pawn->collisionDetection = make_unique<CollisionDetection>(pawn, pawn->getCollisionRange());
-			}
-			pawn->collisionDetection->behaveBitches();
 		}
 	}
 }
@@ -331,3 +448,4 @@ void PursuingMovement::moveThatAss() {
 
 void SquirtMovement::moveThatAss() {
 }
+
