@@ -102,17 +102,24 @@ inline bool StudentWorld::createObjects(int x, int y) {
 		return false;
 
 	/*TODO: ICE IS NOT RECOGNIZED AS AN INTRUDER, FIX THIS SHIT*/
+	/*THIS MAY HAPPEN BECAUSE THE ICE IS DEAD BUT SINCE WE NOT MOVE YET CLEAN UP HASN'T BEEN CALLED*/
 
 
 	//If reach this meaning that's there is an intruder and it's ice
 	std::shared_ptr<T> object = std::make_shared <T>(this, x, y);	//Make the object
 	object->collisionDetection = std::make_unique<CollisionDetection>(object, object->getCollisionRange());	//See if the object collide with any ice
 	object->collisionDetection->behaveBitches();	//This going to gives us the intruder if he exist
-	if (object->collisionDetection->getIntruder()) {
+
+	std::shared_ptr<Actor>intruder = object->collisionDetection->getIntruder();
+	if (intruder) {
 		//Get the intruder to check its' own collision detection
-		object->collisionDetection->getIntruder()->collisionDetection = std::make_unique<CollisionDetection>(object->collisionDetection->getIntruder(), object->collisionDetection->getIntruder()->getCollisionRange());
-		object->collisionResult->response();	//Demand a response from the source
-		object->collisionDetection->getIntruder()->collisionResult->response();	//Demand a response from the intruder
+		intruder->collisionDetection = std::make_unique<CollisionDetection>(intruder, intruder->getCollisionRange());
+		intruder->collisionDetection->behaveBitches();	//Force the intruder to acknowledge the source
+		if(object->collisionResult)	//If there's is a result for the said Collision
+			object->collisionResult->response();	//Demand a response from the source
+		if(intruder->collisionDetection->getIntruder())	//The intruder acknowledge the existence of the source
+			if(intruder->collisionResult)
+				intruder->collisionResult->response();	//Demand a response from the intruder
 	}
 	actor_vec.push_back(object);	//Create a proper boulder at the location picked
 	return true;

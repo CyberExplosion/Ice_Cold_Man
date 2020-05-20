@@ -98,8 +98,7 @@ void StudentWorld::deleteFinishedObjects() {
 
 //Return a pointer to the whole vector of actors
 std::unique_ptr<vector<std::shared_ptr<Actor>>> StudentWorld::getAllActors() {
-	std::unique_ptr<vector<std::shared_ptr<Actor>>> re = make_unique<vector<shared_ptr<Actor>>>(actor_vec);
-	return re;
+	return make_unique<vector<shared_ptr<Actor>>>(actor_vec);
 }
 
 void StudentWorld::populateIce() {

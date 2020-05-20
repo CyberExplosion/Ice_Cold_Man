@@ -26,6 +26,7 @@ shared_ptr<Actor> IceMan::findPlayer() {
 		[](shared_ptr<Actor>& val) {
 			if (val->type == player)
 				return true;
+			return false;
 		});
 	if (re == rend(acVec))	//The player is not in the actor list, which is unlikely
 		*re = nullptr;
@@ -59,12 +60,13 @@ std::shared_ptr<Actor> RadarLikeDetection::sensedActor() {
 		Then return the intruder, the player(intruder) is "sensed"
 	If it's not then return nullptr
 *****************************/
-	if (source && intruder) {
-		for (auto& intruder : *(source->getWorld()->getAllActors())) {
+	if (source) {
+		auto allActors = std::move(*(source->getWorld()->getAllActors()));
+		for (const auto& intruder : allActors) {
 			if (!intruder->isAlive() || intruder == source)	//The intruder and the player is the same actor
 				continue;
 			int distance = sqrt(pow(source->getX() - intruder->getX(), 2) + pow(source->getY() - intruder->getY(), 2));
-			int spotZone = this->range + intruder->getDetectRange();
+			int spotZone = this->range + intruder->getCollisionRange();
 			if (distance <= spotZone)
 				return intruder;
 		}
@@ -110,16 +112,16 @@ void LineOfSightDetection::behaveBitches() {
 
 
 void CollisionDetection::collide(std::shared_ptr<Actor> source, std::shared_ptr<Actor> receiver) {
-	if (source && receiver) {
+	if ((source && receiver) && (source->isVisible() && receiver->isVisible())) {	//Only enable collision for things that are shown
 		if (source->type == Actor::player) {
 			switch (receiver->type) {
 			case Actor::worldStatic:
 				source->collisionResult = make_unique<Block>(source);
 				break;
-			case Actor::hazard: {
+			case Actor::npc:
+			case Actor::hazard:
 				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
 				break;
-			}
 			default:
 				break;
 			}
@@ -129,8 +131,9 @@ void CollisionDetection::collide(std::shared_ptr<Actor> source, std::shared_ptr<
 			case Actor::hazard:
 				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
 				break;
-			case Actor::Actor::worldStatic:
+			case Actor::worldStatic:
 			case Actor::ice:
+			case Actor::player:
 				source->collisionResult = make_unique<Block>(source);
 				break;
 			default:
@@ -138,7 +141,13 @@ void CollisionDetection::collide(std::shared_ptr<Actor> source, std::shared_ptr<
 			}
 		}
 
-		//World static doesn't count because it's never move or destroy
+		if (source->type == Actor::worldStatic) {
+			switch (receiver->type) {
+			default:
+				source->collisionResult = make_unique<Block>(source);
+			}
+		}
+
 		if (source->type == Actor::hazard) {
 			switch (receiver->type) {
 			case Actor::Actor::worldStatic:
@@ -148,16 +157,18 @@ void CollisionDetection::collide(std::shared_ptr<Actor> source, std::shared_ptr<
 				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
 				break;
 			default:
-				break;
+				source->collisionResult = make_unique<Block>(source);
 			}
 		}
 		if (source->type == Actor::ice) {
 			switch (receiver->type) {
 			case Actor::player:
+			case Actor::worldStatic:
+			case Actor::collect:
 				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
 				break;
 			default:
-				break;
+				source->collisionResult = make_unique<Block>(source);
 			}
 		}
 		if (source->type == Actor::dropByPlayer) {
@@ -178,14 +189,6 @@ void CollisionDetection::collide(std::shared_ptr<Actor> source, std::shared_ptr<
 				break;
 			}
 		}
-		if (source->type == Actor::ice) {
-			switch (receiver->type) {
-			case Actor::worldStatic:
-				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
-			default:
-				break;
-			}
-		}
 	}
 }
 
@@ -199,7 +202,8 @@ Then a collision happen and you should produce a collision result
 		if (source->isAlive() && intruder->isAlive()) {
 			//Produce a collision result right here
 			collide(source, intruder);
-			return true;
+			if (source->collisionResult)
+				return true;
 		}
 	}
 	return false;

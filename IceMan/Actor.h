@@ -34,7 +34,7 @@ private:
 	StudentWorld* m_sw;
 
 public:
-	Actor(StudentWorld* world, ActorType type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 0, int t_hp = 1, int t_strength = 0, int col_range = 0, int detect_range = 0) : GraphObject(imgID, startX, startY, dir, size, depth), hitpoints(t_hp), strength(t_strength), collisionRange(col_range), detectionRange(detect_range), type(worldStatic), m_sw(world) {
+	Actor(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 0, int t_hp = 1, int t_strength = 0, int col_range = 0, int detect_range = 0) : GraphObject(imgID, startX, startY, dir, size, depth), hitpoints(t_hp), strength(t_strength), collisionRange(col_range), detectionRange(detect_range), type(t_type), m_sw(world) {
 		setVisible(visibility);
 	};
 	virtual ~Actor() {};
@@ -187,7 +187,10 @@ public:
 //Collision detection and radar detection are the same type, just have different range
 class IDetectionBehavior{
 protected:
+	//The source is npc or objects. Intruder will be the player
 	std::shared_ptr<Actor> source, intruder;
+	IDetectionBehavior(std::shared_ptr<Actor> t_source) : source(t_source) {};
+	IDetectionBehavior(std::shared_ptr<Actor> t_source, std::shared_ptr<Actor> t_intruder) : source(t_source), intruder(t_intruder) {};
 public:
 	//This is a bad idea, but i blame the due date
 	virtual void behaveBitches() = 0;
@@ -209,23 +212,19 @@ public:
 
 class LineOfSightDetection : public IDetectionBehavior {
 private:
-	std::shared_ptr<Actor> source, intruder;
 	bool seePlayer();
 public:
-	LineOfSightDetection(std::shared_ptr<Actor> t_source, std::shared_ptr<Actor>t_intruder) : source(t_source), intruder(t_intruder) {};
+	LineOfSightDetection(std::shared_ptr<Actor> t_source, std::shared_ptr<Actor>t_intruder) : IDetectionBehavior(t_source, t_intruder) {};
 	void behaveBitches() override;
 };
 
 class RadarLikeDetection : public IDetectionBehavior {
 protected:
 	int range;
-	//This is the location of the npc
-	std::shared_ptr<Actor> source;
-	//This will be the player
-	std::shared_ptr<Actor> intruder;
 	std::shared_ptr<Actor> sensedActor();
 public:
-	RadarLikeDetection(std::shared_ptr<Actor> t_source, int t_range) : source(t_source), range(t_range) {
+	RadarLikeDetection(std::shared_ptr<Actor> t_source, int t_range) : IDetectionBehavior(t_source) {
+		range = t_range;
 		intruder = sensedActor();
 	};
 	int getRange() {
@@ -411,7 +410,7 @@ public:
 
 };
 
-class Boulder : public Hazard{
+class Boulder : public Hazard {
 public:
 	enum BoudlderState { stable, waiting, falling };
 private:
@@ -422,6 +421,8 @@ private:
 	void doSomething() override;
 public:
 	Boulder(StudentWorld* world, int startX, int startY, Direction dir = down, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 9999, int col_range = 3, int detect_range = 9999) : Hazard(world, true, IID_BOULDER, startX, startY, dir, size, depth, hp, strength, col_range, detect_range){
+		//Not hazard yet when first spawn
+		changeActorType(worldStatic);
 		movementBehavior = std::make_unique<FallMovement>(); 
 	}
 };
@@ -430,7 +431,7 @@ class Ice : public Inanimated{
 private:
 	
 public:
-	Ice(StudentWorld* world, bool visibility, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 3.0, int hp = 1, int strength = 0, int col_range = 1, int detect_range = 9999) : Inanimated(world, ice, visibility, IID_ICE, startX, startY, dir, 0.25, 3, hp, strength, col_range, detect_range) {};
+	Ice(StudentWorld* world, bool visibility, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 3.0, int hp = 1, int strength = 0, int col_range = 1, int detect_range = 9999) : Inanimated(world, ActorType::ice, visibility, IID_ICE, startX, startY, dir, 0.25, 3, hp, strength, col_range, detect_range) {};
 	void doSomething() override;
 };
 

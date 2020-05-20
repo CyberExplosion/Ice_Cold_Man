@@ -1,10 +1,9 @@
 ﻿  Actor.cpp
-A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(66,17): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(68,17): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
   StudentWorld.cpp
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(106,24): warning C4018: '<': signed/unsigned mismatch
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(107,25): warning C4018: '<': signed/unsigned mismatch
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(140,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(105,24): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(106,25): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(139,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   Generating Code...
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(42): warning C4715: 'StudentWorld::move': not all control paths return a value
-A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(29): warning C4715: '<lambda_3213f61a0a8f1f9b00b74c32290a2beb>::operator()': not all control paths return a value
   IceMan.vcxproj -> A:\Comp Sci\Ice_Cold_Man\Debug\IceMan.exe
