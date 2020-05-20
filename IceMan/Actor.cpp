@@ -8,11 +8,13 @@ using namespace std;
 
 
 void Destroy::resetBehavior() {
-	target.reset();
+	wp_target.reset();
 }
 
 //Destroy an object or deal damage to characters
 void Destroy::response() {
+	shared_ptr<Actor> target = wp_target.lock();
+
 	if(target && target->isAlive())
 		target->dmgActor(dmgTaken);
 	if (target && !target->isAlive()) {
@@ -33,20 +35,20 @@ void FallMovement::moveThatAss() {
 void FallMovement::resetBehavior() {
 }
 
-/////////*** NOT USED ***/////////////
-shared_ptr<Actor> IceMan::findPlayer() {
-	vector<shared_ptr<Actor>> acVec = *(getWorld()->getAllActors());
-	auto re = std::find_if(rbegin(acVec), rend(acVec),	//Since this function is invoked right when created the player, there's a high chance the player is at the last place in the vector
-		[](shared_ptr<Actor>& val) {
-			if (val->type == player)
-				return true;
-			return false;
-		});
-	if (re == rend(acVec))	//The player is not in the actor list, which is unlikely
-		*re = nullptr;
-	return *re;
-}
-/***********************************/
+///////////*** NOT USED ***/////////////
+//shared_ptr<Actor> IceMan::findPlayer() {
+//	vector<shared_ptr<Actor>> acVec = *(getWorld()->getAllActors());
+//	auto re = std::find_if(rbegin(acVec), rend(acVec),	//Since this function is invoked right when created the player, there's a high chance the player is at the last place in the vector
+//		[](shared_ptr<Actor>& val) {
+//			if (val->type == player)
+//				return true;
+//			return false;
+//		});
+//	if (re == rend(acVec))	//The player is not in the actor list, which is unlikely
+//		*re = nullptr;
+//	return *re;
+//}
+///***********************************/
 
 void IceMan::doSomething() {
 	/*******************************
@@ -82,7 +84,7 @@ void Protesters::doSomething() {
 }
 
 
-std::shared_ptr<Actor> RadarLikeDetection::sensedActor() {
+std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedActor() {
 	/*****************************
 	Check if the player is in certain radius of the actor
 	Check in all direction, that means using a circle and Euclidean distance math, the detection range for the actor and the actor
@@ -93,18 +95,24 @@ std::shared_ptr<Actor> RadarLikeDetection::sensedActor() {
 		Then return the intruder, the player(intruder) is "sensed"
 	If it's not then return nullptr
 *****************************/
+	vector<weak_ptr<Actor>> intruders;
+	shared_ptr<Actor>source = wp_source.lock();
+
 	if (source) {
-		auto allActors = std::move(*(source->getWorld()->getAllActors()));
-		for (const auto& intruder : allActors) {
-			if (!intruder->isAlive() || intruder == source)	//The intruder and the player is the same actor
-				continue;
-			int distance = sqrt(pow(source->getX() - intruder->getX(), 2) + pow(source->getY() - intruder->getY(), 2));
-			int spotZone = this->range + intruder->getCollisionRange();
-			if (distance <= spotZone)
-				return intruder;
+		auto allActors = std::move((source->getWorld()->getAllActors()));
+
+		for (auto& single : allActors) {
+			if (single) {
+				if (!single->isAlive() || single == source)	//The intruder and the player is the same actor
+					continue;
+				double distance = sqrt(pow(source->getX() - single->getX(), 2) + pow(source->getY() - single->getY(), 2));
+				int spotZone = this->range + single->getCollisionRange();
+				if (distance <= spotZone)
+					intruders.push_back(single);
+			}
 		}
 	}
-	return nullptr;
+	return intruders;
 }
 
 void RadarLikeDetection::behaveBitches() {
@@ -113,6 +121,7 @@ void RadarLikeDetection::behaveBitches() {
 
 
 void CollisionDetection::behaveBitches() {
+	shared_ptr<Actor>source = wp_source.lock();
 	if (source) {
 		if (collisionHappen()) {	//Make the Actor produce a result because of collision
 			source->collisionResult->response();
@@ -144,7 +153,10 @@ void LineOfSightDetection::behaveBitches() {
 }
 
 
-void CollisionDetection::collide(std::shared_ptr<Actor> source, std::shared_ptr<Actor> receiver) {
+void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<Actor> wp_receiver) {
+	shared_ptr<Actor> source = wp_source.lock();
+	shared_ptr<Actor> receiver = wp_receiver.lock();
+
 	if ((source && receiver) && (source->isVisible() && receiver->isVisible()) && source != receiver) {	//Only enable collision for things that are shown
 		if (source->type == Actor::player) {
 			switch (receiver->type) {
@@ -225,16 +237,26 @@ void CollisionDetection::collide(std::shared_ptr<Actor> source, std::shared_ptr<
 	}
 }
 
+
 //Collision is just a radar like detection but only cover a small radius
 bool CollisionDetection::collisionHappen() {
 /*****************************
 See if you can "sensed" the actor. **This use an entirely different detection range than the "radar" detection range so it's ok**
 Then a collision happen and you should produce a collision result
 *****************************/
-	if (intruder) {
-		if (source->isAlive() && intruder->isAlive()) {
-			//Produce a collision result right here
-			collide(source, intruder);
+	shared_ptr<Actor> source = wp_source.lock();
+	shared_ptr<Actor> perp;
+	if (source) {
+		if (!wp_intruders.empty()) {
+			for (const auto& wp_perp : wp_intruders) {
+				perp = wp_perp.lock();
+				if (perp) {
+					if (source->isAlive() && perp->isAlive()) {
+						//Produce a collision result right here
+						collide(source, perp);
+					}
+				}
+			}
 			if (source->collisionResult)
 				return true;
 		}
@@ -243,11 +265,12 @@ Then a collision happen and you should produce a collision result
 }
 
 void Block::resetBehavior() {
-	target.reset();
+	wp_target.reset();
 }
 
 //***This would cause problem if the moveTo() function create animation.****
 void Block::response() {
+	shared_ptr<Actor>target = wp_target.lock();
 	//Move to the same location == Standing still
 	if(target)
 		target->moveTo(target->getX(), target->getY());
@@ -418,34 +441,36 @@ void ControlledMovement::moveThatAss() {
 	First you have to turn the character to face the direction you move
 	If the characters already facing the direction you move, then move it toward that direction 1 square
 	*****************************/
-	if (pawn && pawn->isAlive()) {
-		if (!pawn->getWorld()->getKey(key))
+	shared_ptr<Actor>spPawn = pawn.lock();
+
+	if (spPawn && spPawn->isAlive()) {
+		if (!spPawn->getWorld()->getKey(key))
 			key = INVALID_KEY;
 		if (key != INVALID_KEY) {
 			switch (key) {
 			case KEY_PRESS_DOWN:
-				if (pawn->getDirection() != GraphObject::Direction::down)
-					pawn->setDirection(GraphObject::Direction::down);
+				if (spPawn->getDirection() != GraphObject::Direction::down)
+					spPawn->setDirection(GraphObject::Direction::down);
 				else
-					pawn->moveTo(pawn->getX(), pawn->getY() - 1);
+					spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
 				break;
 			case KEY_PRESS_UP:
-				if (pawn->getDirection() != GraphObject::Direction::up)
-					pawn->setDirection(GraphObject::Direction::up);
+				if (spPawn->getDirection() != GraphObject::Direction::up)
+					spPawn->setDirection(GraphObject::Direction::up);
 				else
-					pawn->moveTo(pawn->getX(), pawn->getY() + 1);
+					spPawn->moveTo(spPawn->getX(), spPawn->getY() + 1);
 				break;
 			case KEY_PRESS_RIGHT:
-				if (pawn->getDirection() != GraphObject::Direction::right)
-					pawn->setDirection(GraphObject::Direction::right);
+				if (spPawn->getDirection() != GraphObject::Direction::right)
+					spPawn->setDirection(GraphObject::Direction::right);
 				else
-					pawn->moveTo(pawn->getX() + 1, pawn->getY());
+					spPawn->moveTo(spPawn->getX() + 1, spPawn->getY());
 				break;
 			case KEY_PRESS_LEFT:
-				if (pawn->getDirection() != GraphObject::Direction::left)
-					pawn->setDirection(GraphObject::Direction::left);
+				if (spPawn->getDirection() != GraphObject::Direction::left)
+					spPawn->setDirection(GraphObject::Direction::left);
 				else
-					pawn->moveTo(pawn->getX() - 1, pawn->getY());
+					spPawn->moveTo(spPawn->getX() - 1, spPawn->getY());
 				break;
 			default:
 				break;

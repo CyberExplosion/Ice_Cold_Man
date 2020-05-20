@@ -1,6 +1,8 @@
-﻿  StudentWorld.cpp
+﻿  Actor.cpp
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(193,4): warning C4065: switch statement contains 'default' but no 'case' labels
+  StudentWorld.cpp
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(112,24): warning C4018: '<': signed/unsigned mismatch
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(113,25): warning C4018: '<': signed/unsigned mismatch
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(146,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(42): warning C4715: 'StudentWorld::move': not all control paths return a value
-LINK : fatal error LNK1168: cannot open A:\Comp Sci\Ice_Cold_Man\Debug\IceMan.exe for writing
+  Generating Code...
+  IceMan.vcxproj -> A:\Comp Sci\Ice_Cold_Man\Debug\IceMan.exe

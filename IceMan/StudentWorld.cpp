@@ -29,7 +29,7 @@ int StudentWorld::move() {
 	case 3:
 		//playFinishedLevelSound();
 		return GWSTATUS_FINISHED_LEVEL;
-	case 4:
+	default:
 		return GWSTATUS_LEVEL_ERROR;
 	}
 	
@@ -100,8 +100,8 @@ void StudentWorld::deleteFinishedObjects() {
 }
 
 //Return a pointer to the whole vector of actors
-std::unique_ptr<vector<std::shared_ptr<Actor>>> StudentWorld::getAllActors() {
-	return make_unique<vector<shared_ptr<Actor>>>(actor_vec);
+vector<shared_ptr<Actor>> StudentWorld::getAllActors() {
+	return vector<shared_ptr<Actor>>(actor_vec);
 }
 
 void StudentWorld::populateIce() {
@@ -116,7 +116,7 @@ void StudentWorld::populateIce() {
 			}
 			else {
 				ice_array[row][col] = make_shared<Ice>(this, true, col, row);	//Cols is the x location and row is the y location in Cartesian coordinate
-				actor_vec.emplace_back(ice_array[row][col]);
+				actor_vec.push_back(ice_array[row][col]);
 			}
 		}
 	}

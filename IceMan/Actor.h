@@ -123,10 +123,10 @@ public:
 class ControlledMovement : public IMovementBehavior{
 private:
 	int key = INVALID_KEY;
-	std::shared_ptr<Actor> pawn;
+	std::weak_ptr<Actor> pawn;
 public:
 	void resetBehavior() override;
-	ControlledMovement(std::shared_ptr<Actor> t_pawn) : pawn(t_pawn) {}
+	ControlledMovement(std::weak_ptr<Actor> t_pawn) : pawn(t_pawn) {}
 	//This is for the player
 	void moveThatAss() override;
 };
@@ -140,7 +140,7 @@ public:
 	void resetBehavior() override;
 };
 
-class SquirtMovement :public IMovementBehavior {
+class SquirtMovement : public IMovementBehavior {
 private:
 
 public:
@@ -160,21 +160,21 @@ public:
 
 class Block : public IActorResponse {
 private:
-	std::shared_ptr<Actor>target;
+	std::weak_ptr<Actor>wp_target;
 public:
 	void resetBehavior() override;
-	Block(std::shared_ptr<Actor> t_target) : target(t_target) {}
+	Block(std::weak_ptr<Actor> t_target) : wp_target(wp_target) {}
 	//Object will be force to stand still
 	void response() override;
 };
 
 class Destroy : public IActorResponse {
 private:
-	std::shared_ptr<Actor>target;
+	std::weak_ptr<Actor>wp_target;
 	int dmgTaken;
 public:
 	void resetBehavior() override;
-	Destroy(std::shared_ptr<Actor> t_target, int dmgTook) : target(t_target), dmgTaken(dmgTook) {};
+	Destroy(std::weak_ptr<Actor> t_target, int dmgTook) : wp_target(t_target), dmgTaken(dmgTook) {};
 	//Object will be force to reduce their health by an amount
 	void response() override;
 };
@@ -212,29 +212,32 @@ public:
 class IDetectionBehavior{
 protected:
 	//The source is npc or objects. Intruder will be the player
-	std::shared_ptr<Actor> source, intruder;
-	IDetectionBehavior(std::shared_ptr<Actor> t_source) : source(t_source) {};
-	IDetectionBehavior(std::shared_ptr<Actor> t_source, std::shared_ptr<Actor> t_intruder) : source(t_source), intruder(t_intruder) {};
+	std::weak_ptr<Actor> wp_source;
+	std::vector<std::weak_ptr<Actor>> wp_intruders;
+	IDetectionBehavior(std::weak_ptr<Actor> t_source) : wp_source(t_source) {};
+	IDetectionBehavior(std::weak_ptr<Actor> t_source, std::vector<std::weak_ptr<Actor>> t_intruder) : wp_source(t_source), wp_intruders(t_intruder) {};
 public:
 	//All of this is bad and I'm meant it. I wish whoever look at this in the future best of luck
 	virtual void behaveBitches() = 0;
 	void virtual resetBehavior() {
-		source.reset();
-		intruder.reset();
+		wp_source.reset();
+		for (auto& val : wp_intruders)
+			val.reset();
 	}
-	std::shared_ptr<Actor> getSource() {
-		return source;
+	std::weak_ptr<Actor> getSource() {
+		return wp_source;
 	}
-	std::shared_ptr<Actor> getIntruder() {
-		return intruder;
+	std::vector<std::weak_ptr<Actor>> getIntruders() {
+		return wp_intruders;
 	}
-	void setSource(std::shared_ptr<Actor> t_source) {
-		source.reset();
-		source = t_source;
+	void setSource(std::weak_ptr<Actor> t_source) {
+		wp_source.reset();
+		wp_source = t_source;
 	}
-	void setIntruder(std::shared_ptr<Actor> t_intruder) {
-		intruder.reset();
-		intruder = std::move(t_intruder);
+	void setIntruder(std::vector<std::weak_ptr<Actor>> t_intruder) {
+		for (auto& val : wp_intruders)
+			val.reset();
+		wp_intruders = std::move(t_intruder);
 	}
 };
 
@@ -242,18 +245,18 @@ class LineOfSightDetection : public IDetectionBehavior {
 private:
 	bool seePlayer();
 public:
-	LineOfSightDetection(std::shared_ptr<Actor> t_source, std::shared_ptr<Actor>t_intruder) : IDetectionBehavior(t_source, t_intruder) {};
+	LineOfSightDetection(std::weak_ptr<Actor> t_source) : IDetectionBehavior(t_source) {};
 	void behaveBitches() override;
 };
 
 class RadarLikeDetection : public IDetectionBehavior {
 protected:
 	int range;
-	std::shared_ptr<Actor> sensedActor();
+	std::vector<std::weak_ptr<Actor>> sensedActor();
 public:
-	RadarLikeDetection(std::shared_ptr<Actor> t_source, int t_range) : IDetectionBehavior(t_source) {
+	RadarLikeDetection(std::weak_ptr<Actor> t_source, int t_range) : IDetectionBehavior(t_source) {
 		range = t_range;
-		intruder = sensedActor();
+		wp_intruders = std::move(sensedActor());
 	};
 	int getRange() {
 		return range;
@@ -265,10 +268,10 @@ class CollisionDetection : public RadarLikeDetection {
 private:
 	//This functions determine the result of collision between 2 actors. The source will have <Block> or <Destroy> behavior
 	//depend on what it collides into
-	void collide(std::shared_ptr<Actor> source, std::shared_ptr<Actor> receiver);
+	void collide(std::weak_ptr<Actor> source, std::weak_ptr<Actor> receiver);
 	bool collisionHappen();
 public:
-	CollisionDetection(std::shared_ptr<Actor> t_source, int t_range) : RadarLikeDetection(t_source, t_range){}
+	CollisionDetection(std::weak_ptr<Actor> t_source, int t_range) : RadarLikeDetection(t_source, t_range){}
 	void behaveBitches() override;
 };
 
@@ -459,7 +462,7 @@ class Ice : public Inanimated{
 private:
 	
 public:
-	Ice(StudentWorld* world, bool visibility, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 3.0, int hp = 1, int strength = 1, int col_range = 1, int detect_range = 9999, int t_sound = SOUND_DIG) : Inanimated(world, ActorType::ice, visibility, IID_ICE, startX, startY, dir, 0.25, 3, hp, strength, col_range, detect_range, t_sound) {};
+	Ice(StudentWorld* world, bool visibility, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 3.0, int hp = 1, int strength = 1, int col_range = 0, int detect_range = 9999, int t_sound = SOUND_DIG) : Inanimated(world, ActorType::ice, visibility, IID_ICE, startX, startY, dir, 0.25, 3, hp, strength, col_range, detect_range, t_sound) {};
 	void doSomething() override;
 };
 

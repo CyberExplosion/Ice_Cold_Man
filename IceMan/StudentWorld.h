@@ -72,7 +72,7 @@ public:
 	{
 	}
 
-	std::unique_ptr<std::vector<std::shared_ptr<Actor>>> StudentWorld::getAllActors();
+	std::vector<std::shared_ptr<Actor>> StudentWorld::getAllActors();
 	std::shared_ptr<IceMan> getPlayer() {
 		return std::shared_ptr<IceMan>(player);
 	}
@@ -108,33 +108,47 @@ bool StudentWorld::createObjects(int x, int y) {
 			Demand a collision response from the intruder
 	Finally put the newly made object into actor containers
 	************************************/
-	std::shared_ptr<T> temp = std::make_shared <T>(this, x, y, GraphObject::Direction::right, 1.0, 2, 1, 9999, 6);	//Collision range of 6 because that's the requirement for a new object to be made
-	temp->collisionDetection = std::make_unique<CollisionDetection>(temp, temp->getCollisionRange());
+	std::shared_ptr<T> temp = std::make_shared<T>(this, x, y, GraphObject::Direction::right, 1.0, 2, 1, 9999, 6);	//Collision range of 6 because that's the requirement for a new object to be made
+
+ 	temp->collisionDetection = std::make_unique<CollisionDetection>(temp, temp->getCollisionRange());
 	temp->collisionDetection->behaveBitches();	//Check for collision
-	if (temp->collisionDetection->getIntruder() && temp->collisionDetection->getIntruder()->type != Actor::ActorType::ice)	//There's an intruder and it's not ice
-		return false;
+	std::vector<std::weak_ptr<Actor>>intruders = std::move(temp->collisionDetection->getIntruders());
+
+		for (auto const& sp_entity : intruders) {
+			std::shared_ptr<Actor>entity = sp_entity.lock();
+			if (entity && entity->type != Actor::ActorType::ice)	//There's an intruder and it's not ice
+				return false;
+		}
 
 	/*TODO: ICE IS NOT RECOGNIZED AS AN INTRUDER, FIX THIS SHIT*/
 	/*THIS MAY HAPPEN BECAUSE THE ICE IS DEAD BUT SINCE WE NOT MOVE YET CLEAN UP HASN'T BEEN CALLED*/
 	////////// This is fixed, I THINK????!!!
 
+	intruders.clear();
 	//If reach this meaning that's there is an intruder and it's ice
 	std::shared_ptr<T> object = std::make_shared <T>(this, x, y);	//Make the object
-	object->collisionDetection = std::make_unique<CollisionDetection>(object, object->getCollisionRange());	//See if the object collide with any ice
-	object->collisionDetection->behaveBitches();	//This going to gives us the intruder if he exist
+	if (object->isVisible()) {	//Only destroy the ice if it's visible
+		object->collisionDetection = std::make_unique<CollisionDetection>(object, object->getCollisionRange());
+		object->collisionDetection->behaveBitches();	//See if the object collide with any ice
 
-	std::shared_ptr<Actor>intruder = object->collisionDetection->getIntruder();
-	if (intruder) {
-		intruder->collisionDetection = std::make_unique<CollisionDetection>(intruder, intruder->getCollisionRange());	//Get the intruder to check its' own collision detection
-		intruder->collisionDetection->behaveBitches();	//Force the intruder to acknowledge the source
+		intruders = std::move(object->collisionDetection->getIntruders());	//Get the ice
+		for (auto& wp_entity : intruders) {
+			//since i ran out of patient, imma going to do what i called a pro gamer moves
+			shared_ptr<Actor>entity = wp_entity.lock();
 
-		if(object->collisionResult)	//If there's is a result for the said Collision
-			object->collisionResult->response();	//Demand a response from the source
-
-		if(intruder->collisionDetection->getIntruder())	//The intruder acknowledged the existence of the source
-			if(intruder->collisionResult)
-				intruder->collisionResult->response();	//Demand a response from the intruder
+			if (entity) {
+				//entity->collisionDetection = std::make_unique<CollisionDetection>(entity, entity->getCollisionRange());	
+				//entity->collisionDetection->behaveBitches();	//Get the intruder to check its' own collision detection
+				//	
+				//if (entity->collisionResult)
+				//		entity->collisionResult->response();	//Demand a response from the intruder
+				entity->dmgActor(9999);
+				entity.reset();
+			}
+		}
 	}
+	if (object->collisionResult)	//If there's is a result for the said Collision
+		object->collisionResult->response();	//Demand a response from the source
 	actor_vec.push_back(object);	//Create a proper boulder at the location picked
 	return true;
 }
