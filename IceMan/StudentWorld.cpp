@@ -4,6 +4,8 @@
 #include <time.h>
 #include <stdlib.h>
 #include <type_traits>
+
+#include <iostream>
 using namespace std;
 
 GameWorld* createStudentWorld(string assetDir)
@@ -67,8 +69,15 @@ int StudentWorld::updateStatus() {
 int StudentWorld::doThings() {
 	for (auto& actors : actor_vec) { // Iterates through entire vector of actor objects 
 									// and has them call their own doSomething() methods.
-		if (actors && actors->isAlive() && actors->type != Actor::ActorType::player) 
+		if (actors && actors->isAlive() && actors->type != Actor::ActorType::player) {
+			//Logging
+			//cout << "B4: " << actors->getHealth() << "->";
 			actors->doSomething(); // If it is valid, have the actor do something.
+
+			//Logging reason
+			//if (actors->type == Actor::ActorType::ice)
+				//cout << actors->getHealth() << "   ";
+		}
 		if (player && player->isAlive())
 			player->doSomething(); // If the player is still alive, have them do something.
 		else
@@ -76,7 +85,8 @@ int StudentWorld::doThings() {
 		if (oilsLeft == 0)
 			return GWSTATUS_FINISHED_LEVEL; // Or if the player has found all the barrels of oil, return this status.
 	}
-
+	//Logging
+	//cout << endl;
 	return GWSTATUS_CONTINUE_GAME; // If the player hasn't died and hasn't found all the oils, continue to next tick. 
 }
 
@@ -97,6 +107,9 @@ void StudentWorld::deleteFinishedObjects() {
 			}
 		}
 	}
+
+	if (!player->isAlive())
+		player.reset();
 }
 
 //Return a pointer to the whole vector of actors
@@ -123,8 +136,8 @@ void StudentWorld::populateIce() {
 }
 
 void StudentWorld::createPlayer() {
-	player = make_shared<IceMan>(this);
-	actor_vec.emplace_back(player);
+	player = make_shared<IceMan>(this, 0, 0);
+	actor_vec.push_back(player);
 }
 
 void StudentWorld::mainCreateObjects() {

@@ -33,10 +33,14 @@ private:
 	int detectionRange;
 	StudentWorld* m_sw;
 	int sound;
-
+	double centerX;
+	double centerY;
+	int size;
 public:
-	Actor(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 0, int t_hp = 1, int t_strength = 0, int col_range = 0, int detect_range = 0, int t_sound = SOUND_NONE) : GraphObject(imgID, startX, startY, dir, size, depth), hitpoints(t_hp), strength(t_strength), collisionRange(col_range), detectionRange(detect_range), type(t_type), m_sw(world), sound(t_sound) {
+	Actor(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double t_size = 1.0, unsigned int depth = 0, int t_hp = 1, int t_strength = 0, int col_range = 0, int detect_range = 0, int t_sound = SOUND_NONE) : GraphObject(imgID, startX, startY, dir, t_size, depth), hitpoints(t_hp), strength(t_strength), collisionRange(col_range), detectionRange(detect_range), type(t_type), m_sw(world), sound(t_sound), size(t_size) {
 		setVisible(visibility);
+		centerX = (size * 4) / 2 + startX;
+		centerY = (size * 4) / 2 + startY;
 	};
 	virtual ~Actor() {};
 
@@ -50,6 +54,16 @@ public:
 
 	//This is for all the usage of shared_ptr in them behaviors. This is bad but I blame due date
 	virtual void resetAllBehaviors();
+
+	int getCenterX() {
+		centerX = (size * 4) / 2 + getX();
+		return centerX;
+	}
+
+	int getCenterY() {
+		centerY = (size * 4) / 2 + getY();
+		return centerY;
+	}
 
 	int getSound() {
 		return sound;
@@ -211,12 +225,14 @@ public:
 //Collision detection and radar detection are the same type, just have different range
 class IDetectionBehavior{
 protected:
+
+public:
 	//The source is npc or objects. Intruder will be the player
 	std::weak_ptr<Actor> wp_source;
 	std::vector<std::weak_ptr<Actor>> wp_intruders;
 	IDetectionBehavior(std::weak_ptr<Actor> t_source) : wp_source(t_source) {};
 	IDetectionBehavior(std::weak_ptr<Actor> t_source, std::vector<std::weak_ptr<Actor>> t_intruder) : wp_source(t_source), wp_intruders(t_intruder) {};
-public:
+	
 	//All of this is bad and I'm meant it. I wish whoever look at this in the future best of luck
 	virtual void behaveBitches() = 0;
 	void virtual resetBehavior() {
@@ -295,7 +311,7 @@ private:
 	//<NEVER CALLED>
 	std::shared_ptr<Actor>findPlayer();
 public:
-	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 1, 4, 0, SOUND_PLAYER_ANNOYED) {};
+	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 999, 4, 0, SOUND_PLAYER_ANNOYED) {};
 	void doSomething() override;
 	int getSonarNum() {
 		return sonarVec.size();
@@ -462,7 +478,7 @@ class Ice : public Inanimated{
 private:
 	
 public:
-	Ice(StudentWorld* world, bool visibility, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 3.0, int hp = 1, int strength = 1, int col_range = 0, int detect_range = 9999, int t_sound = SOUND_DIG) : Inanimated(world, ActorType::ice, visibility, IID_ICE, startX, startY, dir, 0.25, 3, hp, strength, col_range, detect_range, t_sound) {};
+	Ice(StudentWorld* world, bool visibility, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 3.0, int hp = 1, int strength = 1, int col_range = 1, int detect_range = 9999, int t_sound = SOUND_DIG) : Inanimated(world, ActorType::ice, visibility, IID_ICE, startX, startY, dir, 0.25, 3, hp, strength, col_range, detect_range, t_sound) {};
 	void doSomething() override;
 };
 

@@ -2,6 +2,8 @@
 #include "GameController.h"
 #include "StudentWorld.h"
 #include <cmath>
+#include <iostream>
+
 using namespace std;
 
 // Students:  Add code to this file (if you wish), Actor.h, StudentWorld.h, and StudentWorld.cpp
@@ -21,6 +23,8 @@ void Destroy::response() {
 		target->getWorld()->playSound(SOUND_DIG);
 		target->resetAllBehaviors();
 	}
+
+	target.reset();
 }
 
 void FreeMovement::moveThatAss() {
@@ -61,7 +65,7 @@ void IceMan::doSomething() {
 		return;
 	}
 	//This certainly will cause problem in the future. TOO BAD
-	shared_ptr<Actor> mySelf = shared_from_this();
+	weak_ptr<Actor> mySelf = this->getWorld()->getPlayer();
 
 	if (!movementBehavior) {
 		movementBehavior = std::make_unique<ControlledMovement>(mySelf);
@@ -69,7 +73,7 @@ void IceMan::doSomething() {
 	if (!displayBehavior)
 		displayBehavior = make_unique<ExistPermanently>();
 	if (!collisionDetection)
-		collisionDetection = make_unique<CollisionDetection>(mySelf, mySelf->getCollisionRange());
+		collisionDetection = make_unique<CollisionDetection>(mySelf, this->getCollisionRange());
 
 	displayBehavior->showYourself();
 	collisionDetection->behaveBitches();
@@ -95,6 +99,8 @@ std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedActor() {
 		Then return the intruder, the player(intruder) is "sensed"
 	If it's not then return nullptr
 *****************************/
+
+	/*SINCE THIS IS A SQUARE WE HAVE TO IMPLEMENT IT DIFFERENTLY*/
 	vector<weak_ptr<Actor>> intruders;
 	shared_ptr<Actor>source = wp_source.lock();
 
@@ -105,7 +111,7 @@ std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedActor() {
 			if (single) {
 				if (!single->isAlive() || single == source)	//The intruder and the player is the same actor
 					continue;
-				double distance = sqrt(pow(source->getX() - single->getX(), 2) + pow(source->getY() - single->getY(), 2));
+				int distance = sqrt(pow(source->getCenterX() - single->getCenterX(), 2) + pow(source->getCenterY() - single->getCenterY(), 2));
 				int spotZone = this->range + single->getCollisionRange();
 				if (distance <= spotZone)
 					intruders.push_back(single);
@@ -158,6 +164,8 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 	shared_ptr<Actor> receiver = wp_receiver.lock();
 
 	if ((source && receiver) && (source->isVisible() && receiver->isVisible()) && source != receiver) {	//Only enable collision for things that are shown
+		if (source->collisionResult)
+			source->collisionResult.reset();
 		if (source->type == Actor::player) {
 			switch (receiver->type) {
 			case Actor::worldStatic:
@@ -286,6 +294,7 @@ void OilBarrels::doSomething() {
 	}
 	
 	shared_ptr<Actor>self = shared_from_this();
+
 	//Create the behavior
 	if (!existBehavior)
 		existBehavior = make_unique<ExistPermanently>();
@@ -300,6 +309,8 @@ void OilBarrels::doSomething() {
 	existBehavior->showYourself();
 	if (collisionResult)
 		collisionResult->response();
+
+	self.reset();
 }
 
 bool GoldNuggets::tempTimeEnd() {
@@ -336,6 +347,8 @@ void GoldNuggets::doSomething() {
 	collisionDetection->behaveBitches();
 	if (collisionResult)
 		collisionResult->response();
+
+	self.reset();
 }
 
 int SonarKit::getAmmo() {
@@ -373,6 +386,8 @@ void Water::doSomething() {
 	collisionDetection->behaveBitches();
 	if (collisionResult)
 		collisionResult->response();
+
+	self.reset();
 }
 
 
@@ -407,16 +422,18 @@ void Ice::doSomething() {
 		if (!displayBehavior)
 			displayBehavior = make_unique<ExistPermanently>();
 		if (!collisionDetection)
-			collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
+			collisionDetection.reset();
+		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
 
 		//Use behaviors
 		displayBehavior->showYourself();
 		collisionDetection->behaveBitches();
-		if (collisionResult)
-			collisionResult->response();
+
+		self.reset();
 	}
 	else
 		resetAllBehaviors();
+
 }
 
 void ExistTemporary::showYourself() {
@@ -476,6 +493,7 @@ void ControlledMovement::moveThatAss() {
 				break;
 			}
 		}
+		spPawn.reset();
 	}
 }
 

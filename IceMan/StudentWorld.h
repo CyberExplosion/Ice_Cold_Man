@@ -37,7 +37,7 @@ public:
 	{
 		populateIce();
 		createPlayer();
-		mainCreateObjects();
+		//mainCreateObjects();
 		return GWSTATUS_CONTINUE_GAME;
 	}
 
@@ -77,7 +77,7 @@ public:
 		return std::shared_ptr<IceMan>(player);
 	}
 private:
-	std::array<std::array<std::shared_ptr<Ice>, 60>, 60> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
+	std::array<std::array<std::shared_ptr<Ice>, 30>, 30> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
 	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
 	std::shared_ptr<IceMan> player;
 	int oilsLeft;
@@ -137,7 +137,7 @@ bool StudentWorld::createObjects(int x, int y) {
 			shared_ptr<Actor>entity = wp_entity.lock();
 
 			if (entity) {
-				//entity->collisionDetection = std::make_unique<CollisionDetection>(entity, entity->getCollisionRange());	
+				//entity->collisionDetection = std::make_unique<CollisionDetection>(entity, entity->getCollisionRange());
 				//entity->collisionDetection->behaveBitches();	//Get the intruder to check its' own collision detection
 				//	
 				//if (entity->collisionResult)
