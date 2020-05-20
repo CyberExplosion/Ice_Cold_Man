@@ -47,13 +47,8 @@ public:
 	std::unique_ptr<IDetectionBehavior>detectBehavior;
 	std::unique_ptr<IDetectionBehavior>collisionDetection;
 
-	//This is for all the usage of shared_ptr in them behaviors. THis is bad but I blame due date
-	virtual void resetBehaviors() {
-		movementBehavior->resetBehavior();
-		collisionResult->resetBehavior();
-		detectBehavior->resetBehavior();
-		collisionDetection->resetBehavior();
-	}
+	//This is for all the usage of shared_ptr in them behaviors. This is bad but I blame due date
+	virtual void resetAllBehaviors();
 
 	StudentWorld* getWorld() {
 		return m_sw;
@@ -104,6 +99,7 @@ private:
 public:
 	//This is the default movement for NPC
 	void moveThatAss() override;
+	void resetBehavior() override;
 };
 
 class FallMovement : public IMovementBehavior{
@@ -112,6 +108,7 @@ private:
 public:
 	//This is for the Boulder
 	void moveThatAss() override;
+	void resetBehavior() override;
 };
 
 class ControlledMovement : public IMovementBehavior{
@@ -131,6 +128,7 @@ private:
 public:
 	//This is for whenever NPC chasing after a location
 	void moveThatAss() override;
+	void resetBehavior() override;
 };
 
 class SquirtMovement :public IMovementBehavior {
@@ -139,6 +137,7 @@ private:
 public:
 	//This is for the Squirt to travel
 	void moveThatAss() override;
+	void resetBehavior() override;
 };
 
 //////////////////////////
@@ -187,6 +186,7 @@ private:
 	int timeTillDeath;
 public:
 	void showYourself() override;
+	void resetBehavior() override;
 };
 
 class ExistPermanently : public IExistenceBehavior{
@@ -194,6 +194,7 @@ private:
 	int lifeIsAPain;
 public:
 	void showYourself() override;
+	void resetBehavior() override;
 };
 
 /////////////////////////

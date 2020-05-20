@@ -72,11 +72,11 @@ int StudentWorld::updateStatus() {
 
 int StudentWorld::doThings() {
 	shared_ptr<Actor>p;
-	for (auto actors : actor_vec) { // Iterates through entire vector of actor objects 
+	for (auto& actors : actor_vec) { // Iterates through entire vector of actor objects 
 									// and has them call their own doSomething() methods.
-		if (actors->isAlive() && actors->type != Actor::ActorType::player) 
+		if (actors && actors->isAlive() && actors->type != Actor::ActorType::player) 
 			actors->doSomething(); // If it is valid, have the actor do something.
-		if (player->isAlive())
+		if (player && player->isAlive())
 			player->doSomething(); // If the player is still alive, have them do something.
 		else
 			return GWSTATUS_PLAYER_DIED; // If the player has died, return the appropriate status.
@@ -89,7 +89,7 @@ int StudentWorld::doThings() {
 
 void StudentWorld::deleteFinishedObjects() {
 	actor_vec.erase(remove_if(actor_vec.begin(), actor_vec.end(), [](shared_ptr<Actor>& temp) {
-		if (!temp->isAlive()) { // If the object is not alive anymore we delete it
+		if (temp && !temp->isAlive()) { // If the object is not alive anymore we delete it
 			temp.reset();
 			return true;
 		}
@@ -98,8 +98,8 @@ void StudentWorld::deleteFinishedObjects() {
 	
 	for (auto& rowIter : ice_array) {	//Remove the ice actor if not alive
 		for (auto& colIter : rowIter) {
-			if (!colIter->isAlive()) {
-				colIter->resetBehaviors();
+			if (colIter && !colIter->isAlive()) {
+				colIter->resetAllBehaviors();
 				colIter.reset();
 			}
 		}

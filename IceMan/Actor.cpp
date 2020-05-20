@@ -16,13 +16,19 @@ void Destroy::response() {
 	if(target && target->isAlive())
 		target->dmgActor(dmgTaken);
 	if (!target->isAlive())
-		target->resetBehaviors();
+		target->resetAllBehaviors();
 }
 
 void FreeMovement::moveThatAss() {
 }
 
+void FreeMovement::resetBehavior() {
+}
+
 void FallMovement::moveThatAss() {
+}
+
+void FallMovement::resetBehavior() {
 }
 
 /////////*** NOT USED ***/////////////
@@ -47,7 +53,7 @@ void IceMan::doSomething() {
 	Then do all the behavior
 	********************************/
 	if (!isAlive()) {
-		resetBehaviors();
+		resetAllBehaviors();
 		return;
 	}
 	//This certainly will cause problem in the future. TOO BAD
@@ -253,7 +259,7 @@ void Collectable::showSelf() {
 
 void OilBarrels::doSomething() {
 	if (!isAlive()) {
-		resetBehaviors();
+		resetAllBehaviors();
 		return;
 	}
 	
@@ -283,7 +289,7 @@ void GoldNuggets::drop() {
 
 void GoldNuggets::doSomething() {
 	if (!isAlive()) {
-		resetBehaviors();
+		resetAllBehaviors();
 		return;
 	}
 
@@ -326,7 +332,7 @@ void SonarKit::doSomething() {
 
 void Water::doSomething() {
 	if (!isAlive()) {
-		resetBehaviors();
+		resetAllBehaviors();
 		return;
 	}
 
@@ -388,13 +394,19 @@ void Ice::doSomething() {
 			collisionResult->response();
 	}
 	else
-		resetBehaviors();
+		resetAllBehaviors();
 }
 
 void ExistTemporary::showYourself() {
 }
 
+void ExistTemporary::resetBehavior() {
+}
+
 void ExistPermanently::showYourself() {
+}
+
+void ExistPermanently::resetBehavior() {
 }
 
 void ControlledMovement::resetBehavior() {
@@ -446,6 +458,18 @@ void ControlledMovement::moveThatAss() {
 void PursuingMovement::moveThatAss() {
 }
 
+void PursuingMovement::resetBehavior() {
+}
+
 void SquirtMovement::moveThatAss() {
 }
 
+void SquirtMovement::resetBehavior() {
+}
+
+void Actor::resetAllBehaviors() {
+	movementBehavior->resetBehavior();
+	collisionResult->resetBehavior();
+	detectBehavior->resetBehavior();
+	collisionDetection->resetBehavior();
+}
