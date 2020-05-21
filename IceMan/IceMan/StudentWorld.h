@@ -66,7 +66,7 @@ public:
 		return std::shared_ptr<IceMan>(player);
 	}
 private:
-	std::array<std::array<std::shared_ptr<Ice>, 60>, 60> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
+	std::array<std::array<std::shared_ptr<Ice>, 64>, 60> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
 	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
 	std::shared_ptr<IceMan> player;
 	int oilsLeft;

@@ -292,7 +292,7 @@ private:
 	//<NEVER CALLED>
 	std::shared_ptr<Actor>findPlayer();
 public:
-	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 1, 4, 0, SOUND_PLAYER_ANNOYED) {};
+	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 100, 1, 4, 0, SOUND_PLAYER_ANNOYED) {};
 	void doSomething() override;
 	int getSonarNum() {
 		return sonarVec.size();

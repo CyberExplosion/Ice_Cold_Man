@@ -426,26 +426,42 @@ void ControlledMovement::moveThatAss() {
 			case KEY_PRESS_DOWN:
 				if (pawn->getDirection() != GraphObject::Direction::down)
 					pawn->setDirection(GraphObject::Direction::down);
-				else
-					pawn->moveTo(pawn->getX(), pawn->getY() - 1);
+				else {
+					if (pawn->getY() - 1 < 0)
+						break;
+					else
+						pawn->moveTo(pawn->getX(), pawn->getY() - 1);
+				}
 				break;
 			case KEY_PRESS_UP:
 				if (pawn->getDirection() != GraphObject::Direction::up)
 					pawn->setDirection(GraphObject::Direction::up);
-				else
-					pawn->moveTo(pawn->getX(), pawn->getY() + 1);
+				else {
+					if (pawn->getY() + 1 > 60)
+						break;
+					else
+						pawn->moveTo(pawn->getX(), pawn->getY() + 1);
+				}
 				break;
 			case KEY_PRESS_RIGHT:
 				if (pawn->getDirection() != GraphObject::Direction::right)
 					pawn->setDirection(GraphObject::Direction::right);
-				else
-					pawn->moveTo(pawn->getX() + 1, pawn->getY());
+				else {
+					if (pawn->getX() + 1 > 60)
+						break;
+					else
+						pawn->moveTo(pawn->getX() + 1, pawn->getY());
+				}
 				break;
 			case KEY_PRESS_LEFT:
 				if (pawn->getDirection() != GraphObject::Direction::left)
 					pawn->setDirection(GraphObject::Direction::left);
-				else
-					pawn->moveTo(pawn->getX() - 1, pawn->getY());
+				else {
+					if (pawn->getX() - 1 < 0)
+						break;
+					else
+						pawn->moveTo(pawn->getX() - 1, pawn->getY());
+				}
 				break;
 			default:
 				break;

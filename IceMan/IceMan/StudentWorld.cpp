@@ -60,11 +60,11 @@ int StudentWorld::updateStatus() {
 	lvl = to_string(getLevel());
 	score = to_string(getScore());
 	lives = to_string(getLives());
-	//health = to_string(player->getHealth());
-	//wtr = to_string(player->getSquirtNum());
-	//gld = to_string(player->getGoldNum());
+	health = to_string(player->getHealth());
+	wtr = to_string(player->getSquirtNum());
+	gld = to_string(player->getGoldNum());
 	//oil = to_string(oilsLeft);
-	//sonar = to_string(player->getSonarNum());
+	sonar = to_string(player->getSonarNum());
 
 	/********************************************
 	MAKE TEXT BE AT THE EDGE
@@ -124,7 +124,7 @@ void StudentWorld::populateIce() {
 	*********************************/
 	for (int row = 0; row < ice_array.size(); row++) {
 		for (int col = 0; col < ice_array[row].size(); col++) {
-			if (col < 34 && col > 29 && row > 4 && row < 61) {
+			if (col < 34 && col > 29 && row > 3 && row < 61) {
 				ice_array[row][col] = nullptr;	//Don't add ice in cols and rows between those range
 			}
 			else {
