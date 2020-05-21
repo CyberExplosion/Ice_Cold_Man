@@ -69,6 +69,11 @@ int StudentWorld::updateStatus() {
 int StudentWorld::doThings() {
 	for (auto& actors : actor_vec) { // Iterates through entire vector of actor objects 
 									// and has them call their own doSomething() methods.
+		if (player && player->isAlive())
+			player->doSomething(); // If the player is still alive, have them do something.
+		else
+			return GWSTATUS_PLAYER_DIED; // If the player has died, return the appropriate status.
+
 		if (actors && actors->isAlive() && actors->type != Actor::ActorType::player) {
 			//Logging
 			//cout << "B4: " << actors->getHealth() << "->";
@@ -78,10 +83,16 @@ int StudentWorld::doThings() {
 			//if (actors->type == Actor::ActorType::ice)
 				//cout << actors->getHealth() << "   ";
 		}
-		if (player && player->isAlive())
-			player->doSomething(); // If the player is still alive, have them do something.
-		else
-			return GWSTATUS_PLAYER_DIED; // If the player has died, return the appropriate status.
+
+		if (ice_array.size() > 0) {
+			for (auto& iterRow : ice_array) {
+				for (auto& iterCol : iterRow) {
+					if (iterCol)
+						iterCol->doSomething();
+				}
+			}
+		}
+
 		if (oilsLeft == 0)
 			return GWSTATUS_FINISHED_LEVEL; // Or if the player has found all the barrels of oil, return this status.
 	}
@@ -129,7 +140,6 @@ void StudentWorld::populateIce() {
 			}
 			else {
 				ice_array[row][col] = make_shared<Ice>(this, true, col, row);	//Cols is the x location and row is the y location in Cartesian coordinate
-				actor_vec.push_back(ice_array[row][col]);
 			}
 		}
 	}

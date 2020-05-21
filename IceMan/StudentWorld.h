@@ -16,7 +16,8 @@
 class Actor;
 class IceMan;
 class Ice;
-
+const int COL_NUM = 60,
+ROW_NUM = 60;
 class StudentWorld : public GameWorld
 {
 public:
@@ -74,10 +75,13 @@ public:
 
 	std::vector<std::shared_ptr<Actor>> StudentWorld::getAllActors();
 	std::shared_ptr<IceMan> getPlayer() {
-		return std::shared_ptr<IceMan>(player);
+		return player;
+	}
+	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> getIceArr() {
+		return ice_array;
 	}
 private:
-	std::array<std::array<std::shared_ptr<Ice>, 30>, 30> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
+	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
 	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
 	std::shared_ptr<IceMan> player;
 	int oilsLeft;

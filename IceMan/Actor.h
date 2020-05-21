@@ -268,11 +268,11 @@ public:
 class RadarLikeDetection : public IDetectionBehavior {
 protected:
 	int range;
-	std::vector<std::weak_ptr<Actor>> sensedActor();
+	std::vector<std::weak_ptr<Actor>> sensedIce();
 public:
 	RadarLikeDetection(std::weak_ptr<Actor> t_source, int t_range) : IDetectionBehavior(t_source) {
 		range = t_range;
-		wp_intruders = std::move(sensedActor());
+		wp_intruders = std::move(sensedIce());
 	};
 	int getRange() {
 		return range;
@@ -285,6 +285,7 @@ private:
 	//This functions determine the result of collision between 2 actors. The source will have <Block> or <Destroy> behavior
 	//depend on what it collides into
 	void collide(std::weak_ptr<Actor> source, std::weak_ptr<Actor> receiver);
+	bool collideIceHappen();
 	bool collisionHappen();
 public:
 	CollisionDetection(std::weak_ptr<Actor> t_source, int t_range) : RadarLikeDetection(t_source, t_range){}
