@@ -240,21 +240,21 @@ public:
 		for (auto& val : wp_intruders)
 			val.reset();
 	}
-	std::weak_ptr<Actor> getSource() {
-		return wp_source;
-	}
-	std::vector<std::weak_ptr<Actor>> getIntruders() {
-		return wp_intruders;
-	}
-	void setSource(std::weak_ptr<Actor> t_source) {
-		wp_source.reset();
-		wp_source = t_source;
-	}
-	void setIntruder(std::vector<std::weak_ptr<Actor>> t_intruder) {
-		for (auto& val : wp_intruders)
-			val.reset();
-		wp_intruders = std::move(t_intruder);
-	}
+	//std::weak_ptr<Actor> getSource() {
+	//	return wp_source;
+	//}
+	//std::vector<std::weak_ptr<Actor>> getIntruders() {
+	//	return wp_intruders;
+	//}
+	//void setSource(std::weak_ptr<Actor> t_source) {
+	//	wp_source.reset();
+	//	wp_source = t_source;
+	//}
+	//void setIntruder(std::vector<std::weak_ptr<Actor>> t_intruder) {
+	//	for (auto& val : wp_intruders)
+	//		val.reset();
+	//	wp_intruders = std::move(t_intruder);
+	//}
 };
 
 class LineOfSightDetection : public IDetectionBehavior {
@@ -312,7 +312,7 @@ private:
 	//<NEVER CALLED>
 	std::shared_ptr<Actor>findPlayer();
 public:
-	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 100, 999, 4, 0, SOUND_PLAYER_ANNOYED) {};
+	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 999, 4, 0, SOUND_PLAYER_ANNOYED) {};
 	void doSomething() override;
 	int getSonarNum() {
 		return sonarVec.size();

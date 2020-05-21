@@ -608,7 +608,7 @@ void ControlledMovement::moveThatAss() {
 						break;
 					else
 						spPawn->moveTo(spPawn->getX() - 1, spPawn->getY());
-				}
+        }
 				break;
 			default:
 				break;
