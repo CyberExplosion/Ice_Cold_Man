@@ -146,7 +146,7 @@ void StudentWorld::populateIce() {
 }
 
 void StudentWorld::createPlayer() {
-	player = make_shared<IceMan>(this, 0, 0);
+	player = make_shared<IceMan>(this);
 	actor_vec.push_back(player);
 }
 
