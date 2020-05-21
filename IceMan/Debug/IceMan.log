@@ -1,0 +1,16 @@
+﻿  Actor.cpp
+C:\Users\Kenng\Downloads\Ice_Cold_Man-master\IceMan\Actor.h(40,469): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\Kenng\Downloads\Ice_Cold_Man-master\IceMan\Actor.h(60,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+C:\Users\Kenng\Downloads\Ice_Cold_Man-master\IceMan\Actor.h(65,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+  StudentWorld.cpp
+C:\Users\Kenng\Downloads\Ice_Cold_Man-master\IceMan\Actor.h(40,469): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\Kenng\Downloads\Ice_Cold_Man-master\IceMan\Actor.h(60,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+C:\Users\Kenng\Downloads\Ice_Cold_Man-master\IceMan\Actor.h(65,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+C:\Users\Kenng\Downloads\Ice_Cold_Man-master\IceMan\StudentWorld.cpp(136,24): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Kenng\Downloads\Ice_Cold_Man-master\IceMan\StudentWorld.cpp(137,25): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Kenng\Downloads\Ice_Cold_Man-master\IceMan\StudentWorld.cpp(169,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+  GameController.cpp
+  GameWorld.cpp
+  main.cpp
+  Generating Code...
+freeglut.lib : fatal error LNK1107: invalid or corrupt file: cannot read at 0x82
