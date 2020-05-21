@@ -116,7 +116,7 @@ bool StudentWorld::createObjects(int x, int y) {
 
  	temp->collisionDetection = std::make_unique<CollisionDetection>(temp, temp->getCollisionRange());
 	temp->collisionDetection->behaveBitches();	//Check for collision
-	std::vector<std::weak_ptr<Actor>>intruders = std::move(temp->collisionDetection->getIntruders());
+	std::vector<std::weak_ptr<Actor>>intruders = std::move(temp->collisionDetection->wp_intruders);
 
 		for (auto const& sp_entity : intruders) {
 			std::shared_ptr<Actor>entity = sp_entity.lock();
@@ -135,7 +135,7 @@ bool StudentWorld::createObjects(int x, int y) {
 		object->collisionDetection = std::make_unique<CollisionDetection>(object, object->getCollisionRange());
 		object->collisionDetection->behaveBitches();	//See if the object collide with any ice
 
-		intruders = std::move(object->collisionDetection->getIntruders());	//Get the ice
+		intruders = std::move(object->collisionDetection->wp_intruders);	//Get the ice
 		for (auto& wp_entity : intruders) {
 			//since i ran out of patient, imma going to do what i called a pro gamer moves
 			shared_ptr<Actor>entity = wp_entity.lock();
