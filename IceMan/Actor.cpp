@@ -573,26 +573,42 @@ void ControlledMovement::moveThatAss() {
 			case KEY_PRESS_DOWN:
 				if (spPawn->getDirection() != GraphObject::Direction::down)
 					spPawn->setDirection(GraphObject::Direction::down);
-				else
-					spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
+				else {
+					if (spPawn->getY() - 1 < 0)
+						break;
+					else
+						spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
+				}
 				break;
 			case KEY_PRESS_UP:
 				if (spPawn->getDirection() != GraphObject::Direction::up)
 					spPawn->setDirection(GraphObject::Direction::up);
-				else
-					spPawn->moveTo(spPawn->getX(), spPawn->getY() + 1);
+				else {
+					if (spPawn->getY() + 1 > 60)
+						break;
+					else
+						spPawn->moveTo(spPawn->getX(), spPawn->getY() + 1);
+				}
 				break;
 			case KEY_PRESS_RIGHT:
 				if (spPawn->getDirection() != GraphObject::Direction::right)
 					spPawn->setDirection(GraphObject::Direction::right);
-				else
-					spPawn->moveTo(spPawn->getX() + 1, spPawn->getY());
+				else {
+					if (spPawn->getX() + 1 > 60)
+						break;
+					else
+						spPawn->moveTo(spPawn->getX() + 1, spPawn->getY());
+				}
 				break;
 			case KEY_PRESS_LEFT:
 				if (spPawn->getDirection() != GraphObject::Direction::left)
 					spPawn->setDirection(GraphObject::Direction::left);
-				else
-					spPawn->moveTo(spPawn->getX() - 1, spPawn->getY());
+				else {
+					if (spPawn->getX() - 1 < 0)
+						break;
+					else
+						spPawn->moveTo(spPawn->getX() - 1, spPawn->getY());
+        }
 				break;
 			default:
 				break;

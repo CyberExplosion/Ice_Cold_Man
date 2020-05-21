@@ -50,11 +50,11 @@ int StudentWorld::updateStatus() {
 	lvl = to_string(getLevel()); 
 	score = to_string(getScore()); 
 	lives = to_string(getLives());
-	//health = to_string(player->getHealth()); 
-	//wtr = to_string(player->getSquirtNum());
-	//gld = to_string(player->getGoldNum());
+	health = to_string(player->getHealth()); 
+	wtr = to_string(player->getSquirtNum());
+	gld = to_string(player->getGoldNum());
 	//oil = to_string(oilsLeft);
-	//sonar = to_string(player->getSonarNum());
+	sonar = to_string(player->getSonarNum());
 
 	/********************************************
 	MAKE TEXT BE AT THE EDGE
@@ -196,3 +196,16 @@ void StudentWorld::mainCreateObjects() {
 		} while (!createObjects<OilBarrels>(localX, localY));
 	}
 }
+
+void StudentWorld::cleanUp() {
+	//erase everything from vector
+	actor_vec.erase(actor_vec.begin(), actor_vec.end());
+
+	for (auto& rowIter : ice_array) {
+		for (auto& colIter : rowIter) {
+			if (!colIter->isAlive())
+				colIter.reset();
+		}
+	}
+}
+
