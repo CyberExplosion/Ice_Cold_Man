@@ -135,7 +135,7 @@ void StudentWorld::populateIce() {
 	*********************************/
 	for (int row = 0; row < ice_array.size(); row++) {
 		for (int col = 0; col < ice_array[row].size(); col++) {
-			if (col < 33 && col > 30 && row > 4 && row < 59) {
+			if (col < 34 && col > 29 && row > 3 && row < 61) {
 				ice_array[row][col] = nullptr;	//Don't add ice in cols and rows between those range
 			}
 			else {
@@ -207,5 +207,8 @@ void StudentWorld::cleanUp() {
 				colIter.reset();
 		}
 	}
+
+	if (player)
+		player.reset();
 }
 
