@@ -1,8 +1,15 @@
-﻿  StudentWorld.cpp
+﻿  Actor.cpp
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(40,469): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(60,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(65,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(114,18): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(201,4): warning C4065: switch statement contains 'default' but no 'case' labels
+  StudentWorld.cpp
 A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(40,469): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
 A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(60,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
 A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(65,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(125,24): warning C4018: '<': signed/unsigned mismatch
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(126,25): warning C4018: '<': signed/unsigned mismatch
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(159,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+  Generating Code...
   IceMan.vcxproj -> A:\Comp Sci\Ice_Cold_Man\Debug\IceMan.exe
