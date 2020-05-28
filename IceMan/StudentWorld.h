@@ -18,6 +18,7 @@ class IceMan;
 class Ice;
 const int COL_NUM = 64,
 ROW_NUM = 60;
+const int DIST_ALLOW_BETW_SPAWN = 6;
 class StudentWorld : public GameWorld
 {
 public:
@@ -115,13 +116,12 @@ bool StudentWorld::createObjects(int x, int y) {
 			Demand a collision response from the intruder
 	Finally put the newly made object into actor containers
 	************************************/
-	std::shared_ptr<T> temp = std::make_shared<T>(this, x, y, GraphObject::Direction::right, 1.0, 2, 1, 9999, 6);	//Collision range of 6 because that's the requirement for a new object to be made
+	std::shared_ptr<T> temp = std::make_shared<T>(this, x, y, GraphObject::Direction::right, 1.0, 2, 1, 9999, DIST_ALLOW_BETW_SPAWN);	//Collision range of 6 because that's the requirement for a new object to be made
 
  	temp->collisionDetection = std::make_unique<CollisionDetection>(temp, temp->getCollisionRange());
 	temp->collisionDetection->behaveBitches();	//Check for collision
 
 	std::vector<std::weak_ptr<Actor>>intruders = std::move(temp->collisionDetection->wp_intruders);
-
 
 		for (auto const& sp_entity : intruders) {
 			std::shared_ptr<Actor>entity = sp_entity.lock();

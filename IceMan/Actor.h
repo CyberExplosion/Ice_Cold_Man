@@ -401,7 +401,7 @@ private:
 	//Functions
 	void doSomething() override;
 public:
-	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4) : Collectable(world, false, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range) {
+	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4) : Collectable(world, true, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range) {
 		existBehavior = std::make_unique<ExistPermanently>();
 	};
 
@@ -414,7 +414,7 @@ private:
 	//Determine if the time for the Temporary gold exist ran out
 	bool tempTimeEnd();
 public:
-	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true) : Collectable(world, false, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range), pickableByPlayer(t_pickable) {
+	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true) : Collectable(world, true, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range), pickableByPlayer(t_pickable) {
 		if(pickableByPlayer)
 			existBehavior = std::make_unique<ExistPermanently>();
 		else {
@@ -484,7 +484,7 @@ public:
 	Boulder(StudentWorld* world, int startX, int startY, Direction dir = down, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 9999, double col_range = 3, double detect_range = 9999) : Hazard(world, worldStatic, true, IID_BOULDER, startX, startY, dir, size, depth, hp, strength, col_range, detect_range){
 		//Not hazard yet when first spawn
 		changeActorType(ActorType::worldStatic);
-		movementBehavior = std::make_unique<FallMovement>(); 
+		movementBehavior = std::make_unique<FallMovement>();
 	}
 };
 
