@@ -104,43 +104,47 @@ std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedIce() {
 	vector<weak_ptr<Actor>> intruders;
 	shared_ptr<Actor>source = wp_source.lock();
 
-	if (source) {
-
-		//Ice array
-		array<array<shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_arr = source->getWorld()->getIceArr();
-
-		//Get only the ice in close proximitys
-		int spotPositiveX = this->range + source->getX() + 1;
-		int spotNegativeX = source->getX() - this->range + 1;
-		int spotPositiveY = this->range + source->getY() + 1;
-		int spotNegativeY = source->getY() - this->range + 1;
-
-		//Prune the distance so it doesn't go out of range
-		for (; spotPositiveX >= COL_NUM; spotPositiveX--);
-		for (; spotNegativeX < 0; spotNegativeX++);
-		for (; spotPositiveY >= ROW_NUM; spotPositiveY--);
-		for (; spotNegativeY < 0; spotNegativeY++);
-
-		//Get the ice in them proximity
-		for (auto i = spotNegativeY; i <= spotPositiveY; i++) {
-			for (auto k = spotNegativeX; k <= spotPositiveX; k++) {
-				intruders.push_back(ice_arr[i][k]);
-			}
-		}
-
-
-		//	for (auto& single : allActors) {
-		//		if (single) {
-		//			if (!single->isAlive() || single == source)	//The intruder and the player is the same actor
-		//				continue;
-		//			int distance = sqrt(pow(source->getCenterX() - single->getCenterX(), 2) + pow(source->getCenterY() - single->getCenterY(), 2));
-		//			int spotZone = this->range + single->getCollisionRange();
-		//			if (distance <= spotZone)
-		//				intruders.push_back(single);
-		//		}
-		//	}
-		//}
+	if (source && source->isAlive()) {
+		intruders = std::move(source->getWorld()->iceInProxWithActor(source));
 	}
+
+	//if (source) {
+
+	//	//Ice array
+	//	//array<array<shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_arr = std::move(source->getWorld()->getIceArr());
+
+	//	//Get only the ice in close proximitys
+	//	int spotPositiveX = this->range + source->getX() + 1;
+	//	int spotNegativeX = source->getX() - this->range + 1;
+	//	int spotPositiveY = this->range + source->getY() + 1;
+	//	int spotNegativeY = source->getY() - this->range + 1;
+
+	//	//Prune the distance so it doesn't go out of range
+	//	for (; spotPositiveX >= COL_NUM; spotPositiveX--);
+	//	for (; spotNegativeX < 0; spotNegativeX++);
+	//	for (; spotPositiveY >= ROW_NUM; spotPositiveY--);
+	//	for (; spotNegativeY < 0; spotNegativeY++);
+
+	//	//Get the ice in them proximity
+	//	for (auto i = spotNegativeY; i <= spotPositiveY; i++) {
+	//		for (auto k = spotNegativeX; k <= spotPositiveX; k++) {
+	//			intruders.push_back(source->getWorld()->getIceArr()[i][k]);
+	//		}
+	//	}
+
+
+	//	//	for (auto& single : allActors) {
+	//	//		if (single) {
+	//	//			if (!single->isAlive() || single == source)	//The intruder and the player is the same actor
+	//	//				continue;
+	//	//			int distance = sqrt(pow(source->getCenterX() - single->getCenterX(), 2) + pow(source->getCenterY() - single->getCenterY(), 2));
+	//	//			int spotZone = this->range + single->getCollisionRange();
+	//	//			if (distance <= spotZone)
+	//	//				intruders.push_back(single);
+	//	//		}
+	//	//	}
+	//	//}
+	//}
 	return intruders;
 }
 
@@ -523,18 +527,18 @@ void Ice::doSomething() {
 	Then do the behaviors
 	*********************************/
 	if (isAlive()) {
-		shared_ptr<Actor> self = shared_from_this();
-		//Create behaviors
-		if (!displayBehavior)
-			displayBehavior = make_unique<ExistPermanently>();
+		//shared_ptr<Actor> self = shared_from_this();
+		////Create behaviors
+		//if (!displayBehavior)
+		//	displayBehavior = make_unique<ExistPermanently>();
 
-		//Use behaviors
-		displayBehavior->showYourself();
+		////Use behaviors
+		//displayBehavior->showYourself();
 		
 		if(collisionResult)
 			collisionResult->response();
 
-		self.reset();
+		//self.reset();
 	}
 	else
 		resetAllBehaviors();

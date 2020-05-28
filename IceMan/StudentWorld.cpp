@@ -4,6 +4,8 @@
 #include <time.h>
 #include <stdlib.h>
 #include <type_traits>
+#include <iomanip>
+#include <sstream>
 
 #include <iostream>
 using namespace std;
@@ -46,20 +48,31 @@ int StudentWorld::move() {
 int StudentWorld::updateStatus() {
 	string current_status;
 	string lvl, lives, health, wtr, gld, oil, sonar, score;
+	ostringstream stream;
 
 	lvl = to_string(getLevel()); 
 	score = to_string(getScore()); 
 	lives = to_string(getLives());
-	health = to_string(player->getHealth()); 
+	health = to_string(player->getHealth() * 10); 
 	wtr = to_string(player->getSquirtNum());
 	gld = to_string(player->getGoldNum());
 	//oil = to_string(oilsLeft);
 	sonar = to_string(player->getSonarNum());
 
+	//Fixed a little bit, following the pdf requirements
 	/********************************************
 	MAKE TEXT BE AT THE EDGE
 	*******************************************/
-	current_status += "Lvl:  " + lvl + " Lives:  " + lives + " Hlth:  " + health + " Wtr:  " + wtr + " Gld:  " + gld + " Oil Left:  " + oil + " Sonar:  " + sonar + " Score:  " + score;
+	stream << "Lvl: " << setw(2) << lvl << ' ' ;
+	stream << "Lives: " << lives << ' ';
+	stream << "Hlth: " << setw(3) << health << "% ";
+	stream << "Wtr: " << setw(2) << wtr << ' ';
+	stream << "Gold: " << setw(2) << gld << ' ';
+	stream << "Oil Left: " << setw(2) << oil << ' ';
+	stream << "Sonar :" << setw(2) << sonar << ' ';
+	stream << "Scr: " << setw(6) << setfill('0') << score;
+	current_status = stream.str();
+	//current_status += "Lvl:" + lvl + " Lives:  " + lives + " Hlth:  " + health + " Wtr:  " + wtr + " Gld:  " + gld + " Oil Left:  " + oil + " Sonar:  " + sonar + " Score:  " + score;
 	setGameStatText(current_status);
 
 	//Return for testing reason, THIS IS NOT CORRECT
@@ -84,14 +97,24 @@ int StudentWorld::doThings() {
 				//cout << actors->getHealth() << "   ";
 		}
 
-		if (ice_array.size() > 0) {
-			for (auto& iterRow : ice_array) {
-				for (auto& iterCol : iterRow) {
-					if (iterCol)
-						iterCol->doSomething();
-				}
-			}
+		//Just the ice within the proximity of the player are allow to do any action
+		vector<weak_ptr<Actor>> iceTarget = iceInProxWithActor(player);
+		for (auto& val : iceTarget) {
+			shared_ptr<Actor>temp = val.lock();
+			if (temp)
+				temp->doSomething();
 		}
+
+		////Big performance hit right here
+
+		//if (ice_array.size() > 0) {
+		//	for (auto& iterRow : ice_array) {
+		//		for (auto& iterCol : iterRow) {
+		//			if (iterCol)
+		//				iterCol->doSomething();
+		//		}
+		//	}
+		//}
 
 		if (oilsLeft == 0)
 			return GWSTATUS_FINISHED_LEVEL; // Or if the player has found all the barrels of oil, return this status.
@@ -110,6 +133,7 @@ void StudentWorld::deleteFinishedObjects() {
 		return false;
 		}), end(actor_vec));
 	
+
 	for (auto& rowIter : ice_array) {	//Remove the ice actor if not alive
 		for (auto& colIter : rowIter) {
 			if (colIter && !colIter->isAlive()) {
@@ -161,7 +185,9 @@ void StudentWorld::mainCreateObjects() {
 		Move on to spawn the next actor
 	*****************************/
 	int currentLV = getLevel();
-	int numBoulder = min(currentLV / 2 + 2, 9);
+	//int numBoulder = min(currentLV / 2 + 2, 9);
+	//Test
+	int numBoulder = 1;
 	int numGold = max(5 - currentLV / 2, 2);
 	int numOil = min(2 + currentLV, 21);
 
@@ -175,7 +201,8 @@ void StudentWorld::mainCreateObjects() {
 			localY = rand() % 33 + 20; // 20 - 56
 			if ((localX >= 26 && localX <= 29) || (localY >= 0 || localY <= 55))
 				continue;
-		} while (!createObjects<Boulder>(localX, localY));	//If object cannot create at the location then try again
+			//Testing, remember to change the boulder location back to localX and Y
+		} while (!createObjects<Boulder>(46, 46));	//If object cannot create at the location then try again
 	}
 
 	for (; numGold > 0; numGold--) {
@@ -197,14 +224,72 @@ void StudentWorld::mainCreateObjects() {
 	}
 }
 
+std::vector<std::weak_ptr<Actor>> StudentWorld::iceInProxWithActor(std::shared_ptr<Actor> actor) {
+	/*****************************
+		Check if the player is in certain radius of the actor
+		Check in all direction, that means using a circle and Euclidean distance math, the detection range for the actor and the actor
+		Use Euclidean to find out the distance from the player and the actor
+		sum of detection range of the player and the actor is the "spot zone"
+		If the distance is smaller or equal than the "spot zone"
+			|
+			Then return the intruder, the player(intruder) is "sensed"
+		If it's not then return nullptr
+	*****************************/
+	/*SINCE THIS IS A SQUARE WE HAVE TO IMPLEMENT IT DIFFERENTLY*/
+	vector<weak_ptr<Actor>> intruders;
+
+	if (!ice_array.empty() && actor && actor->isAlive()) {
+		//Ice array
+		//array<array<shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_arr = std::move(source->getWorld()->getIceArr());
+		
+		//Player collision range is the size of the player
+		int playerColRange = actor->getSize();
+		int localX = actor->getCenterX();
+		int localY = actor->getCenterY();
+
+		//Get only the ice in close proximity
+		int spotPositiveX = playerColRange + localX + 1;
+		int spotNegativeX = localX - playerColRange;
+		int spotPositiveY = playerColRange + localY + 1;
+		int spotNegativeY = localY - playerColRange;
+
+		//Prune the distance so it doesn't go out of range
+		for (; spotPositiveX >= COL_NUM; spotPositiveX--);
+		for (; spotNegativeX < 0; spotNegativeX++);
+		for (; spotPositiveY >= ROW_NUM; spotPositiveY--);
+		for (; spotNegativeY < 0; spotNegativeY++);
+
+		//Get the ice in them proximity
+		for (auto i = spotNegativeY; i <= spotPositiveY; i++) {
+			for (auto k = spotNegativeX; k <= spotPositiveX; k++) {
+				intruders.push_back(ice_array[i][k]);
+			}
+		}
+
+
+		//	for (auto& single : allActors) {
+		//		if (single) {
+		//			if (!single->isAlive() || single == source)	//The intruder and the player is the same actor
+		//				continue;
+		//			int distance = sqrt(pow(source->getCenterX() - single->getCenterX(), 2) + pow(source->getCenterY() - single->getCenterY(), 2));
+		//			int spotZone = this->range + single->getCollisionRange();
+		//			if (distance <= spotZone)
+		//				intruders.push_back(single);
+		//		}
+		//	}
+		//}
+	}
+	return intruders;
+}
+
 void StudentWorld::cleanUp() {
 	//erase everything from vector
 	actor_vec.erase(actor_vec.begin(), actor_vec.end());
 
 	for (auto& rowIter : ice_array) {
 		for (auto& colIter : rowIter) {
-			if (!colIter->isAlive())
-				colIter.reset();
+			colIter->resetAllBehaviors();
+			colIter.reset();
 		}
 	}
 
