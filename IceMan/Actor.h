@@ -18,6 +18,7 @@ class GoldNuggets;
 class Squirt;
 class Boulder;
 class StudentWorld;
+class Ice;
 
 
 class Actor : public GraphObject, public std::enable_shared_from_this<Actor> {
@@ -285,7 +286,6 @@ private:
 	//This functions determine the result of collision between 2 actors. The source will have <Block> or <Destroy> behavior
 	//depend on what it collides into
 	void collide(std::weak_ptr<Actor> source, std::weak_ptr<Actor> receiver);
-	bool collideIceHappen();
 	bool collisionHappen();
 public:
 	CollisionDetection(std::weak_ptr<Actor> t_source, int t_range) : RadarLikeDetection(t_source, t_range){}
@@ -309,8 +309,6 @@ private:
 	std::vector<std::shared_ptr<Squirt>>squirtVec;
 	//This is bad and can cause problem later on because it has some kind of circular dependent. Too bad
 	//This function find the player actor type in the whole list of actors
-	//<NEVER CALLED>
-	std::shared_ptr<Actor>findPlayer();
 public:
 	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 999, 2, 0, SOUND_PLAYER_ANNOYED) {};
 	void doSomething() override;
@@ -475,7 +473,7 @@ public:
 	}
 };
 
-class Ice : public Inanimated{
+class Ice : public Inanimated {
 private:
 	
 public:
