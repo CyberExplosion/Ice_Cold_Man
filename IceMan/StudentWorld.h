@@ -80,7 +80,7 @@ public:
 	}
 
 	//Functions for interfaces
-	std::vector<std::weak_ptr<Actor>> iceInProxWithPlayer();
+	std::vector<std::weak_ptr<Actor>> iceInProxWithActor(std::shared_ptr<Actor> actor);
 
 private:
 	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.

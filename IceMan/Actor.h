@@ -57,12 +57,12 @@ public:
 	virtual void resetAllBehaviors();
 
 	int getCenterX() {
-		centerX = (size * 4) / 2 + getX();
+		centerX = (size * 4) / 2 + getX() - 1;
 		return centerX;
 	}
 
 	int getCenterY() {
-		centerY = (size * 4) / 2 + getY();
+		centerY = (size * 4) / 2 + getY() - 1;
 		return centerY;
 	}
 

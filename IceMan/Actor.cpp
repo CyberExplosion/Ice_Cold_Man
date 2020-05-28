@@ -105,7 +105,7 @@ std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedIce() {
 	shared_ptr<Actor>source = wp_source.lock();
 
 	if (source && source->isAlive()) {
-		intruders = std::move(source->getWorld()->iceInProxWithPlayer());
+		intruders = std::move(source->getWorld()->iceInProxWithActor(source));
 	}
 
 	//if (source) {

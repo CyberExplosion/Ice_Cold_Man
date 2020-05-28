@@ -97,8 +97,8 @@ int StudentWorld::doThings() {
 				//cout << actors->getHealth() << "   ";
 		}
 
-		//Let's try just making the ice within proximity
-		vector<weak_ptr<Actor>> iceTarget = iceInProxWithPlayer();
+		//Just the ice within the proximity of the player are allow to do any action
+		vector<weak_ptr<Actor>> iceTarget = iceInProxWithActor(player);
 		for (auto& val : iceTarget) {
 			shared_ptr<Actor>temp = val.lock();
 			if (temp)
@@ -185,7 +185,9 @@ void StudentWorld::mainCreateObjects() {
 		Move on to spawn the next actor
 	*****************************/
 	int currentLV = getLevel();
-	int numBoulder = min(currentLV / 2 + 2, 9);
+	//int numBoulder = min(currentLV / 2 + 2, 9);
+	//Test
+	int numBoulder = 1;
 	int numGold = max(5 - currentLV / 2, 2);
 	int numOil = min(2 + currentLV, 21);
 
@@ -199,7 +201,8 @@ void StudentWorld::mainCreateObjects() {
 			localY = rand() % 33 + 20; // 20 - 56
 			if ((localX >= 26 && localX <= 29) || (localY >= 0 || localY <= 55))
 				continue;
-		} while (!createObjects<Boulder>(localX, localY));	//If object cannot create at the location then try again
+			//Testing, remember to change the boulder location back to localX and Y
+		} while (!createObjects<Boulder>(46, 46));	//If object cannot create at the location then try again
 	}
 
 	for (; numGold > 0; numGold--) {
@@ -221,7 +224,7 @@ void StudentWorld::mainCreateObjects() {
 	}
 }
 
-std::vector<std::weak_ptr<Actor>> StudentWorld::iceInProxWithPlayer() {
+std::vector<std::weak_ptr<Actor>> StudentWorld::iceInProxWithActor(std::shared_ptr<Actor> actor) {
 	/*****************************
 		Check if the player is in certain radius of the actor
 		Check in all direction, that means using a circle and Euclidean distance math, the detection range for the actor and the actor
@@ -235,19 +238,20 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::iceInProxWithPlayer() {
 	/*SINCE THIS IS A SQUARE WE HAVE TO IMPLEMENT IT DIFFERENTLY*/
 	vector<weak_ptr<Actor>> intruders;
 
-	if (!ice_array.empty() && player && player->isAlive()) {
+	if (!ice_array.empty() && actor && actor->isAlive()) {
 		//Ice array
 		//array<array<shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_arr = std::move(source->getWorld()->getIceArr());
-
-		int playerColRange = player->getCollisionRange();
-		int localX = player->getX();
-		int localY = player->getY();
+		
+		//Player collision range is the size of the player
+		int playerColRange = actor->getSize();
+		int localX = actor->getCenterX();
+		int localY = actor->getCenterY();
 
 		//Get only the ice in close proximity
 		int spotPositiveX = playerColRange + localX + 1;
-		int spotNegativeX = localX - playerColRange + 1;
+		int spotNegativeX = localX - playerColRange;
 		int spotPositiveY = playerColRange + localY + 1;
-		int spotNegativeY = localY - playerColRange + 1;
+		int spotNegativeY = localY - playerColRange;
 
 		//Prune the distance so it doesn't go out of range
 		for (; spotPositiveX >= COL_NUM; spotPositiveX--);
