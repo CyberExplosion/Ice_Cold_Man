@@ -97,15 +97,24 @@ int StudentWorld::doThings() {
 				//cout << actors->getHealth() << "   ";
 		}
 
-		//Big performance hit right here
-		if (ice_array.size() > 0) {
-			for (auto& iterRow : ice_array) {
-				for (auto& iterCol : iterRow) {
-					if (iterCol)
-						iterCol->doSomething();
-				}
-			}
+		//Let's try just making the ice within proximity
+		vector<weak_ptr<Actor>> iceTarget = iceInProxWithPlayer();
+		for (auto& val : iceTarget) {
+			shared_ptr<Actor>temp = val.lock();
+			if (temp)
+				temp->doSomething();
 		}
+
+		////Big performance hit right here
+
+		//if (ice_array.size() > 0) {
+		//	for (auto& iterRow : ice_array) {
+		//		for (auto& iterCol : iterRow) {
+		//			if (iterCol)
+		//				iterCol->doSomething();
+		//		}
+		//	}
+		//}
 
 		if (oilsLeft == 0)
 			return GWSTATUS_FINISHED_LEVEL; // Or if the player has found all the barrels of oil, return this status.
