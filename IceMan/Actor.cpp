@@ -72,8 +72,8 @@ void IceMan::doSomething() {
 	}
 	if (!displayBehavior)
 		displayBehavior = make_unique<ExistPermanently>();
-	if (!collisionDetection)
-		collisionDetection = make_unique<CollisionDetection>(mySelf, this->getCollisionRange());
+	
+	collisionDetection = make_unique<CollisionDetection>(mySelf, this->getCollisionRange());
 
 	displayBehavior->showYourself();
 	collisionDetection->behaveBitches();
@@ -88,7 +88,7 @@ void Protesters::doSomething() {
 }
 
 
-std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedActor() {
+std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedIce() {
 	/*****************************
 	Check if the player is in certain radius of the actor
 	Check in all direction, that means using a circle and Euclidean distance math, the detection range for the actor and the actor
@@ -104,34 +104,71 @@ std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedActor() {
 	vector<weak_ptr<Actor>> intruders;
 	shared_ptr<Actor>source = wp_source.lock();
 
-	if (source) {
-		auto allActors = std::move((source->getWorld()->getAllActors()));
-
-		for (auto& single : allActors) {
-			if (single) {
-				if (!single->isAlive() || single == source)	//The intruder and the player is the same actor
-					continue;
-				int distance = sqrt(pow(source->getCenterX() - single->getCenterX(), 2) + pow(source->getCenterY() - single->getCenterY(), 2));
-				int spotZone = this->range + single->getCollisionRange();
-				if (distance <= spotZone)
-					intruders.push_back(single);
-			}
-		}
+	if (source && source->isAlive()) {
+		intruders = std::move(source->getWorld()->iceInProxWithActor(source));
 	}
+
+	//if (source) {
+
+	//	//Ice array
+	//	//array<array<shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_arr = std::move(source->getWorld()->getIceArr());
+
+	//	//Get only the ice in close proximitys
+	//	int spotPositiveX = this->range + source->getX() + 1;
+	//	int spotNegativeX = source->getX() - this->range + 1;
+	//	int spotPositiveY = this->range + source->getY() + 1;
+	//	int spotNegativeY = source->getY() - this->range + 1;
+
+	//	//Prune the distance so it doesn't go out of range
+	//	for (; spotPositiveX >= COL_NUM; spotPositiveX--);
+	//	for (; spotNegativeX < 0; spotNegativeX++);
+	//	for (; spotPositiveY >= ROW_NUM; spotPositiveY--);
+	//	for (; spotNegativeY < 0; spotNegativeY++);
+
+	//	//Get the ice in them proximity
+	//	for (auto i = spotNegativeY; i <= spotPositiveY; i++) {
+	//		for (auto k = spotNegativeX; k <= spotPositiveX; k++) {
+	//			intruders.push_back(source->getWorld()->getIceArr()[i][k]);
+	//		}
+	//	}
+
+
+	//	//	for (auto& single : allActors) {
+	//	//		if (single) {
+	//	//			if (!single->isAlive() || single == source)	//The intruder and the player is the same actor
+	//	//				continue;
+	//	//			int distance = sqrt(pow(source->getCenterX() - single->getCenterX(), 2) + pow(source->getCenterY() - single->getCenterY(), 2));
+	//	//			int spotZone = this->range + single->getCollisionRange();
+	//	//			if (distance <= spotZone)
+	//	//				intruders.push_back(single);
+	//	//		}
+	//	//	}
+	//	//}
+	//}
 	return intruders;
 }
 
 void RadarLikeDetection::behaveBitches() {
-	sensedActor();
+	sensedIce();
 }
 
 
 void CollisionDetection::behaveBitches() {
 	shared_ptr<Actor>source = wp_source.lock();
+	//shared_ptr<Actor> dummy;
+	//if (!wp_intruders.empty())
+	//	dummy = wp_intruders[0].lock();	//See if this is the actor containers or the ice containers
+
 	if (source) {
-		if (collisionHappen()) {	//Make the Actor produce a result because of collision
-			source->collisionResult->response();
-		}
+		//switch (dummy->type) {
+		////case Actor::ice:
+		////	if (collideIceHappen()) 	//Make the Actor produce a result because of collision
+		////		source->collisionResult->response();
+		////	break;
+		//default:
+			if (collisionHappen())
+				source->collisionResult->response();
+
 	}
 }
 
@@ -158,23 +195,72 @@ void LineOfSightDetection::behaveBitches() {
 	seePlayer();
 }
 
-
+//ActorType { player, npc, worldStatic, hazard, ice, dropByPlayer, collect };
+//Affect the both side of the collision
 void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<Actor> wp_receiver) {
 	shared_ptr<Actor> source = wp_source.lock();
 	shared_ptr<Actor> receiver = wp_receiver.lock();
 
 	if ((source && receiver) && (source->isVisible() && receiver->isVisible()) && source != receiver) {	//Only enable collision for things that are shown
-		if (source->collisionResult)
-			source->collisionResult.reset();
-		if (source->type == Actor::player) {
+		//if (source->collisionResult)
+		//	source->collisionResult.reset();
+		//if (receiver->collisionResult)
+		//	source->collisionResult.reset();
+
+		switch (source->type) {
+		case Actor::player:
+			switch (receiver->type) {
+			case Actor::npc:
+				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
+				break;
+			case Actor::worldStatic:
+				source->collisionResult = make_unique<Block>(source);
+				break;
+			case Actor::hazard:
+				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
+				break;
+			case Actor::ice:
+				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
+				break;
+			case Actor::collect:
+				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
+				break;
+			default:
+				break;
+			}
+			break;
+		case Actor::npc:
+			switch (receiver->type) {
+			case Actor::player:
+			case Actor::ice:
+			case Actor::worldStatic:
+				source->collisionResult = make_unique<Block>(source);
+				break;
+			case Actor::hazard:
+				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
+			case Actor::dropByPlayer:
+				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+
+
+
+		/*if (source->type == Actor::player) {
 			switch (receiver->type) {
 			case Actor::worldStatic:
 				source->collisionResult = make_unique<Block>(source);
 				break;
 			case Actor::npc:
+				receiver->collisionResult = make_unique<Block>(receiver);
 			case Actor::hazard:
 				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
 				break;
+			
 			default:
 				break;
 			}
@@ -241,15 +327,39 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 			default:
 				break;
 			}
-		}
+		}*/
 	}
 }
 
+///*Duplicate with collision Happen, will fix later*/
+//bool CollisionDetection::collideIceHappen() {
+//	shared_ptr<Actor> source = wp_source.lock();
+//	shared_ptr<Actor> perp;
+//	if (source) {
+//		if (!wp_intruders.empty()) {
+//			for (const auto& wp_perp : wp_intruders) {
+//				perp = wp_perp.lock();
+//				if (perp && perp->type == Actor::ice) {
+//					if (source->isAlive() && perp->isAlive()) {
+//						//Produce a collision result right here
+//						collide(source, perp);
+//					}
+//				}
+//			}
+//			if (source->collisionResult)
+//				return true;
+//		}
+//	}
+//	return false;
+//}
+
+
+//NOT WORKING IN ITS CURRENT STATE DUE TO FOCUS ON MAKING ICE COLLISION
 
 //Collision is just a radar like detection but only cover a small radius
 bool CollisionDetection::collisionHappen() {
 /*****************************
-See if you can "sensed" the actor. **This use an entirely different detection range than the "radar" detection range so it's ok**
+**This use an entirely different detection range than the "radar" detection range so it's ok**
 Then a collision happen and you should produce a collision result
 *****************************/
 	shared_ptr<Actor> source = wp_source.lock();
@@ -265,7 +375,7 @@ Then a collision happen and you should produce a collision result
 					}
 				}
 			}
-			if (source->collisionResult)
+			if(source->collisionResult)
 				return true;
 		}
 	}
@@ -417,19 +527,18 @@ void Ice::doSomething() {
 	Then do the behaviors
 	*********************************/
 	if (isAlive()) {
-		shared_ptr<Actor> self = shared_from_this();
-		//Create behaviors
-		if (!displayBehavior)
-			displayBehavior = make_unique<ExistPermanently>();
-		if (!collisionDetection)
-			collisionDetection.reset();
-		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
+		//shared_ptr<Actor> self = shared_from_this();
+		////Create behaviors
+		//if (!displayBehavior)
+		//	displayBehavior = make_unique<ExistPermanently>();
 
-		//Use behaviors
-		displayBehavior->showYourself();
-		collisionDetection->behaveBitches();
+		////Use behaviors
+		//displayBehavior->showYourself();
+		
+		if(collisionResult)
+			collisionResult->response();
 
-		self.reset();
+		//self.reset();
 	}
 	else
 		resetAllBehaviors();
@@ -468,26 +577,42 @@ void ControlledMovement::moveThatAss() {
 			case KEY_PRESS_DOWN:
 				if (spPawn->getDirection() != GraphObject::Direction::down)
 					spPawn->setDirection(GraphObject::Direction::down);
-				else
-					spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
+				else {
+					if (spPawn->getY() - 1 < 0)
+						break;
+					else
+						spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
+				}
 				break;
 			case KEY_PRESS_UP:
 				if (spPawn->getDirection() != GraphObject::Direction::up)
 					spPawn->setDirection(GraphObject::Direction::up);
-				else
-					spPawn->moveTo(spPawn->getX(), spPawn->getY() + 1);
+				else {
+					if (spPawn->getY() + 1 > 60)
+						break;
+					else
+						spPawn->moveTo(spPawn->getX(), spPawn->getY() + 1);
+				}
 				break;
 			case KEY_PRESS_RIGHT:
 				if (spPawn->getDirection() != GraphObject::Direction::right)
 					spPawn->setDirection(GraphObject::Direction::right);
-				else
-					spPawn->moveTo(spPawn->getX() + 1, spPawn->getY());
+				else {
+					if (spPawn->getX() + 1 > 60)
+						break;
+					else
+						spPawn->moveTo(spPawn->getX() + 1, spPawn->getY());
+				}
 				break;
 			case KEY_PRESS_LEFT:
 				if (spPawn->getDirection() != GraphObject::Direction::left)
 					spPawn->setDirection(GraphObject::Direction::left);
-				else
-					spPawn->moveTo(spPawn->getX() - 1, spPawn->getY());
+				else {
+					if (spPawn->getX() - 1 < 0)
+						break;
+					else
+						spPawn->moveTo(spPawn->getX() - 1, spPawn->getY());
+        }
 				break;
 			default:
 				break;

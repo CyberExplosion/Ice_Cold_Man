@@ -16,7 +16,8 @@
 class Actor;
 class IceMan;
 class Ice;
-
+const int COL_NUM = 64,
+ROW_NUM = 60;
 class StudentWorld : public GameWorld
 {
 public:
@@ -24,8 +25,8 @@ public:
 		: GameWorld(assetDir) {
 	};
 
-	//Your init() method is responsible for creating the current level갽s oil field and populating
-	//	it with Ice, Boulders, Barrels of Oil, and Gold Nuggets(we갽ll show you how below),
+	//Your init() method is responsible for creating the current level혖fs oil field and populating
+	//	it with Ice, Boulders, Barrels of Oil, and Gold Nuggets(we혖fll show you how below),
 	//	and constructing a virtual representation of the current level in your StudentWorld class,
 	//	using one or more data structures that you come up with.This function must return the
 	//	value GWSTATUS_CONTINUE_GAME(defined in GameConstants.h).
@@ -37,24 +38,24 @@ public:
 	{
 		populateIce();
 		createPlayer();
-		//mainCreateObjects();
+		mainCreateObjects();
 		return GWSTATUS_CONTINUE_GAME;
 	}
 
 
 	// Each time your move() method is called, it must run a single tick
-	//of the game.This means that it is responsible for asking each of the game걌 actors
+	//of the game.This means that it is responsible for asking each of the game혖s actors
 	//to try to do
 	//	something: e.g., move themselves and/or perform their specified behavior. Finally, this
 	//	method is responsible for disposing of(i.e., deleting) actors(e.g., a Squirt from the
-	//		Iceman갽s squirt gun that has run its course, a Regular Protester who has left the oil field,
+	//		Iceman혖fs squirt gun that has run its course, a Regular Protester who has left the oil field,
 	//		a Boulder that has fallen and crashed into Ice below, etc.) that need to disappear during a given tick
 	virtual int move();
 		//For example, if a Boulder has completed its fall and disintegrated in the Ice
-		//	below, then its state should be set to 갺ead, 갿and the after all of the actors in the game
+		//	below, then its state should be set to 혖dead, 혖hand the after all of the actors in the game
 		//	get a chance to do something during the tick, the move() method should remove that
 		//	Boulder from the game world(by deleting its object and removing any reference to the
-		//		object from the StudentWorld갽s data structures)
+		//		object from the StudentWorld혖fs data structures)
 
 
 		// This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
@@ -68,16 +69,21 @@ public:
 	//	freeing all actors that are currently active in the game. This includes all
 	//	actors created during either the init() method or introduced during subsequent game ticks
 	//	that have not yet been removed from the game.
-	virtual void cleanUp()
-	{
-	}
+	virtual void cleanUp();
 
 	std::vector<std::shared_ptr<Actor>> StudentWorld::getAllActors();
 	std::shared_ptr<IceMan> getPlayer() {
-		return std::shared_ptr<IceMan>(player);
+		return player;
 	}
+	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> getIceArr() {
+		return ice_array;
+	}
+
+	//Functions for interfaces
+	std::vector<std::weak_ptr<Actor>> iceInProxWithActor(std::shared_ptr<Actor> actor);
+
 private:
-	std::array<std::array<std::shared_ptr<Ice>, 30>, 30> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
+	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
 	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
 	std::shared_ptr<IceMan> player;
 	int oilsLeft;
@@ -112,7 +118,9 @@ bool StudentWorld::createObjects(int x, int y) {
 
  	temp->collisionDetection = std::make_unique<CollisionDetection>(temp, temp->getCollisionRange());
 	temp->collisionDetection->behaveBitches();	//Check for collision
-	std::vector<std::weak_ptr<Actor>>intruders = std::move(temp->collisionDetection->getIntruders());
+
+	std::vector<std::weak_ptr<Actor>>intruders = std::move(temp->collisionDetection->wp_intruders);
+
 
 		for (auto const& sp_entity : intruders) {
 			std::shared_ptr<Actor>entity = sp_entity.lock();
@@ -131,7 +139,9 @@ bool StudentWorld::createObjects(int x, int y) {
 		object->collisionDetection = std::make_unique<CollisionDetection>(object, object->getCollisionRange());
 		object->collisionDetection->behaveBitches();	//See if the object collide with any ice
 
-		intruders = std::move(object->collisionDetection->getIntruders());	//Get the ice
+
+		intruders = std::move(object->collisionDetection->wp_intruders);	//Get the ice
+
 		for (auto& wp_entity : intruders) {
 			//since i ran out of patient, imma going to do what i called a pro gamer moves
 			shared_ptr<Actor>entity = wp_entity.lock();
