@@ -186,9 +186,9 @@ void StudentWorld::mainCreateObjects() {
 		Move on to spawn the next actor
 	*****************************/
 	int currentLV = getLevel();
-	//int numBoulder = min(currentLV / 2 + 2, 9);
-	//Test
-	int numBoulder = 1;
+	int numBoulder = min(currentLV / 2 + 2, 9);
+	////Test
+	//int numBoulder = 1;
 	int numGold = max(5 - currentLV / 2, 2);
 	int numOil = min(2 + currentLV, 21);
 
@@ -198,9 +198,9 @@ void StudentWorld::mainCreateObjects() {
 
 	for (; numBoulder > 0; numBoulder--) {
 		do {
-			localX = rand() % 57;	// 0 - 60
-			localY = rand() % 33 + 20; // 20 - 56
-			if ((localX >= 26 && localX <= 29) || (localY >= 0 || localY <= 55))
+			localX = rand() % 61;	// 0 - 60
+			localY = rand() % 37 + 20; // 20 - 56
+			if ((localX > 29 && localX < 34) && (localY > 3 && localY < 61))
 				continue;
 			//Testing, remember to change the boulder location back to localX and Y
 			//33 60 for testing collision with boulder
@@ -209,17 +209,17 @@ void StudentWorld::mainCreateObjects() {
 
 	for (; numGold > 0; numGold--) {
 		do {
-			localX = rand() % 57;
-			localY = rand() % 53;	// 0 - 56
-			if ((localX >= 26 && localX <= 29) || (localY >= 0 || localY <= 55))
+			localX = rand() % 61;
+			localY = rand() % 57;	// 0 - 56
+			if ((localX > 29 && localX < 34) && (localY > 0 && localY < 61))
 				continue;
 		} while (!createObjects<GoldNuggets>(localX, localY));
 	}
 
 	for (; numOil > 0; numOil--) {
 		do {
-			localX = rand() % 57;
-			localY = rand() % 53;
+			localX = rand() % 61;
+			localY = rand() % 57;
 			if ((localX >= 26 && localX <= 29) || (localY >= 0 || localY <= 55))
 				continue;
 		} while (!createObjects<OilBarrels>(localX, localY));
@@ -289,19 +289,19 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_
 	vector<weak_ptr<Actor>> intruders;
 	
 	if (!actor_vec.empty() && actor && actor->isAlive()) {
-		//Actor collision range is the size of the actor
+		//Player collision range is actually the size of the its' own
 		int colRange = actor->getSize();
 		int localX = actor->getCenterX();
 		int localY = actor->getCenterY();
 
-		int spotPositiveX = colRange + localX;
+		int spotPositiveX = colRange + localX + 1;
 		int spotNegativeX = localX - colRange;
-		int spotPositiveY = colRange + localY;
+		int spotPositiveY = colRange + localY + 1;
 		int spotNegativeY = localY - colRange;
 
 		for (auto& each : actor_vec) {
 			//For actor, we use collision Range instead of their size
-			int actRange = each->getSize();
+			int actRange = each->getCollisionRange();
 			int actX = each->getCenterX();
 			int actY = each->getCenterY();
 			int distance = sqrt(pow(localX - actX, 2) + pow(localY - actY, 2));	//Euclidean distance

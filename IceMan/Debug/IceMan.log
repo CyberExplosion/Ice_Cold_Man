@@ -17,7 +17,6 @@ A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(162,25): warning C4018: '<': si
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(196,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(248,22): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(293,16): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(304,17): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(307,17): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
   Generating Code...
   IceMan.vcxproj -> A:\Comp Sci\Ice_Cold_Man\Debug\IceMan.exe
