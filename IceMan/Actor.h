@@ -176,9 +176,14 @@ public:
 class Block : public IActorResponse {
 private:
 	std::weak_ptr<Actor>wp_target;
+	int targetFacing;
 public:
 	void resetBehavior() override;
-	Block(std::weak_ptr<Actor> t_target) : wp_target(wp_target) {}
+	Block(std::weak_ptr<Actor> t_target) : wp_target(t_target){
+		std::shared_ptr<Actor>temp = wp_target.lock();
+		if (temp)
+			targetFacing = temp->getDirection();
+	}
 	//Object will be force to stand still
 	void response() override;
 };
@@ -270,10 +275,20 @@ class RadarLikeDetection : public IDetectionBehavior {
 protected:
 	int range;
 	std::vector<std::weak_ptr<Actor>> sensedIce();
+	std::vector<std::weak_ptr<Actor>> sensedOthers();
 public:
 	RadarLikeDetection(std::weak_ptr<Actor> t_source, int t_range) : IDetectionBehavior(t_source) {
 		range = t_range;
-		wp_intruders = std::move(sensedIce());
+		std::shared_ptr<Actor> temp = t_source.lock();
+		if (temp) {
+			if (temp->type == Actor::ActorType::player || temp->type == Actor::ActorType::worldStatic || temp->type == Actor::ActorType::collect) {	//Only these are allow to interact with the ice AND others
+				wp_intruders = std::move(sensedIce());
+				auto temp = std::move(sensedOthers());	
+				wp_intruders.insert(end(wp_intruders), begin(temp), end(temp));	//Concatenate the vectors cause we have more intruders
+			}
+			else
+				wp_intruders = std::move(sensedOthers());
+		}
 	};
 	int getRange() {
 		return range;

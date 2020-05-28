@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <iomanip>
 #include <sstream>
+#include <cmath>
 
 #include <iostream>
 using namespace std;
@@ -98,7 +99,7 @@ int StudentWorld::doThings() {
 		}
 
 		//Just the ice within the proximity of the player are allow to do any action
-		vector<weak_ptr<Actor>> iceTarget = iceInProxWithActor(player);
+		vector<weak_ptr<Actor>> iceTarget = iceCollideWithActor(player);
 		for (auto& val : iceTarget) {
 			shared_ptr<Actor>temp = val.lock();
 			if (temp)
@@ -171,7 +172,7 @@ void StudentWorld::populateIce() {
 
 void StudentWorld::createPlayer() {
 	player = make_shared<IceMan>(this);
-	actor_vec.push_back(player);
+	//actor_vec.push_back(player);
 }
 
 void StudentWorld::mainCreateObjects() {
@@ -202,7 +203,8 @@ void StudentWorld::mainCreateObjects() {
 			if ((localX >= 26 && localX <= 29) || (localY >= 0 || localY <= 55))
 				continue;
 			//Testing, remember to change the boulder location back to localX and Y
-		} while (!createObjects<Boulder>(46, 46));	//If object cannot create at the location then try again
+			//33 60 for testing collision with boulder
+		} while (!createObjects<Boulder>(localX, localY));	//If object cannot create at the location then try again
 	}
 
 	for (; numGold > 0; numGold--) {
@@ -224,7 +226,7 @@ void StudentWorld::mainCreateObjects() {
 	}
 }
 
-std::vector<std::weak_ptr<Actor>> StudentWorld::iceInProxWithActor(std::shared_ptr<Actor> actor) {
+std::vector<std::weak_ptr<Actor>> StudentWorld::iceCollideWithActor(std::shared_ptr<Actor> actor) {
 	/*****************************
 		Check if the player is in certain radius of the actor
 		Check in all direction, that means using a circle and Euclidean distance math, the detection range for the actor and the actor
@@ -248,9 +250,9 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::iceInProxWithActor(std::shared_p
 		int localY = actor->getCenterY();
 
 		//Get only the ice in close proximity
-		int spotPositiveX = playerColRange + localX + 1;
+		int spotPositiveX = playerColRange + localX + 1;	//Don't know why plus 1 on the positive side, probably gota do with something involve pixel and array calculation
 		int spotNegativeX = localX - playerColRange;
-		int spotPositiveY = playerColRange + localY + 1;
+		int spotPositiveY = playerColRange + localY + 1;	//It needs to plus 1 to look good, don't know why
 		int spotNegativeY = localY - playerColRange;
 
 		//Prune the distance so it doesn't go out of range
@@ -278,6 +280,35 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::iceInProxWithActor(std::shared_p
 		//		}
 		//	}
 		//}
+	}
+	return intruders;
+}
+
+std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_ptr<Actor> actor) {
+	
+	vector<weak_ptr<Actor>> intruders;
+	
+	if (!actor_vec.empty() && actor && actor->isAlive()) {
+		//Actor collision range is the size of the actor
+		int colRange = actor->getSize();
+		int localX = actor->getCenterX();
+		int localY = actor->getCenterY();
+
+		int spotPositiveX = colRange + localX;
+		int spotNegativeX = localX - colRange;
+		int spotPositiveY = colRange + localY;
+		int spotNegativeY = localY - colRange;
+
+		for (auto& each : actor_vec) {
+			//For actor, we use collision Range instead of their size
+			int actRange = each->getSize();
+			int actX = each->getCenterX();
+			int actY = each->getCenterY();
+			int distance = sqrt(pow(localX - actX, 2) + pow(localY - actY, 2));	//Euclidean distance
+			int collisionZone = colRange + actRange;
+			if (distance <= collisionZone)
+				intruders.push_back(each);
+		}
 	}
 	return intruders;
 }

@@ -73,13 +73,17 @@ void IceMan::doSomething() {
 	if (!displayBehavior)
 		displayBehavior = make_unique<ExistPermanently>();
 	
+	//Reset cycle of collision result and detection
+	collisionResult.reset();
 	collisionDetection = make_unique<CollisionDetection>(mySelf, this->getCollisionRange());
-
+	collisionDetection->behaveBitches();	//If there's a detection then a response is already made automatically
+	///////////////
 	displayBehavior->showYourself();
-	collisionDetection->behaveBitches();
 	movementBehavior->moveThatAss();
-	if (collisionResult)
-		collisionResult->response();
+
+	
+	//if (collisionResult)
+	//	collisionResult->response();
 }
 
 
@@ -105,7 +109,7 @@ std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedIce() {
 	shared_ptr<Actor>source = wp_source.lock();
 
 	if (source && source->isAlive()) {
-		intruders = std::move(source->getWorld()->iceInProxWithActor(source));
+		intruders = std::move(source->getWorld()->iceCollideWithActor(source));
 	}
 
 	//if (source) {
@@ -145,6 +149,16 @@ std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedIce() {
 	//	//	}
 	//	//}
 	//}
+	return intruders;
+}
+
+std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedOthers() {
+	vector<weak_ptr<Actor>> intruders;
+	shared_ptr<Actor>source = wp_source.lock();
+
+	if (source && source->isAlive()) {
+		intruders = std::move(source->getWorld()->actorsCollideWithMe(source));
+	}
 	return intruders;
 }
 
@@ -388,10 +402,24 @@ void Block::resetBehavior() {
 
 //***This would cause problem if the moveTo() function create animation.****
 void Block::response() {
+	//Problem: Once they in the block state, they cannot get out
 	shared_ptr<Actor>target = wp_target.lock();
+
 	//Move to the same location == Standing still
-	if(target)
-		target->moveTo(target->getX(), target->getY());
+	if (target) {
+		double currentX = 0,
+			currentY = 0;
+		double targetX,
+			targetY;
+		targetX = target->getX();
+		targetY = target->getY();
+		target->getAnimationLocation(currentX, currentY);
+		if (targetFacing != target->getDirection()) {	//If they face different direction after being blocked, they can move again
+				return;
+		}
+		else
+			target->moveTo(currentX, currentY);	//Move to the current location == staying in place
+	}
 }
 
 void Collectable::showSelf() {
@@ -572,6 +600,11 @@ void ControlledMovement::moveThatAss() {
 	if (spPawn && spPawn->isAlive()) {
 		if (!spPawn->getWorld()->getKey(key))
 			key = INVALID_KEY;
+
+		////Test for different key, remember to comment later
+		//key = KEY_PRESS_RIGHT;
+		//////////////////////////////
+
 		if (key != INVALID_KEY) {
 			switch (key) {
 			case KEY_PRESS_DOWN:
