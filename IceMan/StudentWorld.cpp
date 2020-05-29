@@ -197,12 +197,16 @@ void StudentWorld::mainCreateObjects() {
 	//Seed the random
 	srand(time(0));
 	int localX, localY;
+	int shaftXoffsetL = 30,
+		shaftXoffsetR = 33,
+		shaftYoffsetD = 4,	//All inclusive
+		shaftYoffsetU = 60;
 
 	for (; numBoulder > 0; numBoulder--) {
 		do {
-			localX = rand() % 61 - OBJECT_LENGTH;	// 0 - 60 (It's actually 0 - 59) because the location starts at down-left corner
-			localY = rand() % 37 + 20 - OBJECT_LENGTH; // 20 - 56 (Actually 20 - 54)
-			if ((localX >= 30 && localX <= 33 && localY >= 4) || localX < 0 || localY < 0) {	//Location of the shaft
+			localX = rand() % 61 - OBJECT_LENGTH;	// 0 - 60 (It's actually 0 - 56) because the location starts at down-left corner
+			localY = rand() % 37 + 20 - OBJECT_LENGTH; // 20 - 56 (Actually 20 - 52)
+			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numBoulder;	//Make it loop again == Generate another random location
 				break;
 			}
@@ -215,7 +219,7 @@ void StudentWorld::mainCreateObjects() {
 		do {
 			localX = rand() % 61 - OBJECT_LENGTH;
 			localY = rand() % 57 - OBJECT_LENGTH;	// 0 - 56
-			if ((localX >= 30 && localX <= 33 && localY >= 4) || localX < 0 || localY < 0) {	//Location of the shaft
+			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numGold;	//Make it loop again == Generate another random location
 				break;
 			}
@@ -226,12 +230,28 @@ void StudentWorld::mainCreateObjects() {
 		do {
 			localX = rand() % 61 - OBJECT_LENGTH;
 			localY = rand() % 57 - OBJECT_LENGTH;
-			if ((localX >= 30 && localX <= 33 && localY >= 4) || localX < 0 || localY < 0) {	//Location of the shaft
+			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numOil;	//Make it loop again == Generate another random location
 				break;
 			}
 		} while (!createObjects<OilBarrels>(localX, localY));
 	}
+}
+
+void StudentWorld::createNPC() {
+	/****************************
+	Use a random number to determine the odds
+	Spawn the npc at the appropriate location
+	****************************/
+	srand(time(0));
+	int currentLvl = getLevel();
+	int probOfHardcore = min(90, currentLvl * 10 + 30);
+	bool spawnHardcore = (rand() % 100) < probOfHardcore;	//If smaller than the prob then it passed
+	if (spawnHardcore) {
+		actor_vec.emplace_back(make_shared<Protesters>(this));
+	}
+	else
+		actor_vec.emplace_back(make_shared<HardcoreProtesters>(this));
 }
 
 std::vector<std::weak_ptr<Actor>> StudentWorld::iceCollideWithActor(std::shared_ptr<Actor> actor) {

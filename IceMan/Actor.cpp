@@ -20,7 +20,6 @@ void Destroy::response() {
 	if(target && target->isAlive())
 		target->dmgActor(dmgTaken);
 	if (target && !target->isAlive()) {
-		target->getWorld()->playSound(SOUND_DIG);
 		target->resetAllBehaviors();
 	}
 
@@ -84,6 +83,11 @@ void IceMan::doSomething() {
 	
 	//if (collisionResult)
 	//	collisionResult->response();
+}
+
+void IceMan::dmgActor(int amt) {
+	Actor::dmgActor(amt);
+	getWorld()->playSound(dmgSound);
 }
 
 
@@ -665,6 +669,10 @@ void SquirtMovement::moveThatAss() {
 }
 
 void SquirtMovement::resetBehavior() {
+}
+
+Actor::~Actor() {
+	m_sw->playSound(death_sound);
 }
 
 void Actor::resetAllBehaviors() {
