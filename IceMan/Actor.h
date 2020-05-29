@@ -33,15 +33,15 @@ private:
 	double collisionRange;
 	double detectionRange;
 	StudentWorld* m_sw;
-	int sound;
+	int death_sound;
 	//double centerX = 0;
 	//double centerY = 0;
 	int size;
 public:
-	Actor(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double t_size = 1.0, unsigned int depth = 0, int t_hp = 1, int t_strength = 0, double col_range = 0, double detect_range = 0, int t_sound = SOUND_NONE) : GraphObject(imgID, startX, startY, dir, t_size, depth), hitpoints(t_hp), strength(t_strength), collisionRange(col_range), detectionRange(detect_range), type(t_type), m_sw(world), sound(t_sound), size(t_size) {
+	Actor(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double t_size = 1.0, unsigned int depth = 0, int t_hp = 1, int t_strength = 0, double col_range = 0, double detect_range = 0, int t_sound = SOUND_NONE) : GraphObject(imgID, startX, startY, dir, t_size, depth), hitpoints(t_hp), strength(t_strength), collisionRange(col_range), detectionRange(detect_range), type(t_type), m_sw(world), death_sound(t_sound), size(t_size) {
 		setVisible(visibility);
 	};
-	virtual ~Actor() {};
+	virtual ~Actor();
 
 	std::unique_ptr<IExistenceBehavior> displayBehavior;
 	std::unique_ptr<IMovementBehavior> movementBehavior;
@@ -64,13 +64,13 @@ public:
 	//	return centerY;
 	//}
 
-	int getSound() {
-		return sound;
-	}
+	//int getSound() {
+	//	return death_sound;
+	//}
 
-	void setSound(int t_sound) {
-		sound = t_sound;
-	}
+	//void setSound(int t_sound) {
+	//	death_sound = t_sound;
+	//}
 
 	StudentWorld* getWorld() {
 		return m_sw;
@@ -99,8 +99,16 @@ public:
 		return strength;
 	}
 
-	void dmgActor(int amt) {
+	virtual void dmgActor(int amt) {
 		hitpoints -= amt;
+	}
+
+	int getDeathSound() {
+		return death_sound;
+	}
+
+	void setDeathSound(int sound) {
+		death_sound = sound;
 	}
 
 	void changeActorType(ActorType t_type) {
@@ -317,20 +325,25 @@ public:
 
 class IceMan : public Characters {
 private:
+	int dmgSound = SOUND_PLAYER_ANNOYED;
 	std::vector<std::shared_ptr<SonarKit>>sonarVec;
 	std::vector<std::shared_ptr<GoldNuggets>>goldVec;
 	std::vector<std::shared_ptr<Squirt>>squirtVec;
-	//This is bad and can cause problem later on because it has some kind of circular dependent. Too bad
 	//This function find the player actor type in the whole list of actors
 public:
-	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 999, 3, 0, SOUND_PLAYER_ANNOYED) {};
+	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 999, 3, 0, SOUND_PLAYER_GIVE_UP) {};
 	void doSomething() override;
+
+	void dmgActor(int amt) override;
+
 	int getSonarNum() {
 		return sonarVec.size();
 	}
+
 	int getSquirtNum() {
 		return squirtVec.size();
 	}
+
 	int getGoldNum() {
 		return goldVec.size();
 	}
@@ -339,10 +352,14 @@ public:
 class Protesters : public Characters{
 private:
 	bool outOfField = false;
+	int annoyed_sound = SOUND_PROTESTER_GIVE_UP;
+	int yell_sound = SOUND_PROTESTER_YELL;
 public:
 	Protesters(StudentWorld* world, int imgID = IID_PROTESTER, int startX = 60, int startY = 60, int hp = 5, int t_str = 2, double col_range = 4, double detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED) : Characters(world, npc, imgID, startX, startY, left, hp, t_str, col_range, detect_range, t_sound){
 		movementBehavior = std::make_unique<FreeMovement>();
 	}
+	virtual ~Protesters() override {};
+
 	//Functions
 	void rest() {
 		movementBehavior.reset();
@@ -370,6 +387,7 @@ public:
 	HardcoreProtesters(StudentWorld* world, int imgID = IID_HARD_CORE_PROTESTER, int startX = 60, int startY = 60, int hp = 20, int strength = 2, double col_range = 4, double detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED) : Protesters(world, IID_HARD_CORE_PROTESTER, startX, startY, hp, strength, col_range, detect_range, t_sound) {
 		movementBehavior = std::make_unique<FreeMovement>();
 	}
+	~HardcoreProtesters() override {};
 };
 
 //Stuffs
@@ -388,7 +406,7 @@ private:
 protected:
 	std::unique_ptr<IExistenceBehavior> existBehavior;
 public:
-	Collectable(StudentWorld* world, bool visibility, int imgID, int startX, int startY, Direction dir, double size, unsigned int depth, int hp, int strength, double col_range, double detect_range) : Inanimated(world, collect, visibility, imgID, startX, startY, dir, size, depth, hp, strength, col_range, detect_range), isHidden(!visibility) {};
+	Collectable(StudentWorld* world, bool visibility, int imgID, int startX, int startY, Direction dir, double size, unsigned int depth, int hp, int strength, double col_range, double detect_range, int t_sound = SOUND_GOT_GOODIE) : Inanimated(world, collect, visibility, imgID, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound), isHidden(!visibility) {};
 	virtual ~Collectable() {};
 	void showSelf();
 };
@@ -399,7 +417,7 @@ private:
 	//Functions
 	void doSomething() override;
 public:
-	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4) : Collectable(world, true, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range) {
+	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, int t_sound = SOUND_FOUND_OIL) : Collectable(world, true, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound) {
 		existBehavior = std::make_unique<ExistPermanently>();
 	};
 
@@ -413,10 +431,12 @@ private:
 	bool tempTimeEnd();
 public:
 	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true) : Collectable(world, true, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range), pickableByPlayer(t_pickable) {
-		if(pickableByPlayer)
+		if (pickableByPlayer) {
 			existBehavior = std::make_unique<ExistPermanently>();
+		}
 		else {
 			existBehavior = std::make_unique<ExistTemporary>();
+			setDeathSound(SOUND_PROTESTER_FOUND_GOLD);	//Change into sound of protesters when not pickable by player
 			changeActorType(dropByPlayer);
 		}
 	};
@@ -454,7 +474,9 @@ class Hazard : public Inanimated{
 private:
 
 public:
-	Hazard(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 0, double col_range = 0, double detect_range = 9999) : Inanimated(world, t_type, visibility, imgID, startX, startY, dir, 1.0, 1, hp, strength, col_range, detect_range) {};
+	Hazard(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 0, double col_range = 0, double detect_range = 9999, int t_sound = -1) : Inanimated(world, t_type, visibility, imgID, startX, startY, dir, 1.0, 1, hp, strength, col_range, detect_range, t_sound) {
+			
+	};
 	virtual ~Hazard() {};
 };
 
@@ -465,7 +487,7 @@ private:
 	void shoot();
 	void doSomething() override;
 public:
-	Squirt(StudentWorld* world, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 2, double col_range = 4, double detect_range = 9999) : Hazard(world, hazard, true, IID_WATER_SPURT, startX, startY, dir, size, depth, hp, strength, col_range, detect_range) {};
+	Squirt(StudentWorld* world, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 2, double col_range = 4, double detect_range = 9999, int ded_sound = SOUND_PLAYER_SQUIRT) : Hazard(world, hazard, true, IID_WATER_SPURT, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, ded_sound) {};
 
 };
 
@@ -473,6 +495,7 @@ class Boulder : public Hazard {
 public:
 	enum BoudlderState { stable, waiting, falling };
 private:
+	int fall_sound = SOUND_FALLING_ROCK;
 	BoudlderState state = stable;
 	//Functions
 	void fall();
