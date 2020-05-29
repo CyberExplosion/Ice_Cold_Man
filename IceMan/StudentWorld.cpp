@@ -204,8 +204,8 @@ void StudentWorld::mainCreateObjects() {
 
 	for (; numBoulder > 0; numBoulder--) {
 		do {
-			localX = rand() % 61 - OBJECT_LENGTH;	// 0 - 60 (It's actually 0 - 56) because the location starts at down-left corner
-			localY = rand() % 37 + 20 - OBJECT_LENGTH; // 20 - 56 (Actually 20 - 52)
+			localX = rand() % (COL_NUM + 1) - OBJECT_LENGTH;	// 0 - 60 (It's actually 0 - 56) because the location starts at down-left corner
+			localY = rand() % (ROW_NUM - 20) + 20 - OBJECT_LENGTH; // 20 - 56 (Actually 20 - 52)
 			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numBoulder;	//Make it loop again == Generate another random location
 				break;
@@ -217,8 +217,8 @@ void StudentWorld::mainCreateObjects() {
 
 	for (; numGold > 0; numGold--) {
 		do {
-			localX = rand() % 61 - OBJECT_LENGTH;
-			localY = rand() % 57 - OBJECT_LENGTH;	// 0 - 56
+			localX = rand() % (COL_NUM + 1) - OBJECT_LENGTH;
+			localY = rand() % ROW_NUM - OBJECT_LENGTH;	// 0 - 56
 			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numGold;	//Make it loop again == Generate another random location
 				break;
@@ -228,8 +228,8 @@ void StudentWorld::mainCreateObjects() {
 
 	for (; numOil > 0; numOil--) {
 		do {
-			localX = rand() % 61 - OBJECT_LENGTH;
-			localY = rand() % 57 - OBJECT_LENGTH;
+			localX = rand() % (COL_NUM + 1) - OBJECT_LENGTH;
+			localY = rand() % ROW_NUM - OBJECT_LENGTH;
 			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numOil;	//Make it loop again == Generate another random location
 				break;
@@ -345,6 +345,43 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_
 		}
 	}
 	return intruders;
+}
+
+bool StudentWorld::createSquirt() {
+	if (player && player->isAlive()) {
+		GraphObject::Direction sqrtDir = player->getDirection();
+		int localX = player->getX();
+		int localY = player->getY();
+		int playerColRange = player->getCollisionRange();
+
+		Squirt temp(this, localX, localY, sqrtDir);
+		int squirtColRange = temp.getCollisionRange();
+
+
+		switch (sqrtDir) {
+		case GraphObject::up:
+			localY += playerColRange + 1;			//If the player look in different location, we need to account for
+			break;									//the collision between the squirt and player since it's a hazard
+		case GraphObject::down:
+			localY -= squirtColRange + 1;
+			break;
+		case GraphObject::left:
+			localX -= squirtColRange + 1;
+			break;
+		case GraphObject::right:
+			localX += playerColRange + 1;
+			break;
+		default:
+			break;
+		}
+		if ((localY < 0 || localY > ROW_NUM - squirtColRange) || (localX < 0 || localX > COL_NUM - squirtColRange) || (localX == player->getX() && localY == player->getY()))	//Value stay the same or out of bounds
+			return false;
+		else {
+			actor_vec.emplace_back(make_shared<Squirt>(this, localX, localY, sqrtDir));
+			return true;
+		}
+	}
+	return false;
 }
 
 void StudentWorld::cleanUp() {
