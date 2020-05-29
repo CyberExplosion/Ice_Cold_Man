@@ -238,6 +238,22 @@ void StudentWorld::mainCreateObjects() {
 	}
 }
 
+void StudentWorld::createNPC() {
+	/****************************
+	Use a random number to determine the odds
+	Spawn the npc at the appropriate location
+	****************************/
+	srand(time(0));
+	int currentLvl = getLevel();
+	int probOfHardcore = min(90, currentLvl * 10 + 30);
+	bool spawnHardcore = (rand() % 100) < probOfHardcore;	//If smaller than the prob then it passed
+	if (spawnHardcore) {
+		actor_vec.emplace_back(make_shared<Protesters>(this));
+	}
+	else
+		actor_vec.emplace_back(make_shared<HardcoreProtesters>(this));
+}
+
 std::vector<std::weak_ptr<Actor>> StudentWorld::iceCollideWithActor(std::shared_ptr<Actor> actor) {
 	/*****************************
 		Check if the player is in certain radius of the actor

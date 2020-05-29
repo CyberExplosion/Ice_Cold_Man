@@ -104,6 +104,9 @@ private:
 	void mainCreateObjects();
 	template<typename T>
 	bool createObjects(int x, int y);
+
+	//Function for move
+	void createNPC();
 };
 
 template<typename T>

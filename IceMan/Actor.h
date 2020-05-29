@@ -367,7 +367,7 @@ class HardcoreProtesters: public Protesters{
 private:
 
 public:
-	HardcoreProtesters(StudentWorld* world, int startX, int startY, int hp, int strength, double col_range, double detect_range, int t_sound) : Protesters(world, IID_HARD_CORE_PROTESTER, startX, startY, hp, strength, col_range, detect_range, t_sound) {
+	HardcoreProtesters(StudentWorld* world, int imgID = IID_HARD_CORE_PROTESTER, int startX = 60, int startY = 60, int hp = 20, int strength = 2, double col_range = 4, double detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED) : Protesters(world, IID_HARD_CORE_PROTESTER, startX, startY, hp, strength, col_range, detect_range, t_sound) {
 		movementBehavior = std::make_unique<FreeMovement>();
 	}
 };
