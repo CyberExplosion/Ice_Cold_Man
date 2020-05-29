@@ -34,14 +34,12 @@ private:
 	double detectionRange;
 	StudentWorld* m_sw;
 	int sound;
-	double centerX;
-	double centerY;
+	//double centerX = 0;
+	//double centerY = 0;
 	int size;
 public:
 	Actor(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double t_size = 1.0, unsigned int depth = 0, int t_hp = 1, int t_strength = 0, double col_range = 0, double detect_range = 0, int t_sound = SOUND_NONE) : GraphObject(imgID, startX, startY, dir, t_size, depth), hitpoints(t_hp), strength(t_strength), collisionRange(col_range), detectionRange(detect_range), type(t_type), m_sw(world), sound(t_sound), size(t_size) {
 		setVisible(visibility);
-		centerX = (size * 4) / 2 + startX;
-		centerY = (size * 4) / 2 + startY;
 	};
 	virtual ~Actor() {};
 
@@ -56,15 +54,15 @@ public:
 	//This is for all the usage of shared_ptr in them behaviors. This is bad but I blame due date
 	virtual void resetAllBehaviors();
 
-	int getCenterX() {
-		centerX = (size * 4) / 2 + getX() - 1;
-		return centerX;
-	}
+	//int getCenterX() {
+	//	centerX = (size * OBJECT_LENGTH) / 2 + getX() - 1;	//Example: The graph takes 4 slot: 52 53 54 55 -> The center will be 53
+	//	return centerX;
+	//}
 
-	int getCenterY() {
-		centerY = (size * 4) / 2 + getY() - 1;
-		return centerY;
-	}
+	//int getCenterY() {
+	//	centerY = (size * OBJECT_LENGTH) / 2 + getY() - 1;
+	//	return centerY;
+	//}
 
 	int getSound() {
 		return sound;
@@ -325,7 +323,7 @@ private:
 	//This is bad and can cause problem later on because it has some kind of circular dependent. Too bad
 	//This function find the player actor type in the whole list of actors
 public:
-	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 999, 2, 0, SOUND_PLAYER_ANNOYED) {};
+	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 999, 3, 0, SOUND_PLAYER_ANNOYED) {};
 	void doSomething() override;
 	int getSonarNum() {
 		return sonarVec.size();

@@ -19,6 +19,8 @@ class Ice;
 const int COL_NUM = 64,
 ROW_NUM = 60;
 const int DIST_ALLOW_BETW_SPAWN = 6;
+const int OBJECT_LENGTH = 4;
+const int ICE_LENGTH = 1;
 class StudentWorld : public GameWorld
 {
 public:
@@ -116,7 +118,7 @@ bool StudentWorld::createObjects(int x, int y) {
 			Demand a collision response from the intruder
 	Finally put the newly made object into actor containers
 	************************************/
-	std::shared_ptr<T> temp = std::make_shared<T>(this, x, y, GraphObject::Direction::right, 1.0, 2, 1, 9999, DIST_ALLOW_BETW_SPAWN);	//Collision range of 6 because that's the requirement for a new object to be made
+	std::shared_ptr<T> temp = std::make_shared<T>(this, x, y, GraphObject::Direction::right, DIST_ALLOW_BETW_SPAWN, 2, 1, 9999, DIST_ALLOW_BETW_SPAWN);	//Collision range of 6 because that's the requirement for a new object to be made
 
  	temp->collisionDetection = std::make_unique<CollisionDetection>(temp, temp->getCollisionRange());
 	temp->collisionDetection->behaveBitches();	//Check for collision
@@ -136,7 +138,7 @@ bool StudentWorld::createObjects(int x, int y) {
 	intruders.clear();
 	//If reach this meaning that's there is an intruder and it's ice
 	std::shared_ptr<T> object = std::make_shared <T>(this, x, y);	//Make the object
-	if (object->isVisible()) {	//Only destroy the ice if it's visible
+	if (object->isVisible() && object->type == Actor::ActorType::worldStatic) {	//Only destroy the ice if it's visible
 		object->collisionDetection = std::make_unique<CollisionDetection>(object, object->getCollisionRange());
 		object->collisionDetection->behaveBitches();	//See if the object collide with any ice
 

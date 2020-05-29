@@ -187,10 +187,12 @@ void StudentWorld::mainCreateObjects() {
 	*****************************/
 	int currentLV = getLevel();
 	int numBoulder = min(currentLV / 2 + 2, 9);
-	////Test
+	////////Test
 	//int numBoulder = 1;
+	//int numGold = 1;
 	int numGold = max(5 - currentLV / 2, 2);
 	int numOil = min(2 + currentLV, 21);
+	//int numOil = 0;
 
 	//Seed the random
 	srand(time(0));
@@ -198,10 +200,12 @@ void StudentWorld::mainCreateObjects() {
 
 	for (; numBoulder > 0; numBoulder--) {
 		do {
-			localX = rand() % 61;	// 0 - 60
-			localY = rand() % 37 + 20; // 20 - 56
-			if ((localX > 29 && localX < 34) && (localY > 3 && localY < 61))
-				continue;
+			localX = rand() % 61 - OBJECT_LENGTH;	// 0 - 60 (It's actually 0 - 59) because the location starts at down-left corner
+			localY = rand() % 37 + 20 - OBJECT_LENGTH; // 20 - 56 (Actually 20 - 54)
+			if ((localX >= 30 && localX <= 33 && localY >= 4) || localX < 0 || localY < 0) {	//Location of the shaft
+				++numBoulder;	//Make it loop again == Generate another random location
+				break;
+			}
 			//Testing, remember to change the boulder location back to localX and Y
 			//33 60 for testing collision with boulder
 		} while (!createObjects<Boulder>(localX, localY));	//If object cannot create at the location then try again
@@ -209,19 +213,23 @@ void StudentWorld::mainCreateObjects() {
 
 	for (; numGold > 0; numGold--) {
 		do {
-			localX = rand() % 61;
-			localY = rand() % 57;	// 0 - 56
-			if ((localX > 29 && localX < 34) && (localY > 0 && localY < 61))
-				continue;
+			localX = rand() % 61 - OBJECT_LENGTH;
+			localY = rand() % 57 - OBJECT_LENGTH;	// 0 - 56
+			if ((localX >= 30 && localX <= 33 && localY >= 4) || localX < 0 || localY < 0) {	//Location of the shaft
+				++numGold;	//Make it loop again == Generate another random location
+				break;
+			}
 		} while (!createObjects<GoldNuggets>(localX, localY));
 	}
 
 	for (; numOil > 0; numOil--) {
 		do {
-			localX = rand() % 61;
-			localY = rand() % 57;
-			if ((localX >= 26 && localX <= 29) || (localY >= 0 || localY <= 55))
-				continue;
+			localX = rand() % 61 - OBJECT_LENGTH;
+			localY = rand() % 57 - OBJECT_LENGTH;
+			if ((localX >= 30 && localX <= 33 && localY >= 4) || localX < 0 || localY < 0) {	//Location of the shaft
+				++numOil;	//Make it loop again == Generate another random location
+				break;
+			}
 		} while (!createObjects<OilBarrels>(localX, localY));
 	}
 }
@@ -245,15 +253,15 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::iceCollideWithActor(std::shared_
 		//array<array<shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_arr = std::move(source->getWorld()->getIceArr());
 		
 		//Player collision range is the size of the player
-		int playerColRange = actor->getSize();
-		int localX = actor->getCenterX();
-		int localY = actor->getCenterY();
+		int playerColRange = actor->getCollisionRange();	//Collision range from the lower left corner toward the positive y and x
+		int localX = actor->getX();
+		int localY = actor->getY();
 
 		//Get only the ice in close proximity
-		int spotPositiveX = playerColRange + localX + 1;	//Don't know why plus 1 on the positive side, probably gota do with something involve pixel and array calculation
-		int spotNegativeX = localX - playerColRange;
-		int spotPositiveY = playerColRange + localY + 1;	//It needs to plus 1 to look good, don't know why
-		int spotNegativeY = localY - playerColRange;
+		int spotPositiveX = playerColRange + localX;	//Don't know why plus 1 on the positive side, probably gota do with something involve pixel and array calculation
+		int spotNegativeX = localX;	//Found out why plus 1. Example: the ice takes up 4 slots: 52 53 54 55 -> 53 is the center and thus we need to plus 1 on the positive side
+		int spotPositiveY = playerColRange + localY;	//It needs to plus 1 to look good, don't know why
+		int spotNegativeY = localY;
 
 		//Prune the distance so it doesn't go out of range
 		for (; spotPositiveX >= COL_NUM; spotPositiveX--);
@@ -290,24 +298,30 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_
 	
 	if (!actor_vec.empty() && actor && actor->isAlive()) {
 		//Player collision range is actually the size of the its' own
-		int colRange = actor->getSize();
-		int localX = actor->getCenterX();
-		int localY = actor->getCenterY();
-
-		int spotPositiveX = colRange + localX + 1;
-		int spotNegativeX = localX - colRange;
-		int spotPositiveY = colRange + localY + 1;
-		int spotNegativeY = localY - colRange;
+		int colRangePositive = actor->getCollisionRange();
+		int localX = actor->getX();
+		int localY = actor->getY();
 
 		for (auto& each : actor_vec) {
-			//For actor, we use collision Range instead of their size
-			int actRange = each->getCollisionRange();
-			int actX = each->getCenterX();
-			int actY = each->getCenterY();
-			int distance = sqrt(pow(localX - actX, 2) + pow(localY - actY, 2));	//Euclidean distance
-			int collisionZone = colRange + actRange;
-			if (distance <= collisionZone)
-				intruders.push_back(each);
+
+			int actRangePositive = each->getCollisionRange();	//On positive side the document want us to make it collide with each actor when you're 3 squares away
+			//int actRangeNegative = each->getCollisionRange();	//And since each actor collision range is 3 so it's fine
+			int actX = each->getX();
+			int actY = each->getY();
+			////////////////////////////
+
+			double distance = sqrt(pow(localX - actX, 2) + pow(localY - actY, 2));	//Euclidean distance
+			
+			if (localX >= actX && localY >= actY) {	//If inside the positive area of "each"
+				double eachSpotZone = sqrt(pow(actRangePositive, 2) + pow(actRangePositive, 2));	//When on positive side, the spot zone is the distance from the lower left to their own collision range
+				if (distance <= eachSpotZone)
+					intruders.push_back(each);
+			}
+			else {	//Negative side of "each"
+				double actorSpotZone = sqrt(pow(colRangePositive, 2) + pow(colRangePositive, 2));	//The spot zone of the actor
+				if (distance <= actorSpotZone)
+					intruders.push_back(each);
+			}
 		}
 	}
 	return intruders;
