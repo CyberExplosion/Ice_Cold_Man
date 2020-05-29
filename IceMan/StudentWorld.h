@@ -21,6 +21,7 @@ ROW_NUM = 60;
 const int DIST_ALLOW_BETW_SPAWN = 6;
 const int OBJECT_LENGTH = 4;
 const int ICE_LENGTH = 1;
+
 class StudentWorld : public GameWorld
 {
 public:
@@ -75,9 +76,11 @@ public:
 	virtual void cleanUp();
 
 	std::vector<std::shared_ptr<Actor>> StudentWorld::getAllActors();
+
 	std::shared_ptr<IceMan> getPlayer() {
 		return player;
 	}
+
 	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> getIceArr() {
 		return ice_array;
 	}

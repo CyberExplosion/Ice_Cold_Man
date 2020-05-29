@@ -197,12 +197,16 @@ void StudentWorld::mainCreateObjects() {
 	//Seed the random
 	srand(time(0));
 	int localX, localY;
+	int shaftXoffsetL = 30,
+		shaftXoffsetR = 33,
+		shaftYoffsetD = 4,	//All inclusive
+		shaftYoffsetU = 60;
 
 	for (; numBoulder > 0; numBoulder--) {
 		do {
-			localX = rand() % 61 - OBJECT_LENGTH;	// 0 - 60 (It's actually 0 - 59) because the location starts at down-left corner
-			localY = rand() % 37 + 20 - OBJECT_LENGTH; // 20 - 56 (Actually 20 - 54)
-			if ((localX >= 30 && localX <= 33 && localY >= 4) || localX < 0 || localY < 0) {	//Location of the shaft
+			localX = rand() % 61 - OBJECT_LENGTH;	// 0 - 60 (It's actually 0 - 56) because the location starts at down-left corner
+			localY = rand() % 37 + 20 - OBJECT_LENGTH; // 20 - 56 (Actually 20 - 52)
+			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numBoulder;	//Make it loop again == Generate another random location
 				break;
 			}
@@ -215,7 +219,7 @@ void StudentWorld::mainCreateObjects() {
 		do {
 			localX = rand() % 61 - OBJECT_LENGTH;
 			localY = rand() % 57 - OBJECT_LENGTH;	// 0 - 56
-			if ((localX >= 30 && localX <= 33 && localY >= 4) || localX < 0 || localY < 0) {	//Location of the shaft
+			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numGold;	//Make it loop again == Generate another random location
 				break;
 			}
@@ -226,7 +230,7 @@ void StudentWorld::mainCreateObjects() {
 		do {
 			localX = rand() % 61 - OBJECT_LENGTH;
 			localY = rand() % 57 - OBJECT_LENGTH;
-			if ((localX >= 30 && localX <= 33 && localY >= 4) || localX < 0 || localY < 0) {	//Location of the shaft
+			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numOil;	//Make it loop again == Generate another random location
 				break;
 			}
