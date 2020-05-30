@@ -19,7 +19,9 @@ GameWorld* createStudentWorld(string assetDir)
 // Students:  Add code to this file (if you wish), StudentWorld.h, Actor.h and Actor.cpp
 
 int StudentWorld::move() {
+	ticksBeforeSpawn--;
 	updateStatus();
+	createProtesters();
 	int status_of_game = doThings();
 	deleteFinishedObjects();
 
@@ -42,7 +44,6 @@ int StudentWorld::move() {
 	/*
 		Add new actors during each tick.
 		Format el game stats @ the TOP TOP TOP!
-	
 	*/
 }
 
@@ -57,7 +58,7 @@ int StudentWorld::updateStatus() {
 	health = to_string(player->getHealth() * 10); 
 	wtr = to_string(player->getSquirtNum());
 	gld = to_string(player->getGoldNum());
-	//oil = to_string(oilsLeft);
+	oil = to_string(oilsLeft);
 	sonar = to_string(player->getSonarNum());
 
 	//Fixed a little bit, following the pdf requirements
@@ -148,6 +149,58 @@ void StudentWorld::deleteFinishedObjects() {
 		player.reset();
 }
 
+bool StudentWorld::boulderFall(int x, int y)
+{
+	/*
+		This function checks to see if there is ice underneath a boulder.
+		If there isn't commence falling!
+		x and y give us the location of the boulder.
+	*/
+
+	int targetY = y - 1; // The height one below the boulder.
+	int tx1 = x; int tx2 = x + 1; int tx3 = x + 2; int tx4 = x + 3; // We need to check the width of the 
+																	// boulder at a height just below it for ice.
+
+	bool flag1 = true, flag2 = true, flag3 = true, flag4 = true;	// Each flag indicates if there is snow under the boulder. 
+																	// True = there is ice underneath, false = no ice.
+																	// If all four flags are false then there is no 
+																	// ice underneath the boulder and we should let it fall!
+
+	for (int row = 0; row < ice_array.size(); row++) {
+		for (int col = 0; col < ice_array[row].size(); col++) {
+			if (row == targetY && col == tx1) {
+				if (ice_array[row][col] == nullptr) {
+					flag1 = false;
+					continue;
+				}
+			}
+			if (row == targetY && col == tx2) {
+				if (ice_array[row][col] == nullptr) {
+					flag2 = false;
+					continue;
+				}
+			}
+			if (row == targetY && col == tx3) {
+				if (ice_array[row][col] == nullptr) {
+					flag3 = false;
+					continue;
+				}
+			}
+			if (row == targetY && col == tx4) {
+				if (ice_array[row][col] == nullptr) {
+					flag4 = false;
+					continue;
+				}
+			}
+		}
+	}
+
+	if (flag1 == false && flag2 == false && flag3 == false && flag4 == false) {
+		return true;
+	}
+	return false;
+}
+
 //Return a pointer to the whole vector of actors
 vector<shared_ptr<Actor>> StudentWorld::getAllActors() {
 	return vector<shared_ptr<Actor>>(actor_vec);
@@ -192,7 +245,8 @@ void StudentWorld::mainCreateObjects() {
 	//int numGold = 1;
 	int numGold = max(5 - currentLV / 2, 2);
 	int numOil = min(2 + currentLV, 21);
-	//int numOil = 0;
+
+	oilsLeft = numOil;
 
 	//Seed the random
 	srand(time(0));
@@ -201,6 +255,8 @@ void StudentWorld::mainCreateObjects() {
 		shaftXoffsetR = 33,
 		shaftYoffsetD = 4,	//All inclusive
 		shaftYoffsetU = 60;
+
+	//createNPC<Protester>(60, 60);
 
 	for (; numBoulder > 0; numBoulder--) {
 		do {
@@ -236,6 +292,28 @@ void StudentWorld::mainCreateObjects() {
 			}
 		} while (!createObjects<OilBarrels>(localX, localY));
 	}
+
+}
+
+void StudentWorld::createProtesters() {
+	int currentLV = getLevel();
+	if (ticksBeforeSpawn == 0) {
+		if (protesterCount != protesterSpawnLimit) {
+			//createNPC<Protester>(60, 60);
+		}
+		ticksBeforeSpawn = max(25, 200 - currentLV);
+	}
+}
+
+void StudentWorld::initSpawnParameters() {
+	/*
+		This function determines the parameters in which a protester can spawn.
+		These formulas are provided by the PDF.
+	*/
+	int currentLV = getLevel();
+	ticksBeforeSpawn = max(25, 200 - currentLV); 
+	protesterSpawnLimit = min(15, 2 + int(currentLV * 1.5));
+
 }
 
 void StudentWorld::createNPC() {

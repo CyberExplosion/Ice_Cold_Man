@@ -43,6 +43,7 @@ public:
 		populateIce();
 		createPlayer();
 		mainCreateObjects();
+		initSpawnParameters();
 		return GWSTATUS_CONTINUE_GAME;
 	}
 
@@ -84,29 +85,42 @@ public:
 	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> getIceArr() {
 		return ice_array;
 	}
-
-	//Functions for interfaces
+	bool boulderFall(int x, int y);
+	// Functions for interfaces
 	std::vector<std::weak_ptr<Actor>> iceCollideWithActor(std::shared_ptr<Actor> actor);
 	std::vector<std::weak_ptr<Actor>> actorsCollideWithMe(std::shared_ptr<Actor> actor);
 
 private:
+
+	// Data Structures
 	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
 	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
 	std::shared_ptr<IceMan> player;
-	int oilsLeft;
+
+	// Functions for move()
 	int updateStatus(); // Updates the status at the top of the screen. (Health, lives, gold, etc.)
 	int doThings(); // Asks the player and actor objects to doSomething() each tick.
 	void deleteFinishedObjects(); // Checks to see if an object has finished its task. (Eg. if a boulder has fallen, delete it from game.)
-
-	//Functions for init
+	
+	// Functions for init()
 	void populateIce();
 	void createPlayer();
 	void mainCreateObjects();
 	template<typename T>
 	bool createObjects(int x, int y);
+	void createProtesters();
+	void initSpawnParameters();
+	
+	// Private Variables
+	int ticksBeforeSpawn; // # of ticks before a protester can spawn on the field.
+	int protesterSpawnLimit; // # of protestors allowed per level.
+	int oilsLeft;
+	int protesterCount;
+
 
 	//Function for move
 	void createNPC();
+
 };
 
 template<typename T>
@@ -172,5 +186,7 @@ bool StudentWorld::createObjects(int x, int y) {
 	return true;
 }
 
-
+//void StudentWorld::createNPC(int x, int y) {
+//
+//}
 #endif // STUDENTWORLD_H_
