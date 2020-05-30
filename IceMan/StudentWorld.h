@@ -134,11 +134,11 @@ bool StudentWorld::createObjects(int x, int y) {
 
 	std::vector<std::weak_ptr<Actor>>intruders = std::move(temp->collisionDetection->wp_intruders);
 
-		for (auto const& sp_entity : intruders) {
-			std::shared_ptr<Actor>entity = sp_entity.lock();
-			if (entity && entity->type != Actor::ActorType::ice)	//There's an intruder and it's not ice
-				return false;
-		}
+	for (auto& sp_entity : intruders) {
+		std::shared_ptr<Actor>entity = sp_entity.lock();
+		if (entity && entity->type != Actor::ActorType::ice)	//There's an intruder and it's not ice
+			return false;
+	}
 
 	/*TODO: ICE IS NOT RECOGNIZED AS AN INTRUDER, FIX THIS SHIT*/
 	/*THIS MAY HAPPEN BECAUSE THE ICE IS DEAD BUT SINCE WE NOT MOVE YET CLEAN UP HASN'T BEEN CALLED*/

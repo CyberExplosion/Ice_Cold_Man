@@ -38,21 +38,6 @@ void FallMovement::moveThatAss() {
 void FallMovement::resetBehavior() {
 }
 
-///////////*** NOT USED ***/////////////
-//shared_ptr<Actor> IceMan::findPlayer() {
-//	vector<shared_ptr<Actor>> acVec = *(getWorld()->getAllActors());
-//	auto re = std::find_if(rbegin(acVec), rend(acVec),	//Since this function is invoked right when created the player, there's a high chance the player is at the last place in the vector
-//		[](shared_ptr<Actor>& val) {
-//			if (val->type == player)
-//				return true;
-//			return false;
-//		});
-//	if (re == rend(acVec))	//The player is not in the actor list, which is unlikely
-//		*re = nullptr;
-//	return *re;
-//}
-///***********************************/
-
 void IceMan::doSomething() {
 	/*******************************
 	Initialize the existence behavior, the movement behavior, the collision detection and the collision behavior
@@ -72,24 +57,21 @@ void IceMan::doSomething() {
 	if (!displayBehavior)
 		displayBehavior = make_unique<ExistPermanently>();
 	
+	displayBehavior->showYourself();
+	movementBehavior->moveThatAss();
+
+	//The collision need to be executed AFTER the movement for this to works
 	//Reset cycle of collision result and detection
 	collisionResult.reset();
 	collisionDetection = make_unique<CollisionDetection>(mySelf, this->getCollisionRange());
 	collisionDetection->behaveBitches();	//If there's a detection then a response is already made automatically
 	///////////////
-	displayBehavior->showYourself();
-	movementBehavior->moveThatAss();
-
-	
-	//if (collisionResult)
-	//	collisionResult->response();
 }
 
 void IceMan::dmgActor(int amt) {
 	Actor::dmgActor(amt);
 	getWorld()->playSound(dmgSound);
 }
-
 
 
 void Protesters::doSomething() {
@@ -220,7 +202,7 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 			case Actor::worldStatic:
 			case Actor::ice:
 				//Destroy only myself
-				source->collisionResult = make_unique<Destroy>(source, 9999);
+				source->collisionResult = make_unique<Destroy>(source, 99999);
 				break;
 			case Actor::player:
 			case Actor::npc:
@@ -258,9 +240,9 @@ Then a collision happen and you should produce a collision result
 					}
 				}
 			}
-			if(source->collisionResult)
-				return true;
 		}
+		if (source->collisionResult)
+			return true;
 	}
 	return false;
 }
@@ -283,9 +265,8 @@ void Block::response() {
 		targetX = target->getX();
 		targetY = target->getY();
 		target->getAnimationLocation(currentX, currentY);
-		if (targetFacing != target->getDirection()) {	//If they face different direction after being blocked, they can move again
+		if (targetFacing != target->getDirection())	//If they face different direction after being blocked, they can move again
 				return;
-		}
 		else
 			target->moveTo(currentX, currentY);	//Move to the current location == staying in place
 	}
@@ -311,11 +292,9 @@ void OilBarrels::doSomething() {
 		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
 
 	//Use the behavior
+	existBehavior->showYourself();
 	collisionDetection->behaveBitches();
 	detectBehavior->behaveBitches();
-	existBehavior->showYourself();
-	if (collisionResult)
-		collisionResult->response();
 
 	self.reset();
 }
@@ -352,8 +331,6 @@ void GoldNuggets::doSomething() {
 	displayBehavior->showYourself();
 	detectBehavior->behaveBitches();
 	collisionDetection->behaveBitches();
-	if (collisionResult)
-		collisionResult->response();
 
 	self.reset();
 }
@@ -391,8 +368,6 @@ void Water::doSomething() {
 	existBehavior->showYourself();
 	detectBehavior->behaveBitches();
 	collisionDetection->behaveBitches();
-	if (collisionResult)
-		collisionResult->response();
 
 	self.reset();
 }
@@ -405,6 +380,18 @@ void Squirt::shoot() {
 }
 
 void Squirt::doSomething() {
+	if (!isAlive()) {
+		resetAllBehaviors();
+		return;
+	}
+
+	shared_ptr<Actor> self = shared_from_this();
+
+	if (!displayBehavior)
+		displayBehavior = make_unique<ExistTemporary>();
+	if (!collisionDetection)
+		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
+
 }
 
 void Boulder::fall() {
