@@ -33,6 +33,7 @@ void FreeMovement::resetBehavior() {
 }
 
 void FallMovement::moveThatAss() {
+	
 }
 
 void FallMovement::resetBehavior() {
@@ -395,13 +396,35 @@ void Squirt::doSomething() {
 }
 
 void Boulder::fall() {
+	int y = getY();
+	checkIceBelow();
+	if (y == 0)
+		return;
+	else if (t == 0) 
+		moveTo(getX(), getY() - 1);
+	
 }
 
 bool Boulder::checkIceBelow() {
+	if (t != 0) 
+		t--;
+	else
+		return false;
+	
 	return false;
 }
 
 void Boulder::doSomething() {
+	if (!isAlive())
+		return;
+	
+	bool isFalling = getWorld()->boulderFall(getX(), getY());
+
+	if (isFalling) {
+		fall();
+	}
+
+	return;
 }
 
 void Ice::doSomething() {

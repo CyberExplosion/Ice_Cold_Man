@@ -1,9 +1,20 @@
-﻿  StudentWorld.cpp
+﻿  Actor.cpp
 A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
 A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(69,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
 A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(73,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(143,24): warning C4018: '<': signed/unsigned mismatch
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(144,25): warning C4018: '<': signed/unsigned mismatch
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(180,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(228,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(272,29): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(272,19): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+  StudentWorld.cpp
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(69,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(73,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(151,24): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(152,25): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(196,24): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(197,25): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(235,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(307,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+  Generating Code...
+GameWorld.obj : warning LNK4099: PDB 'vc142.pdb' was not found with 'GameWorld.obj' or at 'A:\Comp Sci\Ice_Cold_Man\Debug\vc142.pdb'; linking object as if no debug info
+GameController.obj : warning LNK4099: PDB 'vc142.pdb' was not found with 'GameController.obj' or at 'A:\Comp Sci\Ice_Cold_Man\Debug\vc142.pdb'; linking object as if no debug info
   IceMan.vcxproj -> A:\Comp Sci\Ice_Cold_Man\Debug\IceMan.exe

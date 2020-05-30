@@ -399,7 +399,9 @@ private:
 	//Functions
 	void doSomething() override;
 public:
+
 	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, int t_sound = SOUND_FOUND_OIL) : Collectable(world, true, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound) {
+
 		existBehavior = std::make_unique<ExistPermanently>();
 	};
 
@@ -413,6 +415,7 @@ private:
 	bool tempTimeEnd();
 public:
 	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true) : Collectable(world, true, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range), pickableByPlayer(t_pickable) {
+
 		if (pickableByPlayer) {
 			existBehavior = std::make_unique<ExistPermanently>();
 		}
@@ -475,14 +478,19 @@ public:
 
 class Boulder : public Hazard {
 public:
-	enum BoudlderState { stable, waiting, falling };
+	enum BoulderState { stable, waiting, falling };
 private:
+
+	BoulderState state = stable;
 	int fall_sound = SOUND_FALLING_ROCK;
-	BoudlderState state = stable;
+	
 	//Functions
 	void fall();
 	bool checkIceBelow();
 	void doSomething() override;
+
+	//Variables
+	int t = 30; // Adjust this to change how long before boulder falls.
 public:
 	Boulder(StudentWorld* world, int startX, int startY, Direction dir = down, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 9999, double col_range = 3, double detect_range = 9999) : Hazard(world, worldStatic, true, IID_BOULDER, startX, startY, dir, size, depth, hp, strength, col_range, detect_range){
 		//Not hazard yet when first spawn
