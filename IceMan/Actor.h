@@ -100,15 +100,27 @@ public:
 
 //Movement Strategy
 class IMovementBehavior {
+protected:
+	int key;
 public:
+	IMovementBehavior(int t_key) : key(t_key) {};
+	virtual ~IMovementBehavior() {};
 	virtual void moveThatAss() = 0;
 	virtual void resetBehavior() = 0;
+
+	int getKey() {
+		return key;
+	}
+	void setKey(int& t_key) {
+		key = t_key;
+	}
 };
 
 class FreeMovement : public IMovementBehavior{
 private:
 	
 public:
+	FreeMovement() : IMovementBehavior(INVALID_KEY) {};
 	//This is the default movement for NPC
 	void moveThatAss() override;
 	void resetBehavior() override;
@@ -118,6 +130,7 @@ class FallMovement : public IMovementBehavior{
 private:
 
 public:
+	FallMovement() : IMovementBehavior(INVALID_KEY) {};
 	//This is for the Boulder
 	void moveThatAss() override;
 	void resetBehavior() override;
@@ -125,11 +138,10 @@ public:
 
 class ControlledMovement : public IMovementBehavior{
 private:
-	int key = INVALID_KEY;
 	std::weak_ptr<Actor> pawn;
 public:
 	void resetBehavior() override;
-	ControlledMovement(std::weak_ptr<Actor> t_pawn) : pawn(t_pawn) {}
+	ControlledMovement(std::weak_ptr<Actor> t_pawn, int t_key) : IMovementBehavior(t_key), pawn(t_pawn) {}
 	//This is for the player
 	void moveThatAss() override;
 };
@@ -138,6 +150,7 @@ class PursuingMovement : public IMovementBehavior{
 private:
 
 public:
+	PursuingMovement() : IMovementBehavior(INVALID_KEY) {};
 	//This is for whenever NPC chasing after a location
 	void moveThatAss() override;
 	void resetBehavior() override;
@@ -147,6 +160,7 @@ class SquirtMovement : public IMovementBehavior {
 private:
 
 public:
+	SquirtMovement() : IMovementBehavior(INVALID_KEY) {};
 	//This is for the Squirt to travel
 	void moveThatAss() override;
 	void resetBehavior() override;
@@ -312,10 +326,12 @@ private:
 	std::vector<std::shared_ptr<GoldNuggets>>goldVec;
 	std::vector<std::shared_ptr<Squirt>>squirtVec;
 	//This function find the player actor type in the whole list of actors
+	//Function for users goodies usage
+	bool shootSquirt();
 public:
 	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 999, 3, 0, SOUND_PLAYER_GIVE_UP) {};
 	void doSomething() override;
-
+	bool useGoodies(int key);
 	void dmgActor(int amt) override;
 
 	int getSonarNum() {

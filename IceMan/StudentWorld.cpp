@@ -356,19 +356,6 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::iceCollideWithActor(std::shared_
 				intruders.push_back(ice_array[i][k]);
 			}
 		}
-
-
-		//	for (auto& single : allActors) {
-		//		if (single) {
-		//			if (!single->isAlive() || single == source)	//The intruder and the player is the same actor
-		//				continue;
-		//			int distance = sqrt(pow(source->getCenterX() - single->getCenterX(), 2) + pow(source->getCenterY() - single->getCenterY(), 2));
-		//			int spotZone = this->range + single->getCollisionRange();
-		//			if (distance <= spotZone)
-		//				intruders.push_back(single);
-		//		}
-		//	}
-		//}
 	}
 	return intruders;
 }
@@ -438,7 +425,8 @@ bool StudentWorld::createSquirt() {
 		default:
 			break;
 		}
-		if ((localY < 0 || localY > ROW_NUM - squirtColRange) || (localX < 0 || localX > COL_NUM - squirtColRange) || (localX == player->getX() && localY == player->getY()))	//Value stay the same or out of bounds
+		//Plus Object Length cause the location is lower left corner
+		if ((localY < 0 || localY > ROW_NUM + OBJECT_LENGTH - squirtColRange) || (localX < 0 || localX > COL_NUM + OBJECT_LENGTH - squirtColRange) || (localX == player->getX() && localY == player->getY()))	//Value stay the same or out of bounds
 			return false;
 		else {
 			actor_vec.emplace_back(make_shared<Squirt>(this, localX, localY, sqrtDir));

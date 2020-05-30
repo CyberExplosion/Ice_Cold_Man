@@ -18,7 +18,7 @@ class IceMan;
 class Ice;
 const int COL_NUM = 64,
 ROW_NUM = 60;
-const int DIST_ALLOW_BETW_SPAWN = 6;
+const int DIST_ALLOW_BETW_SPAWN = 9;	//3 is the typical "collision size of most object" plus 6 square away each other
 const int OBJECT_LENGTH = 4;
 const int ICE_LENGTH = 1;
 
@@ -172,11 +172,6 @@ bool StudentWorld::createObjects(int x, int y) {
 			shared_ptr<Actor>entity = wp_entity.lock();
 
 			if (entity) {
-				//entity->collisionDetection = std::make_unique<CollisionDetection>(entity, entity->getCollisionRange());
-				//entity->collisionDetection->behaveBitches();	//Get the intruder to check its' own collision detection
-				//	
-				//if (entity->collisionResult)
-				//		entity->collisionResult->response();	//Demand a response from the intruder
 				entity->dmgActor(9999);
 				entity.reset();
 			}
@@ -188,7 +183,5 @@ bool StudentWorld::createObjects(int x, int y) {
 	return true;
 }
 
-//void StudentWorld::createNPC(int x, int y) {
-//
-//}
+
 #endif // STUDENTWORLD_H_
