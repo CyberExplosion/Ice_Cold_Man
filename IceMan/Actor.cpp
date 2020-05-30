@@ -202,7 +202,7 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 			case Actor::worldStatic:
 			case Actor::ice:
 				//Destroy only myself
-				source->collisionResult = make_unique<Destroy>(source, 99999);
+				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
 				break;
 			case Actor::player:
 			case Actor::npc:
