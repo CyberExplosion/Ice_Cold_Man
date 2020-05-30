@@ -54,24 +54,6 @@ public:
 	//This is for all the usage of shared_ptr in them behaviors. This is bad but I blame due date
 	virtual void resetAllBehaviors();
 
-	//int getCenterX() {
-	//	centerX = (size * OBJECT_LENGTH) / 2 + getX() - 1;	//Example: The graph takes 4 slot: 52 53 54 55 -> The center will be 53
-	//	return centerX;
-	//}
-
-	//int getCenterY() {
-	//	centerY = (size * OBJECT_LENGTH) / 2 + getY() - 1;
-	//	return centerY;
-	//}
-
-	//int getSound() {
-	//	return death_sound;
-	//}
-
-	//void setSound(int t_sound) {
-	//	death_sound = t_sound;
-	//}
-
 	StudentWorld* getWorld() {
 		return m_sw;
 	}
@@ -490,7 +472,7 @@ private:
 	void shoot();
 	void doSomething() override;
 public:
-	Squirt(StudentWorld* world, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 2, double col_range = 4, double detect_range = 9999, int ded_sound = SOUND_PLAYER_SQUIRT) : Hazard(world, hazard, true, IID_WATER_SPURT, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, ded_sound) {};
+	Squirt(StudentWorld* world, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 2, double col_range = 3, double detect_range = 9999, int ded_sound = SOUND_PLAYER_SQUIRT) : Hazard(world, hazard, true, IID_WATER_SPURT, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, ded_sound) {};
 
 };
 

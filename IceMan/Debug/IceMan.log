@@ -1,21 +1,20 @@
 ﻿  Actor.cpp
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(87,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(91,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.cpp(426,29): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.cpp(426,19): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(69,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(73,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(272,29): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(272,19): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
   StudentWorld.cpp
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(87,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(91,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(169,24): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(170,25): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(214,24): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(215,25): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(252,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(324,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-  GameController.cpp
-  GameWorld.cpp
-  main.cpp
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(69,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(73,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(151,24): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(152,25): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(196,24): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(197,25): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(235,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(307,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   Generating Code...
-  IceMan.vcxproj -> C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\Debug\IceMan.exe
+GameWorld.obj : warning LNK4099: PDB 'vc142.pdb' was not found with 'GameWorld.obj' or at 'A:\Comp Sci\Ice_Cold_Man\Debug\vc142.pdb'; linking object as if no debug info
+GameController.obj : warning LNK4099: PDB 'vc142.pdb' was not found with 'GameController.obj' or at 'A:\Comp Sci\Ice_Cold_Man\Debug\vc142.pdb'; linking object as if no debug info
+  IceMan.vcxproj -> A:\Comp Sci\Ice_Cold_Man\Debug\IceMan.exe
