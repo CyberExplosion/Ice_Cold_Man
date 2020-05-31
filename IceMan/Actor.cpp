@@ -1,6 +1,7 @@
 #include "Actor.h"
 #include "GameController.h"
 #include "StudentWorld.h"
+#include "GameConstants.h"
 #include <cmath>
 #include <iostream>
 
@@ -39,6 +40,13 @@ void FallMovement::moveThatAss() {
 void FallMovement::resetBehavior() {
 }
 
+bool IceMan::shootSquirt() {
+	if (getWorld()->createSquirt())
+		return true;
+	else
+		return false;
+}
+
 void IceMan::doSomething() {
 	/*******************************
 	Initialize the existence behavior, the movement behavior, the collision detection and the collision behavior
@@ -50,23 +58,50 @@ void IceMan::doSomething() {
 		return;
 	}
 	//This certainly will cause problem in the future. TOO BAD
-	weak_ptr<Actor> mySelf = this->getWorld()->getPlayer();
+	weak_ptr<Actor> mySelf = getWorld()->getPlayer();
+	
+	//shared_ptr<Actor>temp = mySelf.lock();
+	int keyPressed;
+	if (!getWorld()->getKey(keyPressed))
+		keyPressed = INVALID_KEY;
 
-	if (!movementBehavior) {
-		movementBehavior = std::make_unique<ControlledMovement>(mySelf);
-	}
+	//keyPressed = KEY_PRESS_DOWN;
+	
+	//cerr << keyPressed << " ";
+	if (!movementBehavior)
+		movementBehavior = std::make_unique<ControlledMovement>(mySelf, keyPressed);
+	else
+		movementBehavior->setKey(keyPressed);
+
+
 	if (!displayBehavior)
 		displayBehavior = make_unique<ExistPermanently>();
 	
+	useGoodies(keyPressed);
 	displayBehavior->showYourself();
 	movementBehavior->moveThatAss();
-
 	//The collision need to be executed AFTER the movement for this to works
 	//Reset cycle of collision result and detection
 	collisionResult.reset();
 	collisionDetection = make_unique<CollisionDetection>(mySelf, this->getCollisionRange());
 	collisionDetection->behaveBitches();	//If there's a detection then a response is already made automatically
 	///////////////
+}
+
+//Functions return true if the user using goodies instead of moving
+bool IceMan::useGoodies(int key) {
+		switch (key) {
+		case KEY_PRESS_SPACE:
+			shootSquirt();
+			return true;
+		case KEY_PRESS_TAB:
+			return true;
+		case KEY_PRESS_ESCAPE:
+			return true;
+		default:
+			break;
+	}
+	return false;
 }
 
 void IceMan::dmgActor(int amt) {
@@ -476,13 +511,9 @@ void ControlledMovement::moveThatAss() {
 	*****************************/
 	shared_ptr<Actor>spPawn = pawn.lock();
 
-	if (spPawn && spPawn->isAlive()) {
-		if (!spPawn->getWorld()->getKey(key))
-			key = INVALID_KEY;
-
-		////Test for different key, remember to comment later
-		//key = KEY_PRESS_RIGHT;
-		//////////////////////////////
+	//if (spPawn && spPawn->isAlive()) {
+	//	if (!spPawn->getWorld()->getKey(key))
+	//		key = INVALID_KEY;
 
 		if (key != INVALID_KEY) {
 			switch (key) {
@@ -492,8 +523,12 @@ void ControlledMovement::moveThatAss() {
 				else {
 					if (spPawn->getY() - 1 < 0)
 						break;
-					else
+					else {
+						//Testing purposes
+						cerr << key << " ";
+
 						spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
+					}
 				}
 				break;
 			case KEY_PRESS_UP:
@@ -524,14 +559,14 @@ void ControlledMovement::moveThatAss() {
 						break;
 					else
 						spPawn->moveTo(spPawn->getX() - 1, spPawn->getY());
-        }
+				}
 				break;
 			default:
 				break;
 			}
 		}
-		spPawn.reset();
-	}
+
+	spPawn.reset();
 }
 
 void PursuingMovement::moveThatAss() {
