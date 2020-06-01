@@ -389,9 +389,9 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_
 			int spotPositiveY = actY + playerRange;
 
 			//Prune the distance so it doesn't go out of range
-			for (; spotPositiveX > COL_NUM; spotPositiveX--);
+			for (; spotPositiveX >= COL_NUM; spotPositiveX--);
 			for (; spotNegativeX < 0; spotNegativeX++);
-			for (; spotPositiveY > ROW_NUM; spotPositiveY--);
+			for (; spotPositiveY >= ROW_NUM; spotPositiveY--);
 			for (; spotNegativeY < 0; spotNegativeY++);
 			
 			if (each != actor) {

@@ -157,13 +157,9 @@ std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedOthers() {
 void RadarLikeDetection::checkSurrounding(std::weak_ptr<Actor> t_source) {
 	std::shared_ptr<Actor> temp = t_source.lock();
 	if (temp) {
-		if (temp->type == Actor::ActorType::player || temp->type == Actor::ActorType::worldStatic || temp->type == Actor::ActorType::collect) {	//Only these are allow to interact with the ice AND others
 			wp_intruders = std::move(sensedIce());
 			auto temp = std::move(sensedOthers());
 			wp_intruders.insert(end(wp_intruders), begin(temp), end(temp));	//Concatenate the vectors cause we have more intruders
-		}
-		else
-			wp_intruders = std::move(sensedOthers());
 	}
 }
 
@@ -213,10 +209,6 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 	shared_ptr<Actor> receiver = wp_receiver.lock();
 
 	if ((source && receiver) && (source->isVisible() && receiver->isVisible()) && source != receiver) {	//Only enable collision for things that are shown
-		//if (source->collisionResult)
-		//	source->collisionResult.reset();
-		//if (receiver->collisionResult)
-		//	source->collisionResult.reset();
 
 		switch (source->type) {
 		case Actor::player:
@@ -265,11 +257,6 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 				source->collisionResult = make_unique<Destroy>(source, 9999);
 				break;
 			case Actor::player:
-				//Destroy both
-				//test
-				//receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
-				//receiver->collisionResult = make_unique<Destroy>(receiver, 1);
-				//source->collisionResult = make_unique<Destroy>(source, 9999);
 				break;
 			case Actor::npc:
 				//Destroy only the receiver
@@ -465,7 +452,7 @@ void Squirt::doSomething() {
 	//Always execute movement first before collision detection so that if collision is <Block> it can catch the movement
 	displayBehavior->showYourself();
 	detectBehavior->behaveBitches();
-	movementBehavior->moveThatAss();	
+	movementBehavior->moveThatAss();
 	collisionDetection->behaveBitches();
 
 	self.reset();

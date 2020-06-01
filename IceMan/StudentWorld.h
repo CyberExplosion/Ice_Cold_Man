@@ -95,7 +95,6 @@ public:
 	bool createObjects(int x, int y);
 
 private:
-
 	// Data Structures
 	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
 	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
@@ -170,7 +169,6 @@ bool StudentWorld::createObjects(int x, int y) {
 		for (auto& wp_entity : intruders) {
 			//since i ran out of patient, imma going to do what i called a pro gamer moves
 			shared_ptr<Actor>entity = wp_entity.lock();
-
 			if (entity) {
 				entity->dmgActor(9999);
 				entity.reset();
