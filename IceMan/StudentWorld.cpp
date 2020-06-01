@@ -22,7 +22,9 @@ int StudentWorld::move() {
 	ticksBeforeSpawn--;
 	updateStatus();
 	createProtesters();
+
 	int status_of_game = doThings();
+	
 	deleteFinishedObjects();
 
 	switch (status_of_game) 
@@ -55,11 +57,19 @@ int StudentWorld::updateStatus() {
 	lvl = to_string(getLevel()); 
 	score = to_string(getScore()); 
 	lives = to_string(getLives());
-	health = to_string(player->getHealth() * 10); 
-	wtr = to_string(player->getSquirtNum());
-	gld = to_string(player->getGoldNum());
+
+	if (player) {
+		health = to_string(player->getHealth() * 10);
+		wtr = to_string(player->getSquirtNum());
+		gld = to_string(player->getGoldNum());
+		sonar = to_string(player->getSonarNum());
+	}
+	else {
+		health = '0';
+		wtr = '0';
+		gld = '0';
+	}
 	oil = to_string(oilsLeft);
-	sonar = to_string(player->getSonarNum());
 
 	//Fixed a little bit, following the pdf requirements
 	/********************************************
@@ -127,7 +137,7 @@ void StudentWorld::deleteFinishedObjects() {
 		}
 	}
 
-	if (!player->isAlive())
+	if (player && !player->isAlive())
 		player.reset();
 }
 
@@ -379,9 +389,9 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_
 			int spotPositiveY = actY + playerRange;
 
 			//Prune the distance so it doesn't go out of range
-			for (; spotPositiveX > COL_NUM; spotPositiveX--);
+			for (; spotPositiveX >= COL_NUM; spotPositiveX--);
 			for (; spotNegativeX < 0; spotNegativeX++);
-			for (; spotPositiveY > ROW_NUM; spotPositiveY--);
+			for (; spotPositiveY >= ROW_NUM; spotPositiveY--);
 			for (; spotNegativeY < 0; spotNegativeY++);
 			
 			if (each != actor) {
@@ -429,6 +439,11 @@ bool StudentWorld::createSquirt() {
 		if ((localY < 0 || localY > ROW_NUM + OBJECT_LENGTH - squirtColRange) || (localX < 0 || localX > COL_NUM + OBJECT_LENGTH - squirtColRange) || (localX == player->getX() && localY == player->getY()))	//Value stay the same or out of bounds
 			return false;
 		else {
+			for (int row = localY; row <= localY + squirtColRange && row < ROW_NUM; row++)
+				for (int col = localX; col <= localX + squirtColRange && col < COL_NUM; col++)	
+					if (ice_array[row][col])	//If there are ice in the way
+						return false;
+
 			actor_vec.emplace_back(make_shared<Squirt>(this, localX, localY, sqrtDir));
 			return true;
 		}
@@ -442,7 +457,8 @@ void StudentWorld::cleanUp() {
 
 	for (auto& rowIter : ice_array) {
 		for (auto& colIter : rowIter) {
-			colIter->resetAllBehaviors();
+			if(colIter)
+				colIter->resetAllBehaviors();
 			colIter.reset();
 		}
 	}

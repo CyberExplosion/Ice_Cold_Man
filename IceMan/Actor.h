@@ -158,9 +158,10 @@ public:
 
 class SquirtMovement : public IMovementBehavior {
 private:
-
+	int travelDist;
+	std::weak_ptr<Actor> squirt;
 public:
-	SquirtMovement() : IMovementBehavior(INVALID_KEY) {};
+	SquirtMovement(std::weak_ptr<Actor> t_s, int distTravel = 4) : IMovementBehavior(INVALID_KEY), squirt(t_s), travelDist(distTravel) {};
 	//This is for the Squirt to travel
 	void moveThatAss() override;
 	void resetBehavior() override;
@@ -278,19 +279,11 @@ protected:
 	int range;
 	std::vector<std::weak_ptr<Actor>> sensedIce();
 	std::vector<std::weak_ptr<Actor>> sensedOthers();
+	void checkSurrounding(std::weak_ptr<Actor>t_source);
 public:
 	RadarLikeDetection(std::weak_ptr<Actor> t_source, int t_range) : IDetectionBehavior(t_source) {
 		range = t_range;
-		std::shared_ptr<Actor> temp = t_source.lock();
-		if (temp) {
-			if (temp->type == Actor::ActorType::player || temp->type == Actor::ActorType::worldStatic || temp->type == Actor::ActorType::collect) {	//Only these are allow to interact with the ice AND others
-				wp_intruders = std::move(sensedIce());
-				auto temp = std::move(sensedOthers());	
-				wp_intruders.insert(end(wp_intruders), begin(temp), end(temp));	//Concatenate the vectors cause we have more intruders
-			}
-			else
-				wp_intruders = std::move(sensedOthers());
-		}
+		checkSurrounding(t_source);
 	};
 	int getRange() {
 		return range;
@@ -519,7 +512,7 @@ class Ice : public Inanimated {
 private:
 	
 public:
-	Ice(StudentWorld* world, bool visibility, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 3.0, int hp = 1, int strength = 1, double col_range = 0, double detect_range = 9999, int t_sound = SOUND_DIG) : Inanimated(world, ActorType::ice, visibility, IID_ICE, startX, startY, dir, 0.25, 3, hp, strength, col_range, detect_range, t_sound) {};
+	Ice(StudentWorld* world, bool visibility, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 3.0, int hp = 1, int strength = 9999, double col_range = 0, double detect_range = 9999, int t_sound = SOUND_DIG) : Inanimated(world, ActorType::ice, visibility, IID_ICE, startX, startY, dir, 0.25, 3, hp, strength, col_range, detect_range, t_sound) {};
 	void doSomething() override;
 };
 
