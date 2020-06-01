@@ -47,6 +47,11 @@ bool IceMan::shootSquirt() {
 		return false;
 }
 
+
+////Testing purposes
+//int counter = 2;
+////////////////////
+
 void IceMan::doSomething() {
 	/*******************************
 	Initialize the existence behavior, the movement behavior, the collision detection and the collision behavior
@@ -61,13 +66,21 @@ void IceMan::doSomething() {
 	weak_ptr<Actor> mySelf = getWorld()->getPlayer();
 	
 	//shared_ptr<Actor>temp = mySelf.lock();
+
 	int keyPressed;
+
 	if (!getWorld()->getKey(keyPressed))
 		keyPressed = INVALID_KEY;
 
-	//keyPressed = KEY_PRESS_DOWN;
-	
-	//cerr << keyPressed << " ";
+	///////////Test
+	//if (counter == 2) {
+	//	keyPressed = KEY_PRESS_SPACE;
+	//	counter--;
+	//}
+	//else
+	//	keyPressed = KEY_PRESS_RIGHT;
+	/////////////////
+
 	if (!movementBehavior)
 		movementBehavior = std::make_unique<ControlledMovement>(mySelf, keyPressed);
 	else
@@ -98,6 +111,9 @@ bool IceMan::useGoodies(int key) {
 			return true;
 		case KEY_PRESS_ESCAPE:
 			return true;
+		case 'Z':
+		case 'z':
+			break;
 		default:
 			break;
 	}
@@ -137,6 +153,21 @@ std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedOthers() {
 	return intruders;
 }
 
+//Function works on recording the intruders and ice surround the source. Call this to update the intruders' list
+void RadarLikeDetection::checkSurrounding(std::weak_ptr<Actor> t_source) {
+	std::shared_ptr<Actor> temp = t_source.lock();
+	if (temp) {
+		if (temp->type == Actor::ActorType::player || temp->type == Actor::ActorType::worldStatic || temp->type == Actor::ActorType::collect) {	//Only these are allow to interact with the ice AND others
+			wp_intruders = std::move(sensedIce());
+			auto temp = std::move(sensedOthers());
+			wp_intruders.insert(end(wp_intruders), begin(temp), end(temp));	//Concatenate the vectors cause we have more intruders
+		}
+		else
+			wp_intruders = std::move(sensedOthers());
+	}
+}
+
+
 void RadarLikeDetection::behaveBitches() {
 	sensedIce();
 }
@@ -144,17 +175,8 @@ void RadarLikeDetection::behaveBitches() {
 
 void CollisionDetection::behaveBitches() {
 	shared_ptr<Actor>source = wp_source.lock();
-	//shared_ptr<Actor> dummy;
-	//if (!wp_intruders.empty())
-	//	dummy = wp_intruders[0].lock();	//See if this is the actor containers or the ice containers
-
 	if (source) {
-		//switch (dummy->type) {
-		////case Actor::ice:
-		////	if (collideIceHappen()) 	//Make the Actor produce a result because of collision
-		////		source->collisionResult->response();
-		////	break;
-		//default:
+		checkSurrounding(source);	//Update the current location of intruders
 			if (collisionHappen())
 				source->collisionResult->response();
 
@@ -206,7 +228,9 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 				source->collisionResult = make_unique<Block>(source);
 				break;
 			case Actor::hazard:
+				//Destroy both the hazard and the player
 				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
+				receiver->collisionResult = make_unique<Destroy>(receiver, 9999);
 				break;
 			case Actor::ice:
 				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
@@ -238,9 +262,15 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 			case Actor::worldStatic:
 			case Actor::ice:
 				//Destroy only myself
-				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
+				source->collisionResult = make_unique<Destroy>(source, 9999);
 				break;
 			case Actor::player:
+				//Destroy both
+				//test
+				//receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
+				//receiver->collisionResult = make_unique<Destroy>(receiver, 1);
+				//source->collisionResult = make_unique<Destroy>(source, 9999);
+				break;
 			case Actor::npc:
 				//Destroy only the receiver
 				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
@@ -425,9 +455,20 @@ void Squirt::doSomething() {
 
 	if (!displayBehavior)
 		displayBehavior = make_unique<ExistTemporary>();
+	if (!detectBehavior)
+		detectBehavior = make_unique<RadarLikeDetection>(self, self->getDetectRange());
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
+	if (!movementBehavior)
+		movementBehavior = make_unique<SquirtMovement>(self);
 
+	//Always execute movement first before collision detection so that if collision is <Block> it can catch the movement
+	displayBehavior->showYourself();
+	detectBehavior->behaveBitches();
+	movementBehavior->moveThatAss();	
+	collisionDetection->behaveBitches();
+
+	self.reset();
 }
 
 void Boulder::fall() {
@@ -450,16 +491,27 @@ bool Boulder::checkIceBelow() {
 }
 
 void Boulder::doSomething() {
-	if (!isAlive())
+	if (!isAlive()) {
+		resetAllBehaviors();
 		return;
+	}
 	
+	shared_ptr<Actor> self = shared_from_this();
+
 	bool isFalling = getWorld()->boulderFall(getX(), getY());
 
 	if (isFalling) {
 		fall();
+		changeActorType(ActorType::hazard);
 	}
 
-	return;
+	if (!collisionDetection)
+		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
+
+
+	collisionDetection->behaveBitches();
+
+	self.reset();
 }
 
 void Ice::doSomething() {
@@ -576,6 +628,47 @@ void PursuingMovement::resetBehavior() {
 }
 
 void SquirtMovement::moveThatAss() {
+	shared_ptr<Actor> pawn = squirt.lock();
+	
+	if (pawn && pawn->isAlive()) {
+		if (travelDist <= 0) {	//The distance it can travel expired
+			pawn->dmgActor(9999);
+		}
+
+		GraphObject::Direction dir = pawn->getDirection();
+		int localX = pawn->getX();
+		int localY = pawn->getY();
+
+		switch (dir) {
+		case GraphObject::up:
+			localY += 1;
+			break;
+		case GraphObject::down:
+			localY -= 1;
+			break;
+		case GraphObject::left:
+			localX -= 1;
+			break;
+		case GraphObject::right:
+			localX += 1;
+			break;
+		default:
+			break;
+		}
+
+		if (localY > ROW_NUM || localX > COL_NUM)	//Out of bounds
+			return;
+		else {
+			pawn->moveTo(localX, localY);	//Update new location
+
+			//pawn->collisionDetection.reset();
+			//pawn->collisionDetection = make_unique<CollisionDetection>(pawn, pawn->getCollisionRange());
+			//pawn->collisionDetection->behaveBitches();	//Force check collision after update the new location
+			--travelDist;	//Decrement the distance it can still travel
+		}
+	}
+	pawn.reset();
+	return;
 }
 
 void SquirtMovement::resetBehavior() {
