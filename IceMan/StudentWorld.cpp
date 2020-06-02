@@ -7,12 +7,14 @@
 #include <iomanip>
 #include <sstream>
 #include <cmath>
-
+#include <future>
 #include <iostream>
 using namespace std;
 
 //testing variable
 //int collectableLeft;
+
+const int INVALID_LOCAL = -1;
 
 GameWorld* createStudentWorld(string assetDir)
 {
@@ -25,7 +27,7 @@ int StudentWorld::move() {
 	ticksBeforeSpawn--;
 	updateStatus();
 	createProtesters();
-
+	//createGoodies();
 	int status_of_game = doThings();
 	
 	deleteFinishedObjects();
@@ -63,9 +65,9 @@ int StudentWorld::updateStatus() {
 
 	if (player) {
 		health = to_string(player->getHealth() * 10);
-		wtr = to_string(player->getSquirtNum());
-		gld = to_string(player->getGoldNum());
-		sonar = to_string(player->getSonarNum());
+		wtr = to_string('0');
+		gld = to_string('0');
+		sonar = to_string('0');
 	}
 	else {
 		health = '0';
@@ -101,28 +103,19 @@ int StudentWorld::doThings() {
 		return GWSTATUS_PLAYER_DIED; // If the player has died, return the appropriate status.
 
 
-	//Testing
-	//collectableLeft = 0;
-
 	for (auto& actors : actor_vec) { // Iterates through entire vector of actor objects 
 								// and has them call their own doSomething() methods.
 		if (actors && actors->isAlive()) {
 			actors->doSomething(); // If it is valid, have the actor do something.
 		}
-
-		//////Testing
-		//if (actors->type == Actor::collect)
-		//	collectableLeft++;
 	}
-	//cout << collectableLeft << " ";
-	/////////////////////
 
 	//Just the ice within the proximity of the player are allow to do any action
 	vector<weak_ptr<Actor>> iceTarget = iceCollideWithActor(player);
 	for (auto& val : iceTarget) {
 		shared_ptr<Actor>temp = val.lock();
 		if (temp)
-			temp->doSomething();
+			temp->doSomething();	//Don't know why it needs but it'll crash
 	}
 
 	if (oilsLeft == 0)
@@ -171,7 +164,7 @@ bool StudentWorld::boulderFall(int x, int y)
 																	// If all four flags are false then there is no 
 																	// ice underneath the boulder and we should let it fall!
 
-	for (int row = 0; row < ice_array.size(); row++) {
+	for (int row = targetY; row < ice_array.size(); row++) {
 		for (int col = 0; col < ice_array[row].size(); col++) {
 			if (row == targetY && col == tx1) {
 				if (ice_array[row][col] == nullptr) {
@@ -197,6 +190,8 @@ bool StudentWorld::boulderFall(int x, int y)
 					continue;
 				}
 			}
+			if (flag1 && flag2 && flag3 && flag4)
+				break;
 		}
 	}
 
@@ -244,13 +239,14 @@ void StudentWorld::mainCreateObjects() {
 		Move on to spawn the next actor
 	*****************************/
 	int currentLV = getLevel();
-	int numBoulder = min(currentLV / 2 + 2, 9);
-	int numGold = max(5 - currentLV / 2, 2);
-	int numOil = min(2 + currentLV, 21);
-	//////Test
-	//int numBoulder = 1;
-	//int numGold = 1;
-	//int numOil = 1;
+	//int numBoulder = min(currentLV / 2 + 2, 9);
+	//int numGold = max(5 - currentLV / 2, 2);
+	//int numOil = min(2 + currentLV, 21);
+
+	////Test
+	int numBoulder = 1;
+	int numGold = 1;
+	int numOil = 1;
 
 	oilsLeft = numOil;
 
@@ -262,7 +258,7 @@ void StudentWorld::mainCreateObjects() {
 		shaftYoffsetD = 4,	//All inclusive
 		shaftYoffsetU = 60;
 
-	//createNPC<Protester>(60, 60);
+	createNPC();
 
 	for (; numBoulder > 0; numBoulder--) {
 		do {
@@ -274,7 +270,7 @@ void StudentWorld::mainCreateObjects() {
 			}
 			//Testing, remember to change the boulder location back to localX and Y
 			//33 60 for testing collision with boulder
-		} while (!createObjects<Boulder>(localX , localY));	//If object cannot create at the location then try again
+		} while (!createObjects<Boulder>(33, 60));	//If object cannot create at the location then try again
 	}
 
 	for (; numGold > 0; numGold--) {
@@ -306,7 +302,7 @@ void StudentWorld::createProtesters() {
 	int currentLV = getLevel();
 	if (ticksBeforeSpawn == 0) {
 		if (protesterCount != protesterSpawnLimit) {
-			//createNPC<Protester>(60, 60);
+			createNPC();
 		}
 		ticksBeforeSpawn = max(25, 200 - currentLV);
 	}
@@ -409,9 +405,9 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_
 			int actY = actor->getY();
 
 			int spotNegativeX = actX - eachRange;
-			int spotPositiveX = actX + playerRange;
+			int spotPositiveX = actX + playerRange;	//Range from left to right
 			int spotNegativeY = actY - eachRange;
-			int spotPositiveY = actY + playerRange;
+			int spotPositiveY = actY + playerRange;	//Range from bottom to top
 
 			//Prune the distance so it doesn't go out of range
 			//for (; spotPositiveX >= COL_NUM; spotPositiveX--);
@@ -475,6 +471,74 @@ bool StudentWorld::createSquirt() {
 	}
 	return false;
 }
+
+
+/////test this for bugss plssss
+bool StudentWorld::createGoodies() {
+	//int currentLvl = getLevel();
+	//double spawnChance = currentLvl * 25 + 300;
+	//double spawnPercentage = (1 / spawnChance) * 100;	//1 out of G chance
+
+	//bool allowSpawn = (rand() % 100) < spawnPercentage;
+
+	//Test
+	bool allowSpawn = true;
+
+	if (allowSpawn) {
+		//bool spawnWater = (rand() % 100) < WATER_CHANCE;	//water is 80 percent
+
+		//Tests
+		bool spawnWater = true;
+		/////////////
+
+		//Find the spot to spawn in
+		auto fut = async(launch::async,		//I can't believe this works
+			[this]() {
+				auto temp = this->findEmptyIce();
+				if (temp.first == INVALID_LOCAL || temp.second == INVALID_LOCAL)
+					throw logic_error("Location for spawn GOODIEs is invalid");
+				return temp;
+			});
+		auto location = fut.get();	//Get the future
+		
+		if (spawnWater) {
+			actor_vec.emplace_back(make_shared<Water>(this, location.first, location.second));
+		}
+		else {
+			actor_vec.emplace_back(make_shared<SonarKit>(this));
+		}
+		return true;
+	}
+
+	return false;
+}
+
+//Async Programming because this may takes a long time to find
+std::pair<int, int> StudentWorld::findEmptyIce(int size) {
+	bool gotResult = false;
+	int localX = INVALID_LOCAL;
+	int localY = INVALID_LOCAL;
+	
+	do {
+		gotResult = true;	//Assume the location is nice
+		localX = rand() % COL_NUM;
+		localY = rand() % ROW_NUM;
+
+		localX = 33;
+		localY = 50;
+		for (int i = localY; i < ROW_NUM && i <= ROW_NUM + size; i++) {
+			for (int k = localX; k < COL_NUM && k <= COL_NUM + size; k++) {
+				if (ice_array[i][k]) {
+					gotResult = false;
+					break;
+				}
+			}
+		}
+	} while (!gotResult);
+
+	return make_pair(localX, localY);
+}
+
 
 void StudentWorld::cleanUp() {
 	//erase everything from vector

@@ -45,12 +45,16 @@ public:
 
 	std::unique_ptr<IExistenceBehavior> displayBehavior;
 	std::unique_ptr<IMovementBehavior> movementBehavior;
+	
 	//Store the result in this
+	std::unique_ptr<IDetectionBehavior>collisionDetection;
+	
+	//Don't think about this
 	std::unique_ptr<IActorResponse> collisionResult;
+	
 	//Determine what method of detection the actor would use
 	std::unique_ptr<IDetectionBehavior>detectBehavior;
-	std::unique_ptr<IDetectionBehavior>collisionDetection;
-
+	
 	//This is for all the usage of shared_ptr in them behaviors. This is bad but I blame due date
 	virtual void resetAllBehaviors();
 
@@ -202,6 +206,7 @@ public:
 	void response() override;
 };
 
+//This is only use for radar type collision
 class Appear : public IActorResponse {
 private:
 	std::weak_ptr<Actor>target;
@@ -253,9 +258,10 @@ class IDetectionBehavior{
 protected:
 
 public:
-	//The source is npc or objects. Intruder will be the player
+	//The source is npc or objects. Intruders will be others actors that inside the range
 	std::weak_ptr<Actor> wp_source;
 	std::vector<std::weak_ptr<Actor>> wp_intruders;
+	//Constructor
 	IDetectionBehavior(std::weak_ptr<Actor> t_source) : wp_source(t_source) {};
 	IDetectionBehavior(std::weak_ptr<Actor> t_source, std::vector<std::weak_ptr<Actor>> t_intruder) : wp_source(t_source), wp_intruders(t_intruder) {};
 	
@@ -306,7 +312,6 @@ public:
 
 /////////////////////////
 
-
 //People
 class Characters : public Actor {
 public:
@@ -317,9 +322,6 @@ public:
 class IceMan : public Characters {
 private:
 	int dmgSound = SOUND_PLAYER_ANNOYED;
-	std::vector<std::shared_ptr<SonarKit>>sonarVec;
-	std::vector<std::shared_ptr<GoldNuggets>>goldVec;
-	std::vector<std::shared_ptr<Squirt>>squirtVec;
 	//This function find the player actor type in the whole list of actors
 	//Function for users goodies usage
 	bool shootSquirt();
@@ -328,18 +330,6 @@ public:
 	void doSomething() override;
 	bool useGoodies(int key);
 	void dmgActor(int amt) override;
-
-	int getSonarNum() {
-		return sonarVec.size();
-	}
-
-	int getSquirtNum() {
-		return squirtVec.size();
-	}
-
-	int getGoldNum() {
-		return goldVec.size();
-	}
 };
 
 class Protesters : public Characters{
@@ -413,7 +403,6 @@ public:
 
 	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, int t_sound = SOUND_FOUND_OIL) : Collectable(world, false, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound) {
 	};
-
 };
 
 class GoldNuggets : public Collectable{
@@ -423,17 +412,7 @@ private:
 	//Determine if the time for the Temporary gold exist ran out
 	bool tempTimeEnd();
 public:
-	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true) : Collectable(world, false, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range), pickableByPlayer(t_pickable) {
-
-		//if (pickableByPlayer) {
-		//	existBehavior = std::make_unique<ExistPermanently>();
-		//}
-		//else {
-		//	existBehavior = std::make_unique<ExistTemporary>();
-		//	setDeathSound(SOUND_PROTESTER_FOUND_GOLD);	//Change into sound of protesters when not pickable by player
-		//	changeActorType(dropByPlayer);
-		//}
-	};
+	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true) : Collectable(world, false, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range), pickableByPlayer(t_pickable) {};
 	void drop();
 	bool getStage() {
 		return pickableByPlayer;

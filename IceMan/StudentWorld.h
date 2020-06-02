@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <future>
 #include "Actor.h"
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
@@ -16,11 +17,14 @@
 class Actor;
 class IceMan;
 class Ice;
+
 const int COL_NUM = 64,
 ROW_NUM = 60;
 const int DIST_ALLOW_BETW_SPAWN = 9;	//3 is the typical "collision size of most object" plus 6 square away each other
 const int OBJECT_LENGTH = 4;
 const int ICE_LENGTH = 1;
+const int SONAR_CHANCE = 20,
+WATER_CHANCE = 80;			//both percentages
 
 class StudentWorld : public GameWorld
 {
@@ -90,7 +94,11 @@ public:
 	std::vector<std::weak_ptr<Actor>> iceCollideWithActor(std::shared_ptr<Actor> actor, bool radarMode = false);
 	std::vector<std::weak_ptr<Actor>> actorsCollideWithMe(std::shared_ptr<Actor> actor, bool radarMode = false);
 	bool createSquirt();
-
+	bool createGoodies();
+	void decrementOil() {
+		--oilsLeft;
+	}
+	std::pair<int, int> findEmptyIce(int size = 3);	//Don't know why but my guess it's that async doesn't allow member function
 	template<typename T>
 	bool createObjects(int x, int y);
 

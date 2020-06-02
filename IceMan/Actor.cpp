@@ -48,9 +48,9 @@ bool IceMan::shootSquirt() {
 }
 
 
-////Testing purposes
-//int counter = 2;
-////////////////////
+//Testing purposes
+int counter = 2;
+//////////////////
 
 void IceMan::doSomething() {
 	/*******************************
@@ -72,9 +72,12 @@ void IceMan::doSomething() {
 	if (!getWorld()->getKey(keyPressed))
 		keyPressed = INVALID_KEY;
 
-	/////////////Test
-	//keyPressed = KEY_PRESS_RIGHT;
-	//////////////////
+	///////////////Test
+	//counter--;
+	//if (counter <= 0)
+	//	keyPressed = KEY_PRESS_LEFT;
+	////keyPressed = KEY_PRESS_RIGHT;
+	////////////////////
 
 	if (!displayBehavior)
 		displayBehavior = make_unique<ExistPermanently>(mySelf);
@@ -158,8 +161,10 @@ void RadarLikeDetection::checkSurrounding(std::weak_ptr<Actor> t_source, bool ra
 			vector<weak_ptr<Actor>> temp;
 
 			if(radarMode)
+				//Radar mode
 				temp = std::move(sensedOthers(true));
 			else {
+				//Collision mode
 				temp = std::move(sensedOthers());
 				vector<weak_ptr<Actor >> temp_ice = std::move(sensedIce());
 				temp.insert(end(temp), begin(temp_ice), end(temp_ice));	//Concatenate the ice into temp
@@ -172,7 +177,6 @@ void RadarLikeDetection::checkSurrounding(std::weak_ptr<Actor> t_source, bool ra
 //Collision is just a radar like detection but only cover a small radius
 bool RadarLikeDetection::collisionHappen() {
 /*****************************
-**This use an entirely different detection range than the "radar" detection range so it's ok**
 Then a collision happen and you should produce a collision result
 *****************************/
 	shared_ptr<Actor> source = wp_source.lock();
@@ -233,9 +237,8 @@ void CollisionDetection::behaveBitches() {
 	shared_ptr<Actor>source = wp_source.lock();
 	if (source) {
 		checkSurrounding(source);	//Update the current location of intruders
-			if (collisionHappen())
+			if (source->collisionResult || collisionHappen())	//If there's a result already made or a collision happen
 				source->collisionResult->response();
-
 	}
 }
 
@@ -319,8 +322,6 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 			case Actor::player:
 				break;
 			case Actor::npc:
-				//Destroy only the receiver
-				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
 				break;
 			default:
 				break;
@@ -346,13 +347,11 @@ void Block::response() {
 	if (target) {
 		double currentX = 0,
 			currentY = 0;
-		double targetX,
-			targetY;
-		targetX = target->getX();
-		targetY = target->getY();
+
 		target->getAnimationLocation(currentX, currentY);
-		if (targetFacing != target->getDirection())	//If they face different direction after being blocked, they can move again
-				return;
+		if (targetFacing != target->getDirection()) {	//If they face different direction after being blocked, they can move again
+			return;
+		}
 		else
 			target->moveTo(currentX, currentY);	//Move to the current location == staying in place
 	}
@@ -382,6 +381,7 @@ void OilBarrels::doSomething() {
 	self.reset();
 }
 
+
 bool GoldNuggets::tempTimeEnd() {
 	return false;
 }
@@ -398,7 +398,7 @@ void GoldNuggets::doSomething() {
 	shared_ptr<Actor> self = shared_from_this();
 
 	//Create behavior
-	if (!displayBehavior)
+	if (!displayBehavior) {
 		if (pickableByPlayer)
 			displayBehavior = make_unique<ExistPermanently>(self);
 		else {
@@ -406,6 +406,8 @@ void GoldNuggets::doSomething() {
 			//Test using 1000 as the random timer
 			displayBehavior = make_unique<ExistTemporary>(self, 1000);
 		}
+
+	}
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
 		
@@ -587,7 +589,7 @@ void ControlledMovement::moveThatAss() {
 				if (spPawn->getDirection() != GraphObject::Direction::up)
 					spPawn->setDirection(GraphObject::Direction::up);
 				else {
-					if (spPawn->getY() + 1 > 60)
+					if (spPawn->getY() + 1 > ROW_NUM)
 						break;
 					else
 						spPawn->moveTo(spPawn->getX(), spPawn->getY() + 1);
@@ -597,7 +599,7 @@ void ControlledMovement::moveThatAss() {
 				if (spPawn->getDirection() != GraphObject::Direction::right)
 					spPawn->setDirection(GraphObject::Direction::right);
 				else {
-					if (spPawn->getX() + 1 > 60)
+					if (spPawn->getX() + 1 > COL_NUM - OBJECT_LENGTH)
 						break;
 					else
 						spPawn->moveTo(spPawn->getX() + 1, spPawn->getY());
@@ -668,7 +670,6 @@ void SquirtMovement::moveThatAss() {
 		}
 	}
 	pawn.reset();
-	return;
 }
 
 void SquirtMovement::resetBehavior() {
