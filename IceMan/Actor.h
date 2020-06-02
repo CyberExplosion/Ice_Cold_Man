@@ -106,11 +106,20 @@ public:
 class IMovementBehavior {
 protected:
 	int key;
+	bool allowMovement = true;
 public:
-	IMovementBehavior(int t_key) : key(t_key) {};
+	IMovementBehavior(int t_key, bool move = true) : key(t_key), allowMovement(move) {};
 	virtual ~IMovementBehavior() {};
 	virtual void moveThatAss() = 0;
 	virtual void resetBehavior() = 0;
+
+	void enableMove(bool flip) {
+		allowMovement = flip;
+	}
+
+	bool canMove() {
+		return allowMovement;
+	}
 
 	int getKey() {
 		return key;
@@ -176,6 +185,18 @@ public:
 //Collision Strategy
 class IActorResponse{
 public:
+	enum ResponseType { block, destroy, appear };
+	ResponseType type;
+protected:
+	GraphObject::Direction facing;
+public:
+	IActorResponse(ResponseType type, GraphObject::Direction t_dir = GraphObject::Direction::none) : facing(t_dir) {};
+	GraphObject::Direction getFacing() {
+		return facing;
+	}
+	void setFacing(GraphObject::Direction t_dir) {
+		facing = t_dir;
+	}
 	virtual void response() = 0;
 	virtual void resetBehavior() = 0;
 };
@@ -183,13 +204,12 @@ public:
 class Block : public IActorResponse {
 private:
 	std::weak_ptr<Actor>wp_target;
-	int targetFacing;
 public:
 	void resetBehavior() override;
-	Block(std::weak_ptr<Actor> t_target) : wp_target(t_target){
+	Block(std::weak_ptr<Actor> t_target) : IActorResponse(block), wp_target(t_target){
 		std::shared_ptr<Actor>temp = wp_target.lock();
 		if (temp)
-			targetFacing = temp->getDirection();
+			facing = temp->getDirection();
 	}
 	//Object will be force to stand still
 	void response() override;
@@ -201,7 +221,7 @@ private:
 	int dmgTaken;
 public:
 	void resetBehavior() override;
-	Destroy(std::weak_ptr<Actor> t_target, int dmgTook) : wp_target(t_target), dmgTaken(dmgTook) {};
+	Destroy(std::weak_ptr<Actor> t_target, int dmgTook) : IActorResponse(destroy), wp_target(t_target), dmgTaken(dmgTook) {};
 	//Object will be force to reduce their health by an amount
 	void response() override;
 };
@@ -211,7 +231,7 @@ class Appear : public IActorResponse {
 private:
 	std::weak_ptr<Actor>target;
 public:
-	Appear(std::weak_ptr<Actor> wp_target) : target(wp_target) {};
+	Appear(std::weak_ptr<Actor> wp_target) : IActorResponse(appear), target(wp_target) {};
 	void resetBehavior() override;
 	void response() override;
 };

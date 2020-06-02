@@ -170,7 +170,7 @@ void RadarLikeDetection::checkSurrounding(std::weak_ptr<Actor> t_source, bool ra
 				temp.insert(end(temp), begin(temp_ice), end(temp_ice));	//Concatenate the ice into temp
 			}
 
-			wp_intruders.insert(end(wp_intruders), begin(temp), end(temp));	//Concatenate the vectors cause we have more intruders
+			wp_intruders = std::move(temp);	//Move the thing into intruders set
 	}
 }
 
@@ -237,8 +237,9 @@ void CollisionDetection::behaveBitches() {
 	shared_ptr<Actor>source = wp_source.lock();
 	if (source) {
 		checkSurrounding(source);	//Update the current location of intruders
-			if (source->collisionResult || collisionHappen())	//If there's a result already made or a collision happen
-				source->collisionResult->response();
+
+		if ((source->collisionResult && source->collisionResult->type == source->collisionResult->block) || collisionHappen())	//If there's a result of block type, then we need to allow it to response again. Block Behavior requires the source to look at another direction before allow him to have any other collision result
+			source->collisionResult->response();
 	}
 }
 
@@ -272,7 +273,6 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 	shared_ptr<Actor> receiver = wp_receiver.lock();
 
 	if ((source && receiver) && source != receiver) {
-
 		switch (source->type) {
 		case Actor::player:
 			switch (receiver->type) {
@@ -280,6 +280,7 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
 				break;
 			case Actor::worldStatic:
+
 				source->collisionResult = make_unique<Block>(source);
 				break;
 			case Actor::hazard:
@@ -344,16 +345,19 @@ void Block::response() {
 	shared_ptr<Actor>target = wp_target.lock();
 
 	//Move to the same location == Standing still
-	if (target) {
+	if (target && target->movementBehavior) {
 		double currentX = 0,
 			currentY = 0;
 
 		target->getAnimationLocation(currentX, currentY);
-		if (targetFacing != target->getDirection()) {	//If they face different direction after being blocked, they can move again
-			return;
+
+		if (facing != target->getDirection()) {	//If they face different direction after being blocked, they can move again
+			target->movementBehavior->enableMove(true);
+			target->movementBehavior->moveThatAss();	//Allow to move again
+			target->collisionResult.reset();
 		}
 		else
-			target->moveTo(currentX, currentY);	//Move to the current location == staying in place
+			target->movementBehavior->enableMove(false);	//Disable movement
 	}
 }
 
@@ -566,11 +570,11 @@ void ControlledMovement::moveThatAss() {
 	First you have to turn the character to face the direction you move
 	If the characters already facing the direction you move, then move it toward that direction 1 square
 	*****************************/
-	shared_ptr<Actor>spPawn = pawn.lock();
+		shared_ptr<Actor>spPawn = pawn.lock();
 
-	//if (spPawn && spPawn->isAlive()) {
-	//	if (!spPawn->getWorld()->getKey(key))
-	//		key = INVALID_KEY;
+		//if (spPawn && spPawn->isAlive()) {
+		//	if (!spPawn->getWorld()->getKey(key))
+		//		key = INVALID_KEY;
 
 		if (key != INVALID_KEY) {
 			switch (key) {
@@ -581,7 +585,8 @@ void ControlledMovement::moveThatAss() {
 					if (spPawn->getY() - 1 < 0)
 						break;
 					else {
-						spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
+						if(canMove())
+							spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
 					}
 				}
 				break;
@@ -591,8 +596,10 @@ void ControlledMovement::moveThatAss() {
 				else {
 					if (spPawn->getY() + 1 > ROW_NUM)
 						break;
-					else
-						spPawn->moveTo(spPawn->getX(), spPawn->getY() + 1);
+					else {
+						if(canMove())
+							spPawn->moveTo(spPawn->getX(), spPawn->getY() + 1);
+					}
 				}
 				break;
 			case KEY_PRESS_RIGHT:
@@ -601,8 +608,10 @@ void ControlledMovement::moveThatAss() {
 				else {
 					if (spPawn->getX() + 1 > COL_NUM - OBJECT_LENGTH)
 						break;
-					else
-						spPawn->moveTo(spPawn->getX() + 1, spPawn->getY());
+					else {
+						if(canMove())
+							spPawn->moveTo(spPawn->getX() + 1, spPawn->getY());
+					}
 				}
 				break;
 			case KEY_PRESS_LEFT:
@@ -611,8 +620,10 @@ void ControlledMovement::moveThatAss() {
 				else {
 					if (spPawn->getX() - 1 < 0)
 						break;
-					else
-						spPawn->moveTo(spPawn->getX() - 1, spPawn->getY());
+					else {
+						if(canMove())
+							spPawn->moveTo(spPawn->getX() - 1, spPawn->getY());
+					}
 				}
 				break;
 			default:
@@ -620,7 +631,7 @@ void ControlledMovement::moveThatAss() {
 			}
 		}
 
-	spPawn.reset();
+		spPawn.reset();
 }
 
 void PursuingMovement::moveThatAss() {
