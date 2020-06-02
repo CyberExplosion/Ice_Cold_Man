@@ -54,24 +54,6 @@ public:
 	//This is for all the usage of shared_ptr in them behaviors. This is bad but I blame due date
 	virtual void resetAllBehaviors();
 
-	//int getCenterX() {
-	//	centerX = (size * OBJECT_LENGTH) / 2 + getX() - 1;	//Example: The graph takes 4 slot: 52 53 54 55 -> The center will be 53
-	//	return centerX;
-	//}
-
-	//int getCenterY() {
-	//	centerY = (size * OBJECT_LENGTH) / 2 + getY() - 1;
-	//	return centerY;
-	//}
-
-	//int getSound() {
-	//	return death_sound;
-	//}
-
-	//void setSound(int t_sound) {
-	//	death_sound = t_sound;
-	//}
-
 	StudentWorld* getWorld() {
 		return m_sw;
 	}
@@ -119,15 +101,27 @@ public:
 
 //Movement Strategy
 class IMovementBehavior {
+protected:
+	int key;
 public:
+	IMovementBehavior(int t_key) : key(t_key) {};
+	virtual ~IMovementBehavior() {};
 	virtual void moveThatAss() = 0;
 	virtual void resetBehavior() = 0;
+
+	int getKey() {
+		return key;
+	}
+	void setKey(int& t_key) {
+		key = t_key;
+	}
 };
 
 class FreeMovement : public IMovementBehavior{
 private:
 	
 public:
+	FreeMovement() : IMovementBehavior(INVALID_KEY) {};
 	//This is the default movement for NPC
 	void moveThatAss() override;
 	void resetBehavior() override;
@@ -137,6 +131,7 @@ class FallMovement : public IMovementBehavior{
 private:
 
 public:
+	FallMovement() : IMovementBehavior(INVALID_KEY) {};
 	//This is for the Boulder
 	void moveThatAss() override;
 	void resetBehavior() override;
@@ -144,11 +139,10 @@ public:
 
 class ControlledMovement : public IMovementBehavior{
 private:
-	int key = INVALID_KEY;
 	std::weak_ptr<Actor> pawn;
 public:
 	void resetBehavior() override;
-	ControlledMovement(std::weak_ptr<Actor> t_pawn) : pawn(t_pawn) {}
+	ControlledMovement(std::weak_ptr<Actor> t_pawn, int t_key) : IMovementBehavior(t_key), pawn(t_pawn) {}
 	//This is for the player
 	void moveThatAss() override;
 };
@@ -157,6 +151,7 @@ class PursuingMovement : public IMovementBehavior{
 private:
 
 public:
+	PursuingMovement() : IMovementBehavior(INVALID_KEY) {};
 	//This is for whenever NPC chasing after a location
 	void moveThatAss() override;
 	void resetBehavior() override;
@@ -164,8 +159,10 @@ public:
 
 class SquirtMovement : public IMovementBehavior {
 private:
-
+	int travelDist;
+	std::weak_ptr<Actor> squirt;
 public:
+	SquirtMovement(std::weak_ptr<Actor> t_s, int distTravel = 4) : IMovementBehavior(INVALID_KEY), squirt(t_s), travelDist(distTravel) {};
 	//This is for the Squirt to travel
 	void moveThatAss() override;
 	void resetBehavior() override;
@@ -283,19 +280,11 @@ protected:
 	int range;
 	std::vector<std::weak_ptr<Actor>> sensedIce();
 	std::vector<std::weak_ptr<Actor>> sensedOthers();
+	void checkSurrounding(std::weak_ptr<Actor>t_source);
 public:
 	RadarLikeDetection(std::weak_ptr<Actor> t_source, int t_range) : IDetectionBehavior(t_source) {
 		range = t_range;
-		std::shared_ptr<Actor> temp = t_source.lock();
-		if (temp) {
-			if (temp->type == Actor::ActorType::player || temp->type == Actor::ActorType::worldStatic || temp->type == Actor::ActorType::collect) {	//Only these are allow to interact with the ice AND others
-				wp_intruders = std::move(sensedIce());
-				auto temp = std::move(sensedOthers());	
-				wp_intruders.insert(end(wp_intruders), begin(temp), end(temp));	//Concatenate the vectors cause we have more intruders
-			}
-			else
-				wp_intruders = std::move(sensedOthers());
-		}
+		checkSurrounding(t_source);
 	};
 	int getRange() {
 		return range;
@@ -333,10 +322,12 @@ private:
 	std::vector<std::shared_ptr<Squirt>>squirtVec;
 	GoldNuggets* m_gold;
 	//This function find the player actor type in the whole list of actors
+	//Function for users goodies usage
+	bool shootSquirt();
 public:
 	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 999, 3, 0, SOUND_PLAYER_GIVE_UP) {};
 	void doSomething() override;
-
+	bool useGoodies(int key);
 	void dmgActor(int amt) override;
 
 	int getSonarNum() {
@@ -513,7 +504,7 @@ private:
 	void shoot();
 	void doSomething() override;
 public:
-	Squirt(StudentWorld* world, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 2, double col_range = 4, double detect_range = 9999, int ded_sound = SOUND_PLAYER_SQUIRT) : Hazard(world, hazard, true, IID_WATER_SPURT, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, ded_sound) {};
+	Squirt(StudentWorld* world, int startX, int startY, Direction dir, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 2, double col_range = 3, double detect_range = 9999, int ded_sound = SOUND_PLAYER_SQUIRT) : Hazard(world, hazard, true, IID_WATER_SPURT, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, ded_sound) {};
 
 };
 
@@ -544,7 +535,7 @@ class Ice : public Inanimated {
 private:
 	
 public:
-	Ice(StudentWorld* world, bool visibility, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 3.0, int hp = 1, int strength = 1, double col_range = 0, double detect_range = 9999, int t_sound = SOUND_DIG) : Inanimated(world, ActorType::ice, visibility, IID_ICE, startX, startY, dir, 0.25, 3, hp, strength, col_range, detect_range, t_sound) {};
+	Ice(StudentWorld* world, bool visibility, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 3.0, int hp = 1, int strength = 9999, double col_range = 0, double detect_range = 9999, int t_sound = SOUND_DIG) : Inanimated(world, ActorType::ice, visibility, IID_ICE, startX, startY, dir, 0.25, 3, hp, strength, col_range, detect_range, t_sound) {};
 	void doSomething() override;
 };
 

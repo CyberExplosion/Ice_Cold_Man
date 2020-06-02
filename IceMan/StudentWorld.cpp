@@ -23,7 +23,9 @@ int StudentWorld::move() {
 	ticksBeforeSpawn--;
 	updateStatus();
 	createProtesters();
+
 	int status_of_game = doThings();
+	
 	deleteFinishedObjects();
 
 	switch (status_of_game) 
@@ -56,11 +58,19 @@ int StudentWorld::updateStatus() {
 	lvl = to_string(getLevel()); 
 	score = to_string(getScore()); 
 	lives = to_string(getLives());
-	health = to_string(player->getHealth() * 10); 
-	wtr = to_string(player->getSquirtNum());
-	gld = to_string(player->getGoldNum());
+
+	if (player) {
+		health = to_string(player->getHealth() * 10);
+		wtr = to_string(player->getSquirtNum());
+		gld = to_string(player->getGoldNum());
+		sonar = to_string(player->getSonarNum());
+	}
+	else {
+		health = '0';
+		wtr = '0';
+		gld = '0';
+	}
 	oil = to_string(oilsLeft);
-	sonar = to_string(player->getSonarNum());
 
 	//Fixed a little bit, following the pdf requirements
 	/********************************************
@@ -83,47 +93,29 @@ int StudentWorld::updateStatus() {
 }
 
 int StudentWorld::doThings() {
+	if (player && player->isAlive())
+		player->doSomething(); // If the player is still alive, have them do something.
+	else
+		return GWSTATUS_PLAYER_DIED; // If the player has died, return the appropriate status.
+
 	for (auto& actors : actor_vec) { // Iterates through entire vector of actor objects 
-									// and has them call their own doSomething() methods.
-		if (player && player->isAlive())
-			player->doSomething(); // If the player is still alive, have them do something.
-		else
-			return GWSTATUS_PLAYER_DIED; // If the player has died, return the appropriate status.
-
-		if (actors && actors->isAlive() && actors->type != Actor::ActorType::player) {
-			//Logging
-			//cout << "B4: " << actors->getHealth() << "->";
+								// and has them call their own doSomething() methods.
+		if (actors && actors->isAlive()) {
 			actors->doSomething(); // If it is valid, have the actor do something.
-
-			//Logging reason
-			//if (actors->type == Actor::ActorType::ice)
-				//cout << actors->getHealth() << "   ";
 		}
-
-		//Just the ice within the proximity of the player are allow to do any action
-		vector<weak_ptr<Actor>> iceTarget = iceCollideWithActor(player);
-		for (auto& val : iceTarget) {
-			shared_ptr<Actor>temp = val.lock();
-			if (temp)
-				temp->doSomething();
-		}
-
-		////Big performance hit right here
-
-		//if (ice_array.size() > 0) {
-		//	for (auto& iterRow : ice_array) {
-		//		for (auto& iterCol : iterRow) {
-		//			if (iterCol)
-		//				iterCol->doSomething();
-		//		}
-		//	}
-		//}
-
-		if (oilsLeft == 0)
-			return GWSTATUS_FINISHED_LEVEL; // Or if the player has found all the barrels of oil, return this status.
 	}
-	//Logging
-	//cout << endl;
+
+	//Just the ice within the proximity of the player are allow to do any action
+	vector<weak_ptr<Actor>> iceTarget = iceCollideWithActor(player);
+	for (auto& val : iceTarget) {
+		shared_ptr<Actor>temp = val.lock();
+		if (temp)
+			temp->doSomething();
+	}
+
+	if (oilsLeft == 0)
+		return GWSTATUS_FINISHED_LEVEL; // Or if the player has found all the barrels of oil, return this status.
+
 	return GWSTATUS_CONTINUE_GAME; // If the player hasn't died and hasn't found all the oils, continue to next tick. 
 }
 
@@ -146,7 +138,7 @@ void StudentWorld::deleteFinishedObjects() {
 		}
 	}
 
-	if (!player->isAlive())
+	if (player && !player->isAlive())
 		player.reset();
 }
 
@@ -245,6 +237,10 @@ void StudentWorld::mainCreateObjects() {
 	int numBoulder = min(currentLV / 2 + 2, 9);
 	int numGold = max(5 - currentLV / 2, 2);
 	int numOil = min(2 + currentLV, 21);
+	//////Test
+	//int numBoulder = 1;
+	//int numGold = 1;
+	//int numOil = 0;
 
 	oilsLeft = numOil;
 
@@ -260,21 +256,21 @@ void StudentWorld::mainCreateObjects() {
 
 	for (; numBoulder > 0; numBoulder--) {
 		do {
-			localX = rand() % 61 - OBJECT_LENGTH;	// 0 - 60 (It's actually 0 - 56) because the location starts at down-left corner
-			localY = rand() % 37 + 20 - OBJECT_LENGTH; // 20 - 56 (Actually 20 - 52)
+			localX = rand() % (COL_NUM + 1) - OBJECT_LENGTH;	// 0 - 60 (It's actually 0 - 56) because the location starts at down-left corner
+			localY = rand() % (ROW_NUM - 20) + 20 - OBJECT_LENGTH; // 20 - 56 (Actually 20 - 52)
 			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numBoulder;	//Make it loop again == Generate another random location
 				break;
 			}
 			//Testing, remember to change the boulder location back to localX and Y
 			//33 60 for testing collision with boulder
-		} while (!createObjects<Boulder>(localX, localY));	//If object cannot create at the location then try again
+		} while (!createObjects<Boulder>(localX , localY));	//If object cannot create at the location then try again
 	}
 
 	for (; numGold > 0; numGold--) {
 		do {
-			localX = rand() % 61 - OBJECT_LENGTH;
-			localY = rand() % 57 - OBJECT_LENGTH;	// 0 - 56
+			localX = rand() % (COL_NUM + 1) - OBJECT_LENGTH;
+			localY = rand() % ROW_NUM - OBJECT_LENGTH;	// 0 - 56
 			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numGold;	//Make it loop again == Generate another random location
 				break;
@@ -284,8 +280,8 @@ void StudentWorld::mainCreateObjects() {
 
 	for (; numOil > 0; numOil--) {
 		do {
-			localX = rand() % 61 - OBJECT_LENGTH;
-			localY = rand() % 57 - OBJECT_LENGTH;
+			localX = rand() % (COL_NUM + 1) - OBJECT_LENGTH;
+			localY = rand() % ROW_NUM - OBJECT_LENGTH;
 			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numOil;	//Make it loop again == Generate another random location
 				break;
@@ -323,7 +319,7 @@ void StudentWorld::createNPC() {
 	srand(time(0));
 	int currentLvl = getLevel();
 	int probOfHardcore = min(90, currentLvl * 10 + 30);
-	bool spawnHardcore = (rand() % 100) < probOfHardcore;	//If smaller than the prob then it passed
+	bool spawnHardcore = (rand() % 100) < probOfHardcore;	//If smaller than the prob then it fall into that probability
 	if (spawnHardcore) {
 		actor_vec.emplace_back(make_shared<Protesters>(this));
 	}
@@ -372,19 +368,6 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::iceCollideWithActor(std::shared_
 				intruders.push_back(ice_array[i][k]);
 			}
 		}
-
-
-		//	for (auto& single : allActors) {
-		//		if (single) {
-		//			if (!single->isAlive() || single == source)	//The intruder and the player is the same actor
-		//				continue;
-		//			int distance = sqrt(pow(source->getCenterX() - single->getCenterX(), 2) + pow(source->getCenterY() - single->getCenterY(), 2));
-		//			int spotZone = this->range + single->getCollisionRange();
-		//			if (distance <= spotZone)
-		//				intruders.push_back(single);
-		//		}
-		//	}
-		//}
 	}
 	return intruders;
 }
@@ -394,34 +377,80 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_
 	vector<weak_ptr<Actor>> intruders;
 	
 	if (!actor_vec.empty() && actor && actor->isAlive()) {
-		//Player collision range is actually the size of the its' own
-		int colRangePositive = actor->getCollisionRange();
-		int localX = actor->getX();
-		int localY = actor->getY();
-
 		for (auto& each : actor_vec) {
 
-			int actRangePositive = each->getCollisionRange();	//On positive side the document want us to make it collide with each actor when you're 3 squares away
-			//int actRangeNegative = each->getCollisionRange();	//And since each actor collision range is 3 so it's fine
-			int actX = each->getX();
-			int actY = each->getY();
-			////////////////////////////
+			int playerRange = actor->getCollisionRange();
+			int eachRange = each->getCollisionRange();
 
-			double distance = sqrt(pow(localX - actX, 2) + pow(localY - actY, 2));	//Euclidean distance
+			int actX = actor->getX();
+			int actY = actor->getY();
+
+			int spotNegativeX = actX - eachRange;
+			int spotPositiveX = actX + playerRange;
+			int spotNegativeY = actY - eachRange;
+			int spotPositiveY = actY + playerRange;
+
+			//Prune the distance so it doesn't go out of range
+			for (; spotPositiveX >= COL_NUM; spotPositiveX--);
+			for (; spotNegativeX < 0; spotNegativeX++);
+			for (; spotPositiveY >= ROW_NUM; spotPositiveY--);
+			for (; spotNegativeY < 0; spotNegativeY++);
 			
-			if (localX >= actX && localY >= actY) {	//If inside the positive area of "each"
-				double eachSpotZone = sqrt(pow(actRangePositive, 2) + pow(actRangePositive, 2));	//When on positive side, the spot zone is the distance from the lower left to their own collision range
-				if (distance <= eachSpotZone)
-					intruders.push_back(each);
-			}
-			else {	//Negative side of "each"
-				double actorSpotZone = sqrt(pow(colRangePositive, 2) + pow(colRangePositive, 2));	//The spot zone of the actor
-				if (distance <= actorSpotZone)
-					intruders.push_back(each);
+			if (each != actor) {
+				//Get the intruders in the proximity
+				for (int i = spotNegativeY; i <= spotPositiveY; i++) {
+					for (int k = spotNegativeX; k <= spotPositiveX; k++) {
+						if (each->isAlive() && each->getX() == k && each->getY() == i)
+							intruders.push_back(each);
+					}
+				}
 			}
 		}
 	}
 	return intruders;
+}
+
+bool StudentWorld::createSquirt() {
+	if (player && player->isAlive()) {
+		GraphObject::Direction sqrtDir = player->getDirection();
+		int localX = player->getX();
+		int localY = player->getY();
+		int playerColRange = player->getCollisionRange();
+
+		Squirt temp(this, localX, localY, sqrtDir);
+		int squirtColRange = temp.getCollisionRange();
+
+
+		switch (sqrtDir) {
+		case GraphObject::up:
+			localY += playerColRange + 1;			//If the player look in different location, we need to account for
+			break;									//the collision between the squirt and player since it's a hazard
+		case GraphObject::down:
+			localY -= squirtColRange + 1;
+			break;
+		case GraphObject::left:
+			localX -= squirtColRange + 1;
+			break;
+		case GraphObject::right:
+			localX += playerColRange + 1;
+			break;
+		default:
+			break;
+		}
+		//Plus Object Length cause the location is lower left corner
+		if ((localY < 0 || localY > ROW_NUM + OBJECT_LENGTH - squirtColRange) || (localX < 0 || localX > COL_NUM + OBJECT_LENGTH - squirtColRange) || (localX == player->getX() && localY == player->getY()))	//Value stay the same or out of bounds
+			return false;
+		else {
+			for (int row = localY; row <= localY + squirtColRange && row < ROW_NUM; row++)
+				for (int col = localX; col <= localX + squirtColRange && col < COL_NUM; col++)	
+					if (ice_array[row][col])	//If there are ice in the way
+						return false;
+
+			actor_vec.emplace_back(make_shared<Squirt>(this, localX, localY, sqrtDir));
+			return true;
+		}
+	}
+	return false;
 }
 
 void StudentWorld::cleanUp() {
@@ -430,7 +459,8 @@ void StudentWorld::cleanUp() {
 
 	for (auto& rowIter : ice_array) {
 		for (auto& colIter : rowIter) {
-			colIter->resetAllBehaviors();
+			if(colIter)
+				colIter->resetAllBehaviors();
 			colIter.reset();
 		}
 	}

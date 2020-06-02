@@ -1,4 +1,5 @@
 ﻿  Actor.cpp
+<<<<<<< HEAD
 C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
 C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(87,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
 C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(91,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
@@ -24,3 +25,22 @@ C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(218,25): wa
 C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(252,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
 C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(323,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   Generating Code...
+=======
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(69,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(73,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(324,29): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(324,19): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+  StudentWorld.cpp
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(69,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(73,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(161,24): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(162,25): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(206,24): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(207,25): warning C4018: '<': signed/unsigned mismatch
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(245,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(317,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+  Generating Code...
+  IceMan.vcxproj -> A:\Comp Sci\Ice_Cold_Man\Debug\IceMan.exe
+>>>>>>> e8561a10cb73f9ade75cc8cb04273f88d0646e66

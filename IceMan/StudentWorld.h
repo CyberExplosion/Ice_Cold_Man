@@ -18,7 +18,7 @@ class IceMan;
 class Ice;
 const int COL_NUM = 64,
 ROW_NUM = 60;
-const int DIST_ALLOW_BETW_SPAWN = 6;
+const int DIST_ALLOW_BETW_SPAWN = 9;	//3 is the typical "collision size of most object" plus 6 square away each other
 const int OBJECT_LENGTH = 4;
 const int ICE_LENGTH = 1;
 
@@ -89,11 +89,16 @@ public:
 	// Functions for interfaces
 	std::vector<std::weak_ptr<Actor>> iceCollideWithActor(std::shared_ptr<Actor> actor);
 	std::vector<std::weak_ptr<Actor>> actorsCollideWithMe(std::shared_ptr<Actor> actor);
+	bool createSquirt();
 
 	template<typename T>
 	bool createObjects(int x, int y);
+<<<<<<< HEAD
 private:
+=======
+>>>>>>> e8561a10cb73f9ade75cc8cb04273f88d0646e66
 
+private:
 	// Data Structures
 	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
 	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
@@ -145,11 +150,11 @@ bool StudentWorld::createObjects(int x, int y) {
 
 	std::vector<std::weak_ptr<Actor>>intruders = std::move(temp->collisionDetection->wp_intruders);
 
-		for (auto const& sp_entity : intruders) {
-			std::shared_ptr<Actor>entity = sp_entity.lock();
-			if (entity && entity->type != Actor::ActorType::ice)	//There's an intruder and it's not ice
-				return false;
-		}
+	for (auto& sp_entity : intruders) {
+		std::shared_ptr<Actor>entity = sp_entity.lock();
+		if (entity && entity->type != Actor::ActorType::ice)	//There's an intruder and it's not ice
+			return false;
+	}
 
 	/*TODO: ICE IS NOT RECOGNIZED AS AN INTRUDER, FIX THIS SHIT*/
 	/*THIS MAY HAPPEN BECAUSE THE ICE IS DEAD BUT SINCE WE NOT MOVE YET CLEAN UP HASN'T BEEN CALLED*/
@@ -168,13 +173,7 @@ bool StudentWorld::createObjects(int x, int y) {
 		for (auto& wp_entity : intruders) {
 			//since i ran out of patient, imma going to do what i called a pro gamer moves
 			shared_ptr<Actor>entity = wp_entity.lock();
-
 			if (entity) {
-				//entity->collisionDetection = std::make_unique<CollisionDetection>(entity, entity->getCollisionRange());
-				//entity->collisionDetection->behaveBitches();	//Get the intruder to check its' own collision detection
-				//	
-				//if (entity->collisionResult)
-				//		entity->collisionResult->response();	//Demand a response from the intruder
 				entity->dmgActor(9999);
 				entity.reset();
 			}
@@ -186,7 +185,5 @@ bool StudentWorld::createObjects(int x, int y) {
 	return true;
 }
 
-//void StudentWorld::createNPC(int x, int y) {
-//
-//}
+
 #endif // STUDENTWORLD_H_
