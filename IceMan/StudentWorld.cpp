@@ -11,6 +11,9 @@
 #include <iostream>
 using namespace std;
 
+//testing variable
+//int collectableLeft;
+
 GameWorld* createStudentWorld(string assetDir)
 {
 	return new StudentWorld(assetDir);
@@ -97,12 +100,22 @@ int StudentWorld::doThings() {
 	else
 		return GWSTATUS_PLAYER_DIED; // If the player has died, return the appropriate status.
 
+
+	//Testing
+	//collectableLeft = 0;
+
 	for (auto& actors : actor_vec) { // Iterates through entire vector of actor objects 
 								// and has them call their own doSomething() methods.
 		if (actors && actors->isAlive()) {
 			actors->doSomething(); // If it is valid, have the actor do something.
 		}
+
+		//////Testing
+		//if (actors->type == Actor::collect)
+		//	collectableLeft++;
 	}
+	//cout << collectableLeft << " ";
+	/////////////////////
 
 	//Just the ice within the proximity of the player are allow to do any action
 	vector<weak_ptr<Actor>> iceTarget = iceCollideWithActor(player);
@@ -237,7 +250,7 @@ void StudentWorld::mainCreateObjects() {
 	//////Test
 	//int numBoulder = 1;
 	//int numGold = 1;
-	//int numOil = 0;
+	//int numOil = 1;
 
 	oilsLeft = numOil;
 
@@ -272,6 +285,7 @@ void StudentWorld::mainCreateObjects() {
 				++numGold;	//Make it loop again == Generate another random location
 				break;
 			}
+			//Testing for hidden gold nugget showing up, it's 60 35
 		} while (!createObjects<GoldNuggets>(localX, localY));
 	}
 
@@ -325,7 +339,7 @@ void StudentWorld::createNPC() {
 		actor_vec.emplace_back(make_shared<HardcoreProtesters>(this));
 }
 
-std::vector<std::weak_ptr<Actor>> StudentWorld::iceCollideWithActor(std::shared_ptr<Actor> actor) {
+std::vector<std::weak_ptr<Actor>> StudentWorld::iceCollideWithActor(std::shared_ptr<Actor> actor, bool radarMode) {
 	/*****************************
 		Check if the player is in certain radius of the actor
 		Check in all direction, that means using a circle and Euclidean distance math, the detection range for the actor and the actor
@@ -370,15 +384,26 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::iceCollideWithActor(std::shared_
 	return intruders;
 }
 
-std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_ptr<Actor> actor) {
+std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_ptr<Actor> actor, bool radarMode) {
 	
 	vector<weak_ptr<Actor>> intruders;
 	
 	if (!actor_vec.empty() && actor && actor->isAlive()) {
 		for (auto& each : actor_vec) {
+			int playerRange;
+			int eachRange;
 
-			int playerRange = actor->getCollisionRange();
-			int eachRange = each->getCollisionRange();
+			//Depend on which mode, different range will be used
+			if (radarMode) {
+				playerRange = actor->getDetectRange();
+				eachRange = each->getDetectRange();
+
+			}
+			else {
+				playerRange = actor->getCollisionRange();
+				eachRange = each->getCollisionRange();
+			}
+
 
 			int actX = actor->getX();
 			int actY = actor->getY();
@@ -389,10 +414,10 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_
 			int spotPositiveY = actY + playerRange;
 
 			//Prune the distance so it doesn't go out of range
-			for (; spotPositiveX >= COL_NUM; spotPositiveX--);
-			for (; spotNegativeX < 0; spotNegativeX++);
-			for (; spotPositiveY >= ROW_NUM; spotPositiveY--);
-			for (; spotNegativeY < 0; spotNegativeY++);
+			//for (; spotPositiveX >= COL_NUM; spotPositiveX--);
+			//for (; spotNegativeX < 0; spotNegativeX++);
+			//for (; spotPositiveY >= ROW_NUM; spotPositiveY--);
+			//for (; spotNegativeY < 0; spotNegativeY++);
 			
 			if (each != actor) {
 				//Get the intruders in the proximity
