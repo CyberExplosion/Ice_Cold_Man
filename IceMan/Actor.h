@@ -114,6 +114,7 @@ public:
 	void changeActorType(ActorType t_type) {
 		type = t_type;
 	}
+
 };
 
 //Movement Strategy
@@ -327,8 +328,10 @@ class IceMan : public Characters {
 private:
 	int dmgSound = SOUND_PLAYER_ANNOYED;
 	std::vector<std::shared_ptr<SonarKit>>sonarVec;
-	std::vector<std::shared_ptr<GoldNuggets>>goldVec;
+	//std::vector<std::shared_ptr<GoldNuggets>>goldVec;
+	int goldCount = 1;
 	std::vector<std::shared_ptr<Squirt>>squirtVec;
+	GoldNuggets* m_gold;
 	//This function find the player actor type in the whole list of actors
 public:
 	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 999, 3, 0, SOUND_PLAYER_GIVE_UP) {};
@@ -345,7 +348,13 @@ public:
 	}
 
 	int getGoldNum() {
-		return goldVec.size();
+		return goldCount;
+	}
+
+	void drop();
+
+	GoldNuggets* getGoldNuggets() {
+		return m_gold;
 	}
 };
 
@@ -428,10 +437,14 @@ public:
 class GoldNuggets : public Collectable{
 private:
 	bool pickableByPlayer = true;
+
 	//Function
 	//Determine if the time for the Temporary gold exist ran out
 	bool tempTimeEnd();
+	IceMan * m_IM;
 public:
+	virtual ~GoldNuggets() override;
+
 	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true) : Collectable(world, true, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range), pickableByPlayer(t_pickable) {
 
 		if (pickableByPlayer) {
@@ -444,10 +457,20 @@ public:
 		}
 	};
 	void drop();
+
 	bool getStage() {
 		return pickableByPlayer;
 	}
+
 	void doSomething() override;
+
+	IceMan* getIceMan() {
+		return m_IM;
+	}
+
+	void setPickable(bool temp) {
+		pickableByPlayer = temp;
+	}
 };
 
 class SonarKit : public Collectable{
@@ -504,11 +527,11 @@ private:
 	
 	//Functions
 	void fall();
-	bool checkIceBelow();
+	void fallTimer();
 	void doSomething() override;
 
 	//Variables
-	int t = 30; // Adjust this to change how long before boulder falls.
+	int t = 25; // Adjust this to change how long before boulder falls.
 public:
 	Boulder(StudentWorld* world, int startX, int startY, Direction dir = down, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 9999, double col_range = 3, double detect_range = 9999) : Hazard(world, worldStatic, true, IID_BOULDER, startX, startY, dir, size, depth, hp, strength, col_range, detect_range){
 		//Not hazard yet when first spawn
@@ -526,3 +549,4 @@ public:
 };
 
 #endif // ACTOR_H_
+

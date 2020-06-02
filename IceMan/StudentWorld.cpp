@@ -19,6 +19,7 @@ GameWorld* createStudentWorld(string assetDir)
 // Students:  Add code to this file (if you wish), StudentWorld.h, Actor.h and Actor.cpp
 
 int StudentWorld::move() {
+	cout << ticksBeforeSpawn << endl;
 	ticksBeforeSpawn--;
 	updateStatus();
 	createProtesters();
@@ -153,8 +154,10 @@ bool StudentWorld::boulderFall(int x, int y)
 {
 	/*
 		This function checks to see if there is ice underneath a boulder.
-		If there isn't commence falling!
-		x and y give us the location of the boulder.
+		If there isn't, commence falling!
+
+		Parameters:
+			x and y give us the location of the boulder.
 	*/
 
 	int targetY = y - 1; // The height one below the boulder.
@@ -240,9 +243,6 @@ void StudentWorld::mainCreateObjects() {
 	*****************************/
 	int currentLV = getLevel();
 	int numBoulder = min(currentLV / 2 + 2, 9);
-	////////Test
-	//int numBoulder = 1;
-	//int numGold = 1;
 	int numGold = max(5 - currentLV / 2, 2);
 	int numOil = min(2 + currentLV, 21);
 
@@ -256,7 +256,7 @@ void StudentWorld::mainCreateObjects() {
 		shaftYoffsetD = 4,	//All inclusive
 		shaftYoffsetU = 60;
 
-	//createNPC<Protester>(60, 60);
+	createNPC();
 
 	for (; numBoulder > 0; numBoulder--) {
 		do {
@@ -299,7 +299,7 @@ void StudentWorld::createProtesters() {
 	int currentLV = getLevel();
 	if (ticksBeforeSpawn == 0) {
 		if (protesterCount != protesterSpawnLimit) {
-			//createNPC<Protester>(60, 60);
+			createNPC();
 		}
 		ticksBeforeSpawn = max(25, 200 - currentLV);
 	}
@@ -313,7 +313,6 @@ void StudentWorld::initSpawnParameters() {
 	int currentLV = getLevel();
 	ticksBeforeSpawn = max(25, 200 - currentLV); 
 	protesterSpawnLimit = min(15, 2 + int(currentLV * 1.5));
-
 }
 
 void StudentWorld::createNPC() {

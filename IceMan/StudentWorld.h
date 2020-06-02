@@ -90,6 +90,8 @@ public:
 	std::vector<std::weak_ptr<Actor>> iceCollideWithActor(std::shared_ptr<Actor> actor);
 	std::vector<std::weak_ptr<Actor>> actorsCollideWithMe(std::shared_ptr<Actor> actor);
 
+	template<typename T>
+	bool createObjects(int x, int y);
 private:
 
 	// Data Structures
@@ -106,8 +108,6 @@ private:
 	void populateIce();
 	void createPlayer();
 	void mainCreateObjects();
-	template<typename T>
-	bool createObjects(int x, int y);
 	void createProtesters();
 	void initSpawnParameters();
 	

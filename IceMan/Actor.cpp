@@ -16,13 +16,13 @@ void Destroy::resetBehavior() {
 //Destroy an object or deal damage to characters
 void Destroy::response() {
 	shared_ptr<Actor> target = wp_target.lock();
-
+	
 	if(target && target->isAlive())
 		target->dmgActor(dmgTaken);
 	if (target && !target->isAlive()) {
 		target->resetAllBehaviors();
 	}
-
+	cout << "In here" << endl;
 	target.reset();
 }
 
@@ -89,6 +89,21 @@ void IceMan::doSomething() {
 void IceMan::dmgActor(int amt) {
 	Actor::dmgActor(amt);
 	getWorld()->playSound(dmgSound);
+}
+
+void IceMan::drop()
+{
+	//
+	//if (goldVec.size() == 0)
+	//	return;
+	if (goldCount == 0)
+		return;
+
+	getGoldNuggets()->setPickable(false);
+	getWorld()->createObjects<GoldNuggets>(getX(), getY());
+	getGoldNuggets()->setPickable(true);
+	//Recreate your own createObjects...
+	
 }
 
 
@@ -460,7 +475,22 @@ bool GoldNuggets::tempTimeEnd() {
 	return false;
 }
 
+GoldNuggets::~GoldNuggets()
+{
+	if (pickableByPlayer) // Successfully adds score everytime you pick up but the initial counter is incorrect.
+		getWorld()->increaseScore(10);
+	drop();
+}
+
 void GoldNuggets::drop() {
+	/*
+		If the player pressed TAB or T this function should drop gold on the ground.
+		We need to remove gold from player's inventory.
+	*/
+	if (getIceMan()->getGoldNum() == 0)
+		return;
+
+
 }
 
 void GoldNuggets::doSomething() {
@@ -483,13 +513,11 @@ void GoldNuggets::doSomething() {
 		detectBehavior = make_unique<RadarLikeDetection>(self, self->getDetectRange());
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
-		
+	
 	//Use the behavior
 	displayBehavior->showYourself();
 	detectBehavior->behaveBitches();
 	collisionDetection->behaveBitches();
-	if (collisionResult)
-		collisionResult->response();
 
 	self.reset();
 }
@@ -545,32 +573,56 @@ void Squirt::doSomething() {
 
 void Boulder::fall() {
 	int y = getY();
-	checkIceBelow();
-	if (y == 0)
+	fallTimer(); // According to documentation there needs to be time between when the player 
+				 // destroys the ice below the boulder and when it falls. 
+				 // This function serves as a counter for that purpose.
+
+	if (y == 0) {
+		changeActorType(ActorType::hazard);
 		return;
+	}
+
 	else if (t == 0) 
 		moveTo(getX(), getY() - 1);
-	
 }
 
-bool Boulder::checkIceBelow() {
-	if (t != 0) 
+void Boulder::fallTimer() {
+	if (t != 0)
 		t--;
 	else
-		return false;
+		return;
 	
-	return false;
+	return;
 }
 
 void Boulder::doSomething() {
-	if (!isAlive())
+	/*
+		Boulder falls but we need to make it disappear ! ! !
+		
+	*/
+	if (!isAlive()) // If the boulder already fell, there's nothing we need to do.
 		return;
+
+	shared_ptr<Actor>mySelf = shared_from_this();
+
+	if (!displayBehavior)
+		displayBehavior = make_unique<ExistPermanently>();
+
+	// Reset cycle of collision result and detection
+	collisionResult.reset();
+	collisionDetection = make_unique<CollisionDetection>(mySelf, this->getCollisionRange());
+	collisionDetection->behaveBitches();	//If there's a detection then a response is already made automatically
 	
+	displayBehavior->showYourself();
+	movementBehavior->moveThatAss();
+
+	// Checks to see if there's ice below the boulder, if there isn't it will return true.
 	bool isFalling = getWorld()->boulderFall(getX(), getY());
 
-	if (isFalling) {
+	// Initiates the falling.
+	if (isFalling) 
 		fall();
-	}
+	
 
 	return;
 }
