@@ -72,31 +72,26 @@ void IceMan::doSomething() {
 	if (!getWorld()->getKey(keyPressed))
 		keyPressed = INVALID_KEY;
 
-	///////////Test
-	//if (counter == 2) {
-	//	keyPressed = KEY_PRESS_SPACE;
-	//	counter--;
-	//}
-	//else
-	//	keyPressed = KEY_PRESS_RIGHT;
-	/////////////////
+	/////////////Test
+	//keyPressed = KEY_PRESS_RIGHT;
+	//////////////////
 
+	if (!displayBehavior)
+		displayBehavior = make_unique<ExistPermanently>(mySelf);
 	if (!movementBehavior)
 		movementBehavior = std::make_unique<ControlledMovement>(mySelf, keyPressed);
 	else
 		movementBehavior->setKey(keyPressed);
-
-
-	if (!displayBehavior)
-		displayBehavior = make_unique<ExistPermanently>();
+	if (!detectBehavior)
+		detectBehavior = make_unique<RadarLikeDetection>(mySelf, true);
+	if (!collisionDetection)
+		collisionDetection = make_unique<CollisionDetection>(mySelf);
 	
 	useGoodies(keyPressed);
 	displayBehavior->showYourself();
 	movementBehavior->moveThatAss();
 	//The collision need to be executed AFTER the movement for this to works
-	//Reset cycle of collision result and detection
-	collisionResult.reset();
-	collisionDetection = make_unique<CollisionDetection>(mySelf, this->getCollisionRange());
+	detectBehavior->behaveBitches();
 	collisionDetection->behaveBitches();	//If there's a detection then a response is already made automatically
 	///////////////
 }
@@ -143,29 +138,94 @@ std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedIce() {
 	return intruders;
 }
 
-std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedOthers() {
+std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedOthers(bool radarMode) {
 	vector<weak_ptr<Actor>> intruders;
 	shared_ptr<Actor>source = wp_source.lock();
 
 	if (source && source->isAlive()) {
-		intruders = std::move(source->getWorld()->actorsCollideWithMe(source));
+		if (radarMode)
+			intruders = std::move(source->getWorld()->actorsCollideWithMe(source, true));
+		else
+			intruders = std::move(source->getWorld()->actorsCollideWithMe(source));
 	}
 	return intruders;
 }
 
 //Function works on recording the intruders and ice surround the source. Call this to update the intruders' list
-void RadarLikeDetection::checkSurrounding(std::weak_ptr<Actor> t_source) {
+void RadarLikeDetection::checkSurrounding(std::weak_ptr<Actor> t_source, bool radarMode) {
 	std::shared_ptr<Actor> temp = t_source.lock();
 	if (temp) {
-			wp_intruders = std::move(sensedIce());
-			auto temp = std::move(sensedOthers());
+			vector<weak_ptr<Actor>> temp;
+
+			if(radarMode)
+				temp = std::move(sensedOthers(true));
+			else {
+				temp = std::move(sensedOthers());
+				vector<weak_ptr<Actor >> temp_ice = std::move(sensedIce());
+				temp.insert(end(temp), begin(temp_ice), end(temp_ice));	//Concatenate the ice into temp
+			}
+
 			wp_intruders.insert(end(wp_intruders), begin(temp), end(temp));	//Concatenate the vectors cause we have more intruders
 	}
 }
 
+//Collision is just a radar like detection but only cover a small radius
+bool RadarLikeDetection::collisionHappen() {
+/*****************************
+**This use an entirely different detection range than the "radar" detection range so it's ok**
+Then a collision happen and you should produce a collision result
+*****************************/
+	shared_ptr<Actor> source = wp_source.lock();
+	shared_ptr<Actor> perp;
+	if (source) {
+		if (!wp_intruders.empty()) {
+			for (const auto& wp_perp : wp_intruders) {
+				perp = wp_perp.lock();
+				if (perp) {
+					if (source->isAlive() && perp->isAlive()) {
+						//Produce a collision result right here
+						collide(source, perp);
+					}
+				}
+			}
+		}
+		if (source->collisionResult)
+			return true;
+	}
+	return false;
+}
+
+/////This collide will use the "Radar" range instead of collision range
+void RadarLikeDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<Actor> wp_receiver) {
+	shared_ptr<Actor> source = wp_source.lock();
+	shared_ptr<Actor> receiver = wp_receiver.lock();
+
+	if ((source && receiver) && source != receiver) {
+
+		switch (source->type) {
+		case Actor::player:
+			switch (receiver->type) {
+			case Actor::collect:	//If the receiver is an collectible then make it appear
+				receiver->collisionResult = make_unique<Appear>(receiver);
+				break;
+			default:
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
+}
 
 void RadarLikeDetection::behaveBitches() {
-	sensedIce();
+	//sensedIce();
+	checkSurrounding(wp_source, true);	//Update the source
+	shared_ptr<Actor> source = wp_source.lock();
+	if (source) {
+		if (collisionHappen())	//Radar meeting another object is just like when the "waves" collide with something
+			source->collisionResult->response();
+	}
 }
 
 
@@ -208,7 +268,7 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 	shared_ptr<Actor> source = wp_source.lock();
 	shared_ptr<Actor> receiver = wp_receiver.lock();
 
-	if ((source && receiver) && (source->isVisible() && receiver->isVisible()) && source != receiver) {	//Only enable collision for things that are shown
+	if ((source && receiver) && source != receiver) {
 
 		switch (source->type) {
 		case Actor::player:
@@ -269,36 +329,9 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 		default:
 			break;
 		}
-	}
+	}	
 }
 
-//NOT WORKING IN ITS CURRENT STATE DUE TO FOCUS ON MAKING ICE COLLISION
-
-//Collision is just a radar like detection but only cover a small radius
-bool CollisionDetection::collisionHappen() {
-/*****************************
-**This use an entirely different detection range than the "radar" detection range so it's ok**
-Then a collision happen and you should produce a collision result
-*****************************/
-	shared_ptr<Actor> source = wp_source.lock();
-	shared_ptr<Actor> perp;
-	if (source) {
-		if (!wp_intruders.empty()) {
-			for (const auto& wp_perp : wp_intruders) {
-				perp = wp_perp.lock();
-				if (perp) {
-					if (source->isAlive() && perp->isAlive()) {
-						//Produce a collision result right here
-						collide(source, perp);
-					}
-				}
-			}
-		}
-		if (source->collisionResult)
-			return true;
-	}
-	return false;
-}
 
 void Block::resetBehavior() {
 	wp_target.reset();
@@ -338,16 +371,13 @@ void OilBarrels::doSomething() {
 
 	//Create the behavior
 	if (!existBehavior)
-		existBehavior = make_unique<ExistPermanently>();
-	if (!detectBehavior)
-		detectBehavior = make_unique<RadarLikeDetection>(self, self->getDetectRange());
+		existBehavior = make_unique<ExistPermanently>(self);
 	if (!collisionDetection)
-		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
+		collisionDetection = make_unique<CollisionDetection>(self);
 
 	//Use the behavior
 	existBehavior->showYourself();
 	collisionDetection->behaveBitches();
-	detectBehavior->behaveBitches();
 
 	self.reset();
 }
@@ -370,19 +400,17 @@ void GoldNuggets::doSomething() {
 	//Create behavior
 	if (!displayBehavior)
 		if (pickableByPlayer)
-			displayBehavior = make_unique<ExistPermanently>();
+			displayBehavior = make_unique<ExistPermanently>(self);
 		else {
 			displayBehavior.reset();
-			displayBehavior = make_unique<ExistTemporary>();
+			//Test using 1000 as the random timer
+			displayBehavior = make_unique<ExistTemporary>(self, 1000);
 		}
-	if (!detectBehavior)
-		detectBehavior = make_unique<RadarLikeDetection>(self, self->getDetectRange());
 	if (!collisionDetection)
-		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
+		collisionDetection = make_unique<CollisionDetection>(self);
 		
 	//Use the behavior
 	displayBehavior->showYourself();
-	detectBehavior->behaveBitches();
 	collisionDetection->behaveBitches();
 
 	self.reset();
@@ -411,15 +439,13 @@ void Water::doSomething() {
 	//Create behaviors
 	shared_ptr<Actor>self = shared_from_this();
 	if (!existBehavior)
-		existBehavior = make_unique<ExistTemporary>();
-	if (!detectBehavior)
-		detectBehavior = make_unique<RadarLikeDetection>(self, self->getDetectRange());
+		//Just some testing time of 1000
+		existBehavior = make_unique<ExistTemporary>(self, 1000);
 	if (!collisionDetection)
-		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
+		collisionDetection = make_unique<CollisionDetection>(self);
 
 	//Use the behaviors
 	existBehavior->showYourself();
-	detectBehavior->behaveBitches();
 	collisionDetection->behaveBitches();
 
 	self.reset();
@@ -441,17 +467,15 @@ void Squirt::doSomething() {
 	shared_ptr<Actor> self = shared_from_this();
 
 	if (!displayBehavior)
-		displayBehavior = make_unique<ExistTemporary>();
-	if (!detectBehavior)
-		detectBehavior = make_unique<RadarLikeDetection>(self, self->getDetectRange());
+		//Testing time of 1000
+		displayBehavior = make_unique<ExistTemporary>(self, 1000);
 	if (!collisionDetection)
-		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
+		collisionDetection = make_unique<CollisionDetection>(self);
 	if (!movementBehavior)
 		movementBehavior = make_unique<SquirtMovement>(self);
 
 	//Always execute movement first before collision detection so that if collision is <Block> it can catch the movement
 	displayBehavior->showYourself();
-	detectBehavior->behaveBitches();
 	movementBehavior->moveThatAss();
 	collisionDetection->behaveBitches();
 
@@ -493,8 +517,7 @@ void Boulder::doSomething() {
 	}
 
 	if (!collisionDetection)
-		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
-
+		collisionDetection = make_unique<CollisionDetection>(self);
 
 	collisionDetection->behaveBitches();
 
@@ -508,13 +531,6 @@ void Ice::doSomething() {
 	Then do the behaviors
 	*********************************/
 	if (isAlive()) {
-		//shared_ptr<Actor> self = shared_from_this();
-		////Create behaviors
-		//if (!displayBehavior)
-		//	displayBehavior = make_unique<ExistPermanently>();
-
-		////Use behaviors
-		//displayBehavior->showYourself();
 		
 		if(collisionResult)
 			collisionResult->response();
@@ -563,9 +579,6 @@ void ControlledMovement::moveThatAss() {
 					if (spPawn->getY() - 1 < 0)
 						break;
 					else {
-						//Testing purposes
-						cerr << key << " ";
-
 						spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
 					}
 				}
@@ -659,6 +672,7 @@ void SquirtMovement::moveThatAss() {
 }
 
 void SquirtMovement::resetBehavior() {
+	SquirtMovement::squirt.reset();
 }
 
 Actor::~Actor() {
@@ -681,4 +695,15 @@ void shout(Actor::Direction dir) {
 }
 
 void doSomething() {
+}
+
+void Appear::resetBehavior() {
+	target.reset();
+}
+
+void Appear::response() {
+	shared_ptr<Actor> actor = target.lock();
+	if (actor)
+		actor->setVisible(true);
+	actor.reset();
 }
