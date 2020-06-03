@@ -7,12 +7,13 @@
 #include <iomanip>
 #include <sstream>
 #include <cmath>
-
+#include <future>
 #include <iostream>
 using namespace std;
 
 //testing variable
 //int collectableLeft;
+const int INVALID_LOCAL = -1;
 
 GameWorld* createStudentWorld(string assetDir)
 {
@@ -23,12 +24,15 @@ GameWorld* createStudentWorld(string assetDir)
 
 int StudentWorld::move() {
 	ticksBeforeSpawn--;
+	auto fut = async(launch::async, &StudentWorld::findEmptyIce, this);	//Could take a long time so we create another thread
+
 	updateStatus();
 	createProtesters();
-
+	createGoodies(fut.get());	//Give in the location here
 	int status_of_game = doThings();
-	
+
 	deleteFinishedObjects();
+	increaseEmptyIce();	//Increase the possible location that water can spawn
 
 	switch (status_of_game) 
 	{
@@ -63,9 +67,9 @@ int StudentWorld::updateStatus() {
 
 	if (player) {
 		health = to_string(player->getHealth() * 10);
-		wtr = to_string(player->getSquirtNum());
-		gld = to_string(player->getGoldNum());
-		sonar = to_string(player->getSonarNum());
+		wtr = to_string('0');
+		gld = to_string('0');
+		sonar = to_string('0');
 	}
 	else {
 		health = '0';
@@ -101,28 +105,19 @@ int StudentWorld::doThings() {
 		return GWSTATUS_PLAYER_DIED; // If the player has died, return the appropriate status.
 
 
-	//Testing
-	//collectableLeft = 0;
-
 	for (auto& actors : actor_vec) { // Iterates through entire vector of actor objects 
 								// and has them call their own doSomething() methods.
 		if (actors && actors->isAlive()) {
 			actors->doSomething(); // If it is valid, have the actor do something.
 		}
-
-		//////Testing
-		//if (actors->type == Actor::collect)
-		//	collectableLeft++;
 	}
-	//cout << collectableLeft << " ";
-	/////////////////////
 
 	//Just the ice within the proximity of the player are allow to do any action
 	vector<weak_ptr<Actor>> iceTarget = iceCollideWithActor(player);
 	for (auto& val : iceTarget) {
 		shared_ptr<Actor>temp = val.lock();
 		if (temp)
-			temp->doSomething();
+			temp->doSomething();	//Don't know why it needs but it'll crash
 	}
 
 	if (oilsLeft == 0)
@@ -215,16 +210,20 @@ void StudentWorld::populateIce() {
 	/*********************************
 	Spawn ice in the coordinate specified
 	Put the Ice in the ice array and also put the pointer into another containers that holds every actors
+	Put the empty Ice location in the vector
 	*********************************/
 	for (int row = 0; row < ice_array.size(); row++) {
 		for (int col = 0; col < ice_array[row].size(); col++) {
-			if (col < 34 && col > 29 && row > 3 && row < 61) {
+			if (col <= shaftXoffsetR && col >= shaftXoffsetL && row >= shaftYoffsetD && row < shaftYoffsetU) {
 				ice_array[row][col] = nullptr;	//Don't add ice in cols and rows between those range
 			}
 			else {
 				ice_array[row][col] = make_shared<Ice>(this, true, col, row);	//Cols is the x location and row is the y location in Cartesian coordinate
 			}
 		}
+	}
+	for (int i = shaftYoffsetD; i <= shaftYoffsetU; i++) {
+		empty_iceLocal.emplace_back(shaftXoffsetL, i);	//Put the whole shaft as location for empty ice that water can fit in
 	}
 }
 
@@ -247,7 +246,8 @@ void StudentWorld::mainCreateObjects() {
 	int numBoulder = min(currentLV / 2 + 2, 9);
 	int numGold = max(5 - currentLV / 2, 2);
 	int numOil = min(2 + currentLV, 21);
-	//////Test
+
+	////Test
 	//int numBoulder = 1;
 	//int numGold = 1;
 	//int numOil = 1;
@@ -257,12 +257,8 @@ void StudentWorld::mainCreateObjects() {
 	//Seed the random
 	srand(time(0));
 	int localX, localY;
-	int shaftXoffsetL = 30,
-		shaftXoffsetR = 33,
-		shaftYoffsetD = 4,	//All inclusive
-		shaftYoffsetU = 60;
 
-	//createNPC<Protester>(60, 60);
+	createNPC();
 
 	for (; numBoulder > 0; numBoulder--) {
 		do {
@@ -274,7 +270,7 @@ void StudentWorld::mainCreateObjects() {
 			}
 			//Testing, remember to change the boulder location back to localX and Y
 			//33 60 for testing collision with boulder
-		} while (!createObjects<Boulder>(localX , localY));	//If object cannot create at the location then try again
+		} while (!createObjects<Boulder>(localX, localY));	//If object cannot create at the location then try again
 	}
 
 	for (; numGold > 0; numGold--) {
@@ -306,7 +302,7 @@ void StudentWorld::createProtesters() {
 	int currentLV = getLevel();
 	if (ticksBeforeSpawn == 0) {
 		if (protesterCount != protesterSpawnLimit) {
-			//createNPC<Protester>(60, 60);
+			createNPC();
 		}
 		ticksBeforeSpawn = max(25, 200 - currentLV);
 	}
@@ -409,9 +405,9 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_
 			int actY = actor->getY();
 
 			int spotNegativeX = actX - eachRange;
-			int spotPositiveX = actX + playerRange;
+			int spotPositiveX = actX + playerRange;	//Range from left to right
 			int spotNegativeY = actY - eachRange;
-			int spotPositiveY = actY + playerRange;
+			int spotPositiveY = actY + playerRange;	//Range from bottom to top
 
 			//Prune the distance so it doesn't go out of range
 			//for (; spotPositiveX >= COL_NUM; spotPositiveX--);
@@ -476,9 +472,73 @@ bool StudentWorld::createSquirt() {
 	return false;
 }
 
+
+/////test this for bugss plssss
+bool StudentWorld::createGoodies(pair<int, int> locale) {
+	int currentLvl = getLevel();
+	double spawnChance = currentLvl * 25 + 300;
+	double spawnPercentage = (1 / spawnChance) * 100;	//1 out of G chance
+
+	bool allowSpawn = (rand() % 100) < spawnPercentage;
+
+	////Test
+	//bool allowSpawn = true;
+
+	if (allowSpawn) {
+		bool spawnWater = (rand() % 100) < WATER_CHANCE;	//water is 80 percent
+		////Tests
+		//bool spawnWater = true;
+		///////////////
+		if (locale.first != INVALID_LOCAL && locale.second != INVALID_LOCAL) {
+			if (spawnWater) {
+				actor_vec.emplace_back(make_shared<Water>(this, locale.first, locale.second));
+			}
+			else {
+				actor_vec.emplace_back(make_shared<SonarKit>(this));
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+//The function put in location that the player traveled as possible empty ice place
+void StudentWorld::increaseEmptyIce() {
+	if (player && player->isAlive()) {
+		double localX, localY;
+		player->getAnimationLocation(localX, localY);
+		if (localX > 0 && localX < COL_NUM - OBJECT_LENGTH && localY > 0 && localY < ROW_NUM - OBJECT_LENGTH) {	//Make sure it's in the ice field
+			for (int i = localY; i < ROW_NUM && i < localY + OBJECT_LENGTH; i++) {	//Check the surrounding ice to make sure there's none exist in 4x4 radius
+				for (int k = localX; k < COL_NUM && k < localX + OBJECT_LENGTH; k++) {
+					if (ice_array[i][k])	//If there's an ice exist in an area, then it's not qualified
+						return;
+				}
+			}
+			empty_iceLocal.emplace_back(localX, localY);
+		}
+	}
+}
+
+//Function will return a random pair of location for possible water spawning place
+std::pair<int, int> StudentWorld::findEmptyIce() {
+	if (player && player->isAlive()) {
+		while (!empty_iceLocal.empty()) {
+			int theOne = rand() % empty_iceLocal.size();
+			pair<int, int> locale = empty_iceLocal[theOne];
+
+			int distance = sqrt(pow(locale.first - player->getX(), 2) + pow(locale.second - player->getY(), 2));
+			if (distance >= DIST_ALLOW_BETW_SPAWN)	//Return the location if it's different than where the player is
+				return locale;
+		}
+	}
+	return make_pair(INVALID_LOCAL, INVALID_LOCAL);	//Should throw some error here instead, but meh
+}
+
+
 void StudentWorld::cleanUp() {
 	//erase everything from vector
-	actor_vec.erase(actor_vec.begin(), actor_vec.end());
+	actor_vec.clear();
+	empty_iceLocal.clear();
 
 	for (auto& rowIter : ice_array) {
 		for (auto& colIter : rowIter) {

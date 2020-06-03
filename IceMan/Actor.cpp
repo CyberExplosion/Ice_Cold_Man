@@ -33,8 +33,33 @@ void FreeMovement::moveThatAss() {
 void FreeMovement::resetBehavior() {
 }
 
+bool FallMovement::checkIceBelow() {
+	if (t != 0)
+		t--;
+	else
+		return false;
+
+	return false;
+}
+
+void FallMovement::fall(shared_ptr<Actor> target) {
+	int y = target->getY();
+	checkIceBelow();
+	if (y == 0)
+		return;
+	else if (t == 0)
+		target->moveTo(target->getX(), target->getY() - 1);
+}
+
 void FallMovement::moveThatAss() {
-	
+	shared_ptr<Actor> spPawn = pawn.lock();
+
+	if (spPawn && spPawn->isAlive()) {
+		if (key == KEY_PRESS_DOWN) {
+			fall(spPawn);
+			spPawn->changeActorType(Actor::ActorType::hazard);
+		}
+	}
 }
 
 void FallMovement::resetBehavior() {
@@ -48,9 +73,9 @@ bool IceMan::shootSquirt() {
 }
 
 
-////Testing purposes
-//int counter = 2;
-////////////////////
+//Testing purposes
+int counter = 2;
+//////////////////
 
 void IceMan::doSomething() {
 	/*******************************
@@ -72,9 +97,12 @@ void IceMan::doSomething() {
 	if (!getWorld()->getKey(keyPressed))
 		keyPressed = INVALID_KEY;
 
-	/////////////Test
-	//keyPressed = KEY_PRESS_RIGHT;
-	//////////////////
+	///////////////Test
+	//counter--;
+	//if (counter <= 0)
+	//	keyPressed = KEY_PRESS_LEFT;
+	////keyPressed = KEY_PRESS_RIGHT;
+	////////////////////
 
 	if (!displayBehavior)
 		displayBehavior = make_unique<ExistPermanently>(mySelf);
@@ -158,8 +186,10 @@ void RadarLikeDetection::checkSurrounding(std::weak_ptr<Actor> t_source, bool ra
 			vector<weak_ptr<Actor>> temp;
 
 			if(radarMode)
+				//Radar mode
 				temp = std::move(sensedOthers(true));
 			else {
+				//Collision mode
 				temp = std::move(sensedOthers());
 				vector<weak_ptr<Actor >> temp_ice = std::move(sensedIce());
 				temp.insert(end(temp), begin(temp_ice), end(temp_ice));	//Concatenate the ice into temp
@@ -172,7 +202,6 @@ void RadarLikeDetection::checkSurrounding(std::weak_ptr<Actor> t_source, bool ra
 //Collision is just a radar like detection but only cover a small radius
 bool RadarLikeDetection::collisionHappen() {
 /*****************************
-**This use an entirely different detection range than the "radar" detection range so it's ok**
 Then a collision happen and you should produce a collision result
 *****************************/
 	shared_ptr<Actor> source = wp_source.lock();
@@ -233,8 +262,9 @@ void CollisionDetection::behaveBitches() {
 	shared_ptr<Actor>source = wp_source.lock();
 	if (source) {
 		checkSurrounding(source);	//Update the current location of intruders
-			if ((source->collisionResult && source->collisionResult->type == source->collisionResult->block) || collisionHappen())	//If there's a result of block type, then we need to allow it to response again. Block Behavior requires the source to look at another direction before allow him to have any other collision result
-				source->collisionResult->response();
+
+		if ((source->collisionResult && source->collisionResult->type == source->collisionResult->block) || collisionHappen())	//If there's a result of block type, then we need to allow it to response again. Block Behavior requires the source to look at another direction before allow him to have any other collision result
+			source->collisionResult->response();
 	}
 }
 
@@ -272,10 +302,10 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 		case Actor::player:
 			switch (receiver->type) {
 			case Actor::npc:
+				source->getWorld()->increaseScore(receiver->getScore());
 				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
 				break;
 			case Actor::worldStatic:
-
 				source->collisionResult = make_unique<Block>(source);
 				break;
 			case Actor::hazard:
@@ -287,6 +317,7 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
 				break;
 			case Actor::collect:
+				source->getWorld()->increaseScore(receiver->getScore());
 				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
 				break;
 			default:
@@ -318,8 +349,6 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 			case Actor::player:
 				break;
 			case Actor::npc:
-				//Destroy only the receiver
-				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
 				break;
 			default:
 				break;
@@ -347,6 +376,7 @@ void Block::response() {
 			currentY = 0;
 
 		target->getAnimationLocation(currentX, currentY);
+
 		if (facing != target->getDirection()) {	//If they face different direction after being blocked, they can move again
 			target->movementBehavior->enableMove(true);
 			target->movementBehavior->moveThatAss();	//Allow to move again
@@ -381,8 +411,15 @@ void OilBarrels::doSomething() {
 	self.reset();
 }
 
+
 bool GoldNuggets::tempTimeEnd() {
 	return false;
+}
+
+GoldNuggets::~GoldNuggets() {
+	if (pickableByPlayer) {
+		getWorld()->playSound(getDeathSound());
+	}
 }
 
 void GoldNuggets::drop() {
@@ -397,7 +434,7 @@ void GoldNuggets::doSomething() {
 	shared_ptr<Actor> self = shared_from_this();
 
 	//Create behavior
-	if (!displayBehavior)
+	if (!displayBehavior) {
 		if (pickableByPlayer)
 			displayBehavior = make_unique<ExistPermanently>(self);
 		else {
@@ -405,6 +442,8 @@ void GoldNuggets::doSomething() {
 			//Test using 1000 as the random timer
 			displayBehavior = make_unique<ExistTemporary>(self, 1000);
 		}
+
+	}
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
 		
@@ -427,7 +466,20 @@ void SonarKit::useSonar() {
 }
 
 void SonarKit::doSomething() {
+	if (!isAlive()) {
+		resetAllBehaviors();
+		return;
+	}
+
+	shared_ptr<Actor>self = shared_from_this();
+	if (!collisionDetection)
+		collisionDetection = make_unique<CollisionDetection>(self);
+
+	collisionDetection->behaveBitches();
+
+	self.reset();
 }
+
 
 void Water::doSomething() {
 	if (!isAlive()) {
@@ -481,24 +533,6 @@ void Squirt::doSomething() {
 	self.reset();
 }
 
-void Boulder::fall() {
-	int y = getY();
-	checkIceBelow();
-	if (y == 0)
-		return;
-	else if (t == 0) 
-		moveTo(getX(), getY() - 1);
-	
-}
-
-bool Boulder::checkIceBelow() {
-	if (t != 0) 
-		t--;
-	else
-		return false;
-	
-	return false;
-}
 
 void Boulder::doSomething() {
 	if (!isAlive()) {
@@ -510,14 +544,14 @@ void Boulder::doSomething() {
 
 	bool isFalling = getWorld()->boulderFall(getX(), getY());
 
-	if (isFalling) {
-		fall();
-		changeActorType(ActorType::hazard);
-	}
+	if (isFalling && !movementBehavior)
+		movementBehavior = make_unique<FallMovement>(self, KEY_PRESS_DOWN);
 
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
-
+	
+	if(movementBehavior)
+		movementBehavior->moveThatAss();
 	collisionDetection->behaveBitches();
 
 	self.reset();
@@ -587,7 +621,7 @@ void ControlledMovement::moveThatAss() {
 				if (spPawn->getDirection() != GraphObject::Direction::up)
 					spPawn->setDirection(GraphObject::Direction::up);
 				else {
-					if (spPawn->getY() + 1 > 60)
+					if (spPawn->getY() + 1 > ROW_NUM)
 						break;
 					else {
 						if(canMove())
@@ -599,7 +633,7 @@ void ControlledMovement::moveThatAss() {
 				if (spPawn->getDirection() != GraphObject::Direction::right)
 					spPawn->setDirection(GraphObject::Direction::right);
 				else {
-					if (spPawn->getX() + 1 > 60)
+					if (spPawn->getX() + 1 > COL_NUM - OBJECT_LENGTH)
 						break;
 					else {
 						if(canMove())
@@ -674,7 +708,6 @@ void SquirtMovement::moveThatAss() {
 		}
 	}
 	pawn.reset();
-	return;
 }
 
 void SquirtMovement::resetBehavior() {

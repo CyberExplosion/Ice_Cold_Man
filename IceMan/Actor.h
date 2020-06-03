@@ -20,7 +20,6 @@ class Boulder;
 class StudentWorld;
 class Ice;
 
-
 class Actor : public GraphObject, public std::enable_shared_from_this<Actor> {
 public:
 	//Type
@@ -34,23 +33,26 @@ private:
 	double detectionRange;
 	StudentWorld* m_sw;
 	int death_sound;
-	//double centerX = 0;
-	//double centerY = 0;
+	int score;
 	int size;
 public:
-	Actor(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double t_size = 1.0, unsigned int depth = 0, int t_hp = 1, int t_strength = 0, double col_range = 0, double detect_range = 0, int t_sound = SOUND_NONE) : GraphObject(imgID, startX, startY, dir, t_size, depth), hitpoints(t_hp), strength(t_strength), collisionRange(col_range), detectionRange(detect_range), type(t_type), m_sw(world), death_sound(t_sound), size(t_size) {
+	Actor(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double t_size = 1.0, unsigned int depth = 0, int t_hp = 1, int t_strength = 0, double col_range = 0, double detect_range = 0, int t_sound = SOUND_NONE, int t_score = 0) : GraphObject(imgID, startX, startY, dir, t_size, depth), hitpoints(t_hp), strength(t_strength), collisionRange(col_range), detectionRange(detect_range), type(t_type), m_sw(world), death_sound(t_sound), size(t_size), score(t_score) {
 		setVisible(visibility);
 	};
 	virtual ~Actor();
 
 	std::unique_ptr<IExistenceBehavior> displayBehavior;
 	std::unique_ptr<IMovementBehavior> movementBehavior;
+	
 	//Store the result in this
+	std::unique_ptr<IDetectionBehavior>collisionDetection;
+	
+	//Don't think about this
 	std::unique_ptr<IActorResponse> collisionResult;
+	
 	//Determine what method of detection the actor would use
 	std::unique_ptr<IDetectionBehavior>detectBehavior;
-	std::unique_ptr<IDetectionBehavior>collisionDetection;
-
+	
 	//This is for all the usage of shared_ptr in them behaviors. This is bad but I blame due date
 	virtual void resetAllBehaviors();
 
@@ -91,6 +93,14 @@ public:
 
 	void setDeathSound(int sound) {
 		death_sound = sound;
+	}
+
+	int getScore() {
+		return score;
+	}
+
+	void setScore(int val) {
+		score = val;
 	}
 
 	void changeActorType(ActorType t_type) {
@@ -137,9 +147,13 @@ public:
 
 class FallMovement : public IMovementBehavior{
 private:
-
+	std::weak_ptr<Actor> pawn;
+	//Variables
+	int t = 30; // Adjust this to change how long before boulder falls.
+	bool checkIceBelow();
+	void fall(std::shared_ptr<Actor> actor);
 public:
-	FallMovement() : IMovementBehavior(INVALID_KEY) {};
+	FallMovement(std::weak_ptr<Actor> t_pawn, int key = INVALID_KEY) : IMovementBehavior(key), pawn(t_pawn) {};
 	//This is for the Boulder
 	void moveThatAss() override;
 	void resetBehavior() override;
@@ -222,6 +236,7 @@ public:
 	void response() override;
 };
 
+//This is only use for radar type collision
 class Appear : public IActorResponse {
 private:
 	std::weak_ptr<Actor>target;
@@ -273,9 +288,10 @@ class IDetectionBehavior{
 protected:
 
 public:
-	//The source is npc or objects. Intruder will be the player
+	//The source is npc or objects. Intruders will be others actors that inside the range
 	std::weak_ptr<Actor> wp_source;
 	std::vector<std::weak_ptr<Actor>> wp_intruders;
+	//Constructor
 	IDetectionBehavior(std::weak_ptr<Actor> t_source) : wp_source(t_source) {};
 	IDetectionBehavior(std::weak_ptr<Actor> t_source, std::vector<std::weak_ptr<Actor>> t_intruder) : wp_source(t_source), wp_intruders(t_intruder) {};
 	
@@ -326,40 +342,24 @@ public:
 
 /////////////////////////
 
-
 //People
 class Characters : public Actor {
 public:
-	Characters(StudentWorld* world, ActorType type, int imgID, int startX, int startY, Direction dir, int t_hp, int t_str, double col_ran, double detect_range, int t_sound) : Actor(world, type, true, imgID, startX, startY, dir, 1.0, 0, t_hp, t_str, col_ran, detect_range, t_sound) {};
+	Characters(StudentWorld* world, ActorType type, int imgID, int startX, int startY, Direction dir, int t_hp, int t_str, double col_ran, double detect_range, int t_sound, int t_score) : Actor(world, type, true, imgID, startX, startY, dir, 1.0, 0, t_hp, t_str, col_ran, detect_range, t_sound, t_score) {};
 	virtual ~Characters() {};
 };
 
 class IceMan : public Characters {
 private:
 	int dmgSound = SOUND_PLAYER_ANNOYED;
-	std::vector<std::shared_ptr<SonarKit>>sonarVec;
-	std::vector<std::shared_ptr<GoldNuggets>>goldVec;
-	std::vector<std::shared_ptr<Squirt>>squirtVec;
 	//This function find the player actor type in the whole list of actors
 	//Function for users goodies usage
 	bool shootSquirt();
 public:
-	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 999, 3, 4, SOUND_PLAYER_GIVE_UP) {};
+	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 999, 3, 4, SOUND_PLAYER_GIVE_UP, 0) {};
 	void doSomething() override;
 	bool useGoodies(int key);
 	void dmgActor(int amt) override;
-
-	int getSonarNum() {
-		return sonarVec.size();
-	}
-
-	int getSquirtNum() {
-		return squirtVec.size();
-	}
-
-	int getGoldNum() {
-		return goldVec.size();
-	}
 };
 
 class Protesters : public Characters{
@@ -368,7 +368,7 @@ private:
 	int annoyed_sound = SOUND_PROTESTER_GIVE_UP;
 	int yell_sound = SOUND_PROTESTER_YELL;
 public:
-	Protesters(StudentWorld* world, int imgID = IID_PROTESTER, int startX = 60, int startY = 60, int hp = 5, int t_str = 2, double col_range = 4, double detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED) : Characters(world, npc, imgID, startX, startY, left, hp, t_str, col_range, detect_range, t_sound){
+	Protesters(StudentWorld* world, int imgID = IID_PROTESTER, int startX = 60, int startY = 60, int hp = 5, int t_str = 2, double col_range = 4, double detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED, int t_score = 0) : Characters(world, npc, imgID, startX, startY, left, hp, t_str, col_range, detect_range, t_sound, t_score){
 		movementBehavior = std::make_unique<FreeMovement>();
 	}
 	virtual ~Protesters() override {};
@@ -397,7 +397,7 @@ class HardcoreProtesters: public Protesters{
 private:
 
 public:
-	HardcoreProtesters(StudentWorld* world, int imgID = IID_HARD_CORE_PROTESTER, int startX = 60, int startY = 60, int hp = 20, int strength = 2, double col_range = 4, double detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED) : Protesters(world, IID_HARD_CORE_PROTESTER, startX, startY, hp, strength, col_range, detect_range, t_sound) {
+	HardcoreProtesters(StudentWorld* world, int imgID = IID_HARD_CORE_PROTESTER, int startX = 60, int startY = 60, int hp = 20, int strength = 2, double col_range = 4, double detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED, int t_score = 0) : Protesters(world, IID_HARD_CORE_PROTESTER, startX, startY, hp, strength, col_range, detect_range, t_sound, t_score) {
 		movementBehavior = std::make_unique<FreeMovement>();
 	}
 	~HardcoreProtesters() override {};
@@ -408,7 +408,7 @@ class Inanimated : public Actor {
 private:
 
 public:
-	Inanimated(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 2, int hp = 1, int strength = 0, double col_range = 4, double detect_range = 0, int t_sound = SOUND_NONE) : Actor(world, t_type, visibility, imgID, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound) {};
+	Inanimated(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double size = 1.0, unsigned int depth = 2, int hp = 1, int strength = 0, double col_range = 4, double detect_range = 0, int t_sound = SOUND_NONE, int t_score = 0) : Actor(world, t_type, visibility, imgID, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {};
 
 	virtual ~Inanimated() {};
 };
@@ -419,44 +419,37 @@ private:
 protected:
 	std::unique_ptr<IExistenceBehavior> existBehavior;
 public:
-	Collectable(StudentWorld* world, bool visibility, int imgID, int startX, int startY, Direction dir, double size, unsigned int depth, int hp, int strength, double col_range, double detect_range, int t_sound = SOUND_GOT_GOODIE) : Inanimated(world, collect, visibility, imgID, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound), isHidden(!visibility) {};
+	Collectable(StudentWorld* world, bool visibility, int imgID, int startX, int startY, Direction dir, double size, unsigned int depth, int hp, int strength, double col_range, double detect_range, int t_sound = SOUND_GOT_GOODIE, int t_score = 0) : Inanimated(world, collect, visibility, imgID, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score), isHidden(!visibility) {};
 	virtual ~Collectable() {};
 	void showSelf();
 };
 
 class OilBarrels : public Collectable{
 private:
-
 	//Functions
 	void doSomething() override;
 public:
-
-	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, int t_sound = SOUND_FOUND_OIL) : Collectable(world, false, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound) {
+	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, int t_sound = SOUND_FOUND_OIL, int t_score = 1000) : Collectable(world, false, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
 	};
-
 };
 
 class GoldNuggets : public Collectable{
 private:
-	bool pickableByPlayer = true;
+	bool pickableByPlayer;
 	//Function
 	//Determine if the time for the Temporary gold exist ran out
 	bool tempTimeEnd();
-public:
-	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true) : Collectable(world, false, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range), pickableByPlayer(t_pickable) {
 
-		//if (pickableByPlayer) {
-		//	existBehavior = std::make_unique<ExistPermanently>();
-		//}
-		//else {
-		//	existBehavior = std::make_unique<ExistTemporary>();
-		//	setDeathSound(SOUND_PROTESTER_FOUND_GOLD);	//Change into sound of protesters when not pickable by player
-		//	changeActorType(dropByPlayer);
-		//}
-	};
+public:
+	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true, int t_sound = SOUND_GOT_GOODIE, int t_score = 50) : Collectable(world, false, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score), pickableByPlayer(t_pickable) {};
+	~GoldNuggets() override;
+
 	void drop();
 	bool getStage() {
 		return pickableByPlayer;
+	}
+	void setToPickalbe(bool flag) {
+		pickableByPlayer = flag;
 	}
 	void doSomething() override;
 };
@@ -467,18 +460,20 @@ private:
 	int increaseAmmo(int amount);
 	void useSonar();
 public:
-	SonarKit(StudentWorld* world, int startX = 0, int startY = 60, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 9999) : Collectable(world, true, IID_SONAR, startX, startY, dir, size, depth, hp, strength, col_range, detect_range) {
+	SonarKit(StudentWorld* world, int startX = 0, int startY = 60, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 0, int t_sound = SOUND_FOUND_OIL, int t_score = 75) : Collectable(world, true, IID_SONAR, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
 		/*existBehavior = std::make_unique<ExistTemporary>();*/
 	};
+
 	void doSomething() override;
 };
 
 class Water : public Collectable{
 private:
 public:
-	Water(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 9999) : Collectable(world, true, IID_WATER_POOL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range) {
+	Water(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 0, int t_sound = SOUND_GOT_GOODIE, int t_score = 100) : Collectable(world, true, IID_WATER_POOL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
 		/*existBehavior = std::make_unique<ExistTemporary>();*/
 	}
+
 	void doSomething() override;
 };
 
@@ -514,17 +509,10 @@ private:
 	int fall_sound = SOUND_FALLING_ROCK;
 	
 	//Functions
-	void fall();
-	bool checkIceBelow();
 	void doSomething() override;
-
-	//Variables
-	int t = 30; // Adjust this to change how long before boulder falls.
 public:
 	Boulder(StudentWorld* world, int startX, int startY, Direction dir = down, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 9999, double col_range = 3, double detect_range = 0) : Hazard(world, worldStatic, true, IID_BOULDER, startX, startY, dir, size, depth, hp, strength, col_range, detect_range){
 		//Not hazard yet when first spawn
-		changeActorType(ActorType::worldStatic);
-		movementBehavior = std::make_unique<FallMovement>();
 	}
 };
 

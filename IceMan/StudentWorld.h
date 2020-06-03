@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <future>
 #include "Actor.h"
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
@@ -16,15 +17,23 @@
 class Actor;
 class IceMan;
 class Ice;
+
 const int COL_NUM = 64,
 ROW_NUM = 60;
 const int DIST_ALLOW_BETW_SPAWN = 9;	//3 is the typical "collision size of most object" plus 6 square away each other
 const int OBJECT_LENGTH = 4;
 const int ICE_LENGTH = 1;
+const int SONAR_CHANCE = 20,
+WATER_CHANCE = 80;			//both percentages
+const int shaftXoffsetL = 30,
+shaftXoffsetR = 33,
+shaftYoffsetD = 4,	//All inclusive
+shaftYoffsetU = 60;
 
 class StudentWorld : public GameWorld
 {
 public:
+
 	StudentWorld(std::string assetDir)
 		: GameWorld(assetDir) {
 	};
@@ -44,6 +53,7 @@ public:
 		createPlayer();
 		mainCreateObjects();
 		initSpawnParameters();
+
 		return GWSTATUS_CONTINUE_GAME;
 	}
 
@@ -90,13 +100,18 @@ public:
 	std::vector<std::weak_ptr<Actor>> iceCollideWithActor(std::shared_ptr<Actor> actor, bool radarMode = false);
 	std::vector<std::weak_ptr<Actor>> actorsCollideWithMe(std::shared_ptr<Actor> actor, bool radarMode = false);
 	bool createSquirt();
-
+	bool createGoodies(std::pair<int, int>);
+	void decrementOil() {
+		--oilsLeft;
+	}
+	void increaseEmptyIce();
+	std::pair<int, int> findEmptyIce();	//Don't know why but my guess it's that async doesn't allow member function
 	template<typename T>
 	bool createObjects(int x, int y);
-
 private:
 	// Data Structures
 	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
+	std::vector<std::pair<int, int>>empty_iceLocal;
 	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
 	std::shared_ptr<IceMan> player;
 
