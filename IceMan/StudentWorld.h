@@ -104,7 +104,7 @@ public:
 	void decrementOil() {
 		--oilsLeft;
 	}
-	void increaseEmptyIce();
+	void increaseEmptyIce();	//Call this function at the end to populate the location where water can spawn
 	std::pair<int, int> findEmptyIce();	//Don't know why but my guess it's that async doesn't allow member function
 	template<typename T>
 	bool createObjects(int x, int y);
@@ -142,28 +142,16 @@ private:
 template<typename T>
 bool StudentWorld::createObjects(int x, int y) {
 	/************************************
-	Create a dummy object at the specified location with its collision range set up to 6. It will tell us if we can put the object in the location or not
-	If there's a collision with any actors except ice, the location is compromised and thus should return false to get another location
-	The location is not compromise, move to next phase:
-		Create a real object with real collision and every attributes at the location
-		Make a collision detection with the object to find intruder (ice)
-		If there's an intruder
-			Then make the intruder to check its' own collision detection
-		If there's a collision happen in the source and the intruder
-			Demand a collision response from the source
-			Demand a collision response from the intruder
-	Finally put the newly made object into actor containers
+	Check if the location is well spread out enough compare to other actors or not
+	If the location is valid, clear the ice in that location
+	Put the object into the actor vector
 	************************************/
-	std::shared_ptr<T> temp = std::make_shared<T>(this, x, y, GraphObject::Direction::right, 1.0, 2, 1, DIST_ALLOW_BETW_SPAWN, DIST_ALLOW_BETW_SPAWN);	//Radar range of 6 because that's the requirement for a new object to be made
-
- 	temp->detectBehavior = std::make_unique<RadarLikeDetection>(temp, true);	//Use radar because we don't need to find the ice for our intruders
-	temp->detectBehavior->behaveBitches();	//Check for collision
-
-	std::vector<std::weak_ptr<Actor>>intruders = std::move(temp->detectBehavior->wp_intruders);
-
-	for (auto& sp_entity : intruders) {
-		std::shared_ptr<Actor>entity = sp_entity.lock();
-		if (entity && entity->type != Actor::ActorType::ice)	//There's an intruder and it's not ice
+	//Test
+	//cerr << "x :" << x << " || " << "y: " << y << "\n";
+ 	
+	for (auto const& each : actor_vec) {
+		int distance = sqrt(pow(each->getX() - x, 2) + pow(each->getY() - y, 2));
+		if (distance < DIST_ALLOW_BETW_SPAWN)
 			return false;
 	}
 
@@ -171,15 +159,14 @@ bool StudentWorld::createObjects(int x, int y) {
 	/*THIS MAY HAPPEN BECAUSE THE ICE IS DEAD BUT SINCE WE NOT MOVE YET CLEAN UP HASN'T BEEN CALLED*/
 	////////// This is fixed, I THINK????!!!
 
-	intruders.clear();
 	//If reach this meaning that's there is an intruder and it's ice
-	std::shared_ptr<T> object = std::make_shared <T>(this, x, y);	//Make the object
+	std::shared_ptr<T> object = std::make_shared<T>(this, x, y);	//Make the object
 	if (object->type == Actor::ActorType::worldStatic) {	//Only destroy the ice if it's worldStatic
 		object->collisionDetection = std::make_unique<CollisionDetection>(object);
 		object->collisionDetection->behaveBitches();	//See if the object collide with any ice
 
 
-		intruders = std::move(object->collisionDetection->wp_intruders);	//Get the ice
+		auto intruders = std::move(object->collisionDetection->wp_intruders);	//Get the ice
 
 		for (auto& wp_entity : intruders) {
 			//since i ran out of patient, imma going to do what i called a pro gamer moves

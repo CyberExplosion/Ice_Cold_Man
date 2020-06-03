@@ -69,9 +69,9 @@ int StudentWorld::updateStatus() {
 
 	if (player) {
 		health = to_string(player->getHealth() * 10);
-		wtr = to_string('0');
-		gld = to_string('0');
-		sonar = to_string('0');
+		wtr = to_string(player->getWater());
+		gld = to_string(player->getGold());
+		sonar = to_string(player->getSonar());
 	}
 	else {
 		health = '0';
@@ -245,6 +245,9 @@ void StudentWorld::mainCreateObjects() {
 		Move on to spawn the next actor
 	*****************************/
 	int currentLV = getLevel();
+	////Test
+	//currentLV = 13;
+
 	int numBoulder = min(currentLV / 2 + 2, 9);
 	int numGold = max(5 - currentLV / 2, 2);
 	int numOil = min(2 + currentLV, 21);
@@ -262,10 +265,15 @@ void StudentWorld::mainCreateObjects() {
 
 	createNPC();
 
+	//numbers in the range [M, N] could be generated with something like
+	//M + rand() / (RAND_MAX / (N - M + 1) + 1)
+	
+	//Test
+	//cerr << "Boulder: \n";
 	for (; numBoulder > 0; numBoulder--) {
 		do {
-			localX = rand() % (COL_NUM + 1) - OBJECT_LENGTH;	// 0 - 60 (It's actually 0 - 56) because the location starts at down-left corner
-			localY = rand() % (ROW_NUM - 20) + 20 - OBJECT_LENGTH; // 20 - 56 (Actually 20 - 52)
+			localX = 0 + rand() / (RAND_MAX / ((COL_NUM - OBJECT_LENGTH) - 0 + 1) + 1);	// 0 - 60 (It's actually 0 - 56) because the location starts at down-left corner
+			localY = 20 + rand() / (RAND_MAX / ((ROW_NUM - OBJECT_LENGTH) - 20 + 1) + 1); // 20 - 56
 			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numBoulder;	//Make it loop again == Generate another random location
 				break;
@@ -275,10 +283,11 @@ void StudentWorld::mainCreateObjects() {
 		} while (!createObjects<Boulder>(localX, localY));	//If object cannot create at the location then try again
 	}
 
+	//cerr << "Gold: \n";
 	for (; numGold > 0; numGold--) {
 		do {
-			localX = rand() % (COL_NUM + 1) - OBJECT_LENGTH;
-			localY = rand() % ROW_NUM - OBJECT_LENGTH;	// 0 - 56
+			localX = 0 + rand() / (RAND_MAX / ((COL_NUM - OBJECT_LENGTH) - 0 + 1) + 1);	//0 - 60
+			localY = 0 + rand() / (RAND_MAX / ((ROW_NUM - OBJECT_LENGTH) - 0 + 1) + 1);	// 0 - 52
 			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numGold;	//Make it loop again == Generate another random location
 				break;
@@ -287,10 +296,11 @@ void StudentWorld::mainCreateObjects() {
 		} while (!createObjects<GoldNuggets>(localX, localY));
 	}
 
+	//cerr << "Oil: \n";
 	for (; numOil > 0; numOil--) {
 		do {
-			localX = rand() % (COL_NUM + 1) - OBJECT_LENGTH;
-			localY = rand() % ROW_NUM - OBJECT_LENGTH;
+			localX = 0 + rand() / (RAND_MAX / ((COL_NUM - OBJECT_LENGTH) - 0 + 1) + 1);	//0 - 60
+			localY = 0 + rand() / (RAND_MAX / ((ROW_NUM - OBJECT_LENGTH) - 0 + 1) + 1);	// 0 - 52
 			if ((localX >= shaftXoffsetL - OBJECT_LENGTH && localX <= shaftXoffsetR && localY >= shaftYoffsetD - OBJECT_LENGTH) || localX < 0 || localY < 0) {	//Location of the shaft
 				++numOil;	//Make it loop again == Generate another random location
 				break;
@@ -402,7 +412,6 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_
 				eachRange = each->getCollisionRange();
 			}
 
-
 			int actX = actor->getX();
 			int actY = actor->getY();
 
@@ -477,14 +486,20 @@ bool StudentWorld::createSquirt() {
 
 /////test this for bugss plssss
 bool StudentWorld::createGoodies(pair<int, int> locale) {
+	//See if there's any actors in the proximity
+
+	//Water dummy(this, x, y, dir, size, depth, hp, strength, col, detect, sound, score);
+	auto dummy = make_shared<Water>(this, locale.first, locale.second, GraphObject::Direction::none, 1.0, 3, 1, 0, OBJECT_LENGTH - 1, OBJECT_LENGTH - 1, SOUND_NONE, 0);
+	dummy->detectBehavior = make_unique<RadarLikeDetection>(dummy);
+	dummy->detectBehavior->behaveBitches();		//Check if any actor already in your position
+	if (!dummy->detectBehavior->wp_intruders.empty())
+		return false;
+
 	int currentLvl = getLevel();
 	double spawnChance = currentLvl * 25 + 300;
 	double spawnPercentage = (1 / spawnChance) * 100;	//1 out of G chance
 
 	bool allowSpawn = (rand() % 100) < spawnPercentage;
-
-	////Test
-	//bool allowSpawn = true;
 
 	if (allowSpawn) {
 		bool spawnWater = (rand() % 100) < WATER_CHANCE;	//water is 80 percent
@@ -525,7 +540,10 @@ void StudentWorld::increaseEmptyIce() {
 std::pair<int, int> StudentWorld::findEmptyIce() {
 	if (player && player->isAlive()) {
 		while (!empty_iceLocal.empty()) {
-			int theOne = rand() % empty_iceLocal.size();
+			//numbers in the range [M, N] could be generated with something like
+			//M + rand() / (RAND_MAX / (N - M + 1) + 1)
+
+			int theOne = rand() / (RAND_MAX / (empty_iceLocal.size() - 0) + 1);
 			pair<int, int> locale = empty_iceLocal[theOne];
 
 			int distance = sqrt(pow(locale.first - player->getX(), 2) + pow(locale.second - player->getY(), 2));

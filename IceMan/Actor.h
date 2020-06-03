@@ -41,7 +41,7 @@ public:
 	};
 	virtual ~Actor() {};
 
-	std::unique_ptr<IExistenceBehavior> displayBehavior;
+	//Represents the movement
 	std::unique_ptr<IMovementBehavior> movementBehavior;
 	
 	//Store the result in this
@@ -372,6 +372,15 @@ public:
 	void pickUpGold(int amt = 1) {
 		numGold += amt;
 	}
+	int getWater() {
+		return numSquirt;
+	}
+	int getGold() {
+		return numGold;
+	}
+	int getSonar() {
+		return numSonar;
+	}
 };
 
 class Protesters : public Characters{
@@ -429,9 +438,16 @@ class Collectable : public Inanimated{
 private:
 	bool isHidden;
 protected:
-	std::unique_ptr<IExistenceBehavior> existBehavior;
+	std::unique_ptr<IExistenceBehavior>existBehavior;
+	bool pickableByPlayer;
+	bool isPickable() {
+		return pickableByPlayer;
+	}
+	void setToPickalbe(bool flag) {
+		pickableByPlayer = flag;
+	}
 public:
-	Collectable(StudentWorld* world, bool visibility, int imgID, int startX, int startY, Direction dir, double size, unsigned int depth, int hp, int strength, double col_range, double detect_range, int t_sound = SOUND_GOT_GOODIE, int t_score = 0) : Inanimated(world, collect, visibility, imgID, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score), isHidden(!visibility) {};
+	Collectable(StudentWorld* world, bool visibility, int imgID, int startX, int startY, Direction dir, double size, unsigned int depth, int hp, int strength, double col_range, double detect_range, int t_sound = SOUND_GOT_GOODIE, int t_score = 0, bool pickable = true) : Inanimated(world, collect, visibility, imgID, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score), isHidden(!visibility), pickableByPlayer(pickable) {};
 	virtual ~Collectable() {};
 	void showSelf();
 };
@@ -447,21 +463,14 @@ public:
 
 class GoldNuggets : public Collectable{
 private:
-	bool pickableByPlayer;
 	//Function
 	//Determine if the time for the Temporary gold exist ran out
 	bool tempTimeEnd();
-
 public:
-	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true, int t_sound = SOUND_GOT_GOODIE, int t_score = 50) : Collectable(world, false, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score), pickableByPlayer(t_pickable) {};
+	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true, int t_sound = SOUND_GOT_GOODIE, int t_score = 50) : Collectable(world, false, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {};
 
 	void drop();
-	bool getStage() {
-		return pickableByPlayer;
-	}
-	void setToPickalbe(bool flag) {
-		pickableByPlayer = flag;
-	}
+
 	void doSomething() override;
 };
 
@@ -471,7 +480,7 @@ private:
 	int increaseAmmo(int amount);
 	void useSonar();
 public:
-	SonarKit(StudentWorld* world, int startX = 0, int startY = 60, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 0, int t_sound = SOUND_FOUND_OIL, int t_score = 75) : Collectable(world, true, IID_SONAR, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
+	SonarKit(StudentWorld* world, int startX = 0, int startY = 60, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 3, int t_sound = SOUND_FOUND_OIL, int t_score = 75) : Collectable(world, true, IID_SONAR, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
 		/*existBehavior = std::make_unique<ExistTemporary>();*/
 	};
 
@@ -481,7 +490,7 @@ public:
 class Water : public Collectable{
 private:
 public:
-	Water(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 0, int t_sound = SOUND_GOT_GOODIE, int t_score = 100) : Collectable(world, true, IID_WATER_POOL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
+	Water(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 3, int t_sound = SOUND_GOT_GOODIE, int t_score = 100) : Collectable(world, true, IID_WATER_POOL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
 		/*existBehavior = std::make_unique<ExistTemporary>();*/
 	}
 

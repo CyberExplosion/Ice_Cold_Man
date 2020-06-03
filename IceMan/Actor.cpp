@@ -104,8 +104,6 @@ void IceMan::doSomething() {
 	////keyPressed = KEY_PRESS_RIGHT;
 	////////////////////
 
-	if (!displayBehavior)
-		displayBehavior = make_unique<ExistPermanently>(mySelf);
 	if (!movementBehavior)
 		movementBehavior = std::make_unique<ControlledMovement>(mySelf, keyPressed);
 	else
@@ -116,7 +114,6 @@ void IceMan::doSomething() {
 		collisionDetection = make_unique<CollisionDetection>(mySelf);
 	
 	useGoodies(keyPressed);
-	displayBehavior->showYourself();
 	movementBehavior->moveThatAss();
 	//The collision need to be executed AFTER the movement for this to works
 	detectBehavior->behaveBitches();
@@ -206,7 +203,6 @@ void RadarLikeDetection::checkSurrounding(std::weak_ptr<Actor> t_source, bool ra
 				vector<weak_ptr<Actor >> temp_ice = std::move(sensedIce());
 				temp.insert(end(temp), begin(temp_ice), end(temp_ice));	//Concatenate the ice into temp
 			}
-
 			wp_intruders = std::move(temp);	//Move the thing into intruders set
 	}
 }
@@ -409,17 +405,14 @@ void OilBarrels::doSomething() {
 	shared_ptr<Actor>self = shared_from_this();
 
 	//Create the behavior
-	if (!existBehavior)
-		existBehavior = make_unique<ExistPermanently>(self);
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
 
 	//Use the behavior
-	existBehavior->showYourself();
 	collisionDetection->behaveBitches();
 
 	//Reward for player
-	if (!isAlive()) {
+	if (!isAlive() && self->getScore() != 0) {
 		self->getWorld()->playSound(getDeathSound());
 		self->getWorld()->decrementOil();
 		self->getWorld()->increaseScore(getScore());
@@ -445,25 +438,20 @@ void GoldNuggets::doSomething() {
 	shared_ptr<Actor> self = shared_from_this();
 
 	//Create behavior
-	if (!displayBehavior) {
-		if (pickableByPlayer)
-			displayBehavior = make_unique<ExistPermanently>(self);
-		else {
-			displayBehavior.reset();
-			//Test using 1000 as the random timer
-			displayBehavior = make_unique<ExistTemporary>(self, 1000);
-		}
-
+	if (!existBehavior && !pickableByPlayer) {
+		//10000 as the timer
+		existBehavior = make_unique<ExistTemporary>(self, 1000);
 	}
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
 		
 	//Use the behavior
-	displayBehavior->showYourself();
+	if(existBehavior)
+		existBehavior->showYourself();
 	collisionDetection->behaveBitches();
 
 	//Reward for player
-	if (!isAlive()) {
+	if (!isAlive() && self->getScore() != 0) {
 			self->getWorld()->getPlayer()->pickUpGold();
 			self->getWorld()->increaseScore(self->getScore());
 			self->getWorld()->playSound(self->getDeathSound());
@@ -488,15 +476,21 @@ void SonarKit::doSomething() {
 		resetAllBehaviors();
 		return;
 	}
-
 	shared_ptr<Actor>self = shared_from_this();
+	
+	if (!existBehavior) {
+		int curLvl = getWorld()->getLevel();
+		int timer = max(100, 300 - 10 * curLvl);
+		existBehavior = make_unique<ExistTemporary>(self, timer);
+	}
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
 
+	existBehavior->showYourself();
 	collisionDetection->behaveBitches();
 
 	//Reward for player
-	if (!isAlive()) {
+	if (!isAlive() && self->getScore() != 0) {
 		self->getWorld()->getPlayer()->pickUpSonar();
 		self->getWorld()->playSound(getDeathSound());
 		self->getWorld()->increaseScore(getScore());
@@ -514,9 +508,12 @@ void Water::doSomething() {
 
 	//Create behaviors
 	shared_ptr<Actor>self = shared_from_this();
-	if (!existBehavior)
-		//Just some testing time of 1000
-		existBehavior = make_unique<ExistTemporary>(self, 1000);
+
+	if (!existBehavior) {
+		int curLvl = getWorld()->getLevel();
+		int timer = max(100, 300 - 10 * curLvl);
+		existBehavior = make_unique<ExistTemporary>(self, timer);
+	}
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
 
@@ -525,8 +522,8 @@ void Water::doSomething() {
 	collisionDetection->behaveBitches();
 
 	//Reward for player
-	if (!isAlive()) {
-		self->getWorld()->getPlayer()->pickUpWater();
+	if (!isAlive() && self->getScore() != 0) {
+		self->getWorld()->getPlayer()->pickUpWater(5);
 		self->getWorld()->playSound(self->getDeathSound());
 		self->getWorld()->increaseScore(self->getScore());
 	}
@@ -549,16 +546,12 @@ void Squirt::doSomething() {
 
 	shared_ptr<Actor> self = shared_from_this();
 
-	if (!displayBehavior)
-		//Testing time of 1000
-		displayBehavior = make_unique<ExistTemporary>(self, 1000);
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
 	if (!movementBehavior)
 		movementBehavior = make_unique<SquirtMovement>(self);
 
 	//Always execute movement first before collision detection so that if collision is <Block> it can catch the movement
-	displayBehavior->showYourself();
 	movementBehavior->moveThatAss();
 	collisionDetection->behaveBitches();
 
@@ -608,6 +601,17 @@ void Ice::doSomething() {
 }
 
 void ExistTemporary::showYourself() {
+	std::shared_ptr<Actor> spPawn = pawn.lock();
+
+	if (spPawn && spPawn->isAlive()) {
+		if (deathTimer > 0) {
+			--deathTimer;
+		}
+		else {
+			spPawn->dmgActor(9999);
+			spPawn->setScore(0);
+		}
+	}
 }
 
 void ExistTemporary::resetBehavior() {
