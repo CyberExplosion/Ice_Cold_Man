@@ -166,7 +166,7 @@ bool StudentWorld::boulderFall(int x, int y)
 																	// If all four flags are false then there is no 
 																	// ice underneath the boulder and we should let it fall!
 
-	for (int row = targetY; row < ice_array.size(); row++) {
+	for (int row = 0; row < ice_array.size(); row++) {
 		for (int col = 0; col < ice_array[row].size(); col++) {
 			if (row == targetY && col == tx1) {
 				if (ice_array[row][col] == nullptr) {
@@ -192,8 +192,6 @@ bool StudentWorld::boulderFall(int x, int y)
 					continue;
 				}
 			}
-			if (flag1 && flag2 && flag3 && flag4)
-				break;
 		}
 	}
 
@@ -491,42 +489,47 @@ bool StudentWorld::createGoodies(pair<int, int> locale) {
 		////Tests
 		//bool spawnWater = true;
 		///////////////
-		
-		if (spawnWater) {
-			actor_vec.emplace_back(make_shared<Water>(this, locale.first, locale.second));
+		if (locale.first != INVALID_LOCAL && locale.second != INVALID_LOCAL) {
+			if (spawnWater) {
+				actor_vec.emplace_back(make_shared<Water>(this, locale.first, locale.second));
+			}
+			else {
+				actor_vec.emplace_back(make_shared<SonarKit>(this));
+			}
+			return true;
 		}
-		else {
-			actor_vec.emplace_back(make_shared<SonarKit>(this));
-		}
-		return true;
 	}
 	return false;
 }
 
 //The function put in location that the player traveled as possible empty ice place
 void StudentWorld::increaseEmptyIce() {
-	double localX, localY;
-	player->getAnimationLocation(localX, localY);
-	if (localX > 0 && localX < COL_NUM - OBJECT_LENGTH && localY > 0 && localY < ROW_NUM - OBJECT_LENGTH) {	//Make sure it's in the ice field
-		for (int i = localY; i < ROW_NUM && i < localY + OBJECT_LENGTH; i++) {	//Check the surrounding ice to make sure there's none exist in 4x4 radius
-			for (int k = localX; k < COL_NUM && k < localX + OBJECT_LENGTH; k++) {
-				if (ice_array[i][k])	//If there's an ice exist in an area, then it's not qualified
-					return;
+	if (player && player->isAlive()) {
+		double localX, localY;
+		player->getAnimationLocation(localX, localY);
+		if (localX > 0 && localX < COL_NUM - OBJECT_LENGTH && localY > 0 && localY < ROW_NUM - OBJECT_LENGTH) {	//Make sure it's in the ice field
+			for (int i = localY; i < ROW_NUM && i < localY + OBJECT_LENGTH; i++) {	//Check the surrounding ice to make sure there's none exist in 4x4 radius
+				for (int k = localX; k < COL_NUM && k < localX + OBJECT_LENGTH; k++) {
+					if (ice_array[i][k])	//If there's an ice exist in an area, then it's not qualified
+						return;
+				}
 			}
+			empty_iceLocal.emplace_back(localX, localY);
 		}
-		empty_iceLocal.emplace_back(localX, localY);
 	}
 }
 
 //Function will return a random pair of location for possible water spawning place
 std::pair<int, int> StudentWorld::findEmptyIce() {
-	while (!empty_iceLocal.empty()) {
-		int theOne = rand() % empty_iceLocal.size();
-		pair<int, int> locale = empty_iceLocal[theOne];
+	if (player && player->isAlive()) {
+		while (!empty_iceLocal.empty()) {
+			int theOne = rand() % empty_iceLocal.size();
+			pair<int, int> locale = empty_iceLocal[theOne];
 
-		int distance = sqrt(pow(locale.first - player->getX(), 2) + pow(locale.second - player->getY(), 2));
-		if (distance >= DIST_ALLOW_BETW_SPAWN)	//Return the location if it's different than where the player is
-			return locale;
+			int distance = sqrt(pow(locale.first - player->getX(), 2) + pow(locale.second - player->getY(), 2));
+			if (distance >= DIST_ALLOW_BETW_SPAWN)	//Return the location if it's different than where the player is
+				return locale;
+		}
 	}
 	return make_pair(INVALID_LOCAL, INVALID_LOCAL);	//Should throw some error here instead, but meh
 }

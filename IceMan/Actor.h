@@ -147,9 +147,13 @@ public:
 
 class FallMovement : public IMovementBehavior{
 private:
-
+	std::weak_ptr<Actor> pawn;
+	//Variables
+	int t = 30; // Adjust this to change how long before boulder falls.
+	bool checkIceBelow();
+	void fall(std::shared_ptr<Actor> actor);
 public:
-	FallMovement() : IMovementBehavior(INVALID_KEY) {};
+	FallMovement(std::weak_ptr<Actor> t_pawn, int key = INVALID_KEY) : IMovementBehavior(key), pawn(t_pawn) {};
 	//This is for the Boulder
 	void moveThatAss() override;
 	void resetBehavior() override;
@@ -505,17 +509,10 @@ private:
 	int fall_sound = SOUND_FALLING_ROCK;
 	
 	//Functions
-	void fall();
-	bool checkIceBelow();
 	void doSomething() override;
-
-	//Variables
-	int t = 30; // Adjust this to change how long before boulder falls.
 public:
 	Boulder(StudentWorld* world, int startX, int startY, Direction dir = down, double size = 1.0, unsigned depth = 1.0, int hp = 1, int strength = 9999, double col_range = 3, double detect_range = 0) : Hazard(world, worldStatic, true, IID_BOULDER, startX, startY, dir, size, depth, hp, strength, col_range, detect_range){
 		//Not hazard yet when first spawn
-		changeActorType(ActorType::worldStatic);
-		movementBehavior = std::make_unique<FallMovement>();
 	}
 };
 

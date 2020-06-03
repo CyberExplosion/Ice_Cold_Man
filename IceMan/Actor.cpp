@@ -33,8 +33,33 @@ void FreeMovement::moveThatAss() {
 void FreeMovement::resetBehavior() {
 }
 
+bool FallMovement::checkIceBelow() {
+	if (t != 0)
+		t--;
+	else
+		return false;
+
+	return false;
+}
+
+void FallMovement::fall(shared_ptr<Actor> target) {
+	int y = target->getY();
+	checkIceBelow();
+	if (y == 0)
+		return;
+	else if (t == 0)
+		target->moveTo(target->getX(), target->getY() - 1);
+}
+
 void FallMovement::moveThatAss() {
-	
+	shared_ptr<Actor> spPawn = pawn.lock();
+
+	if (spPawn && spPawn->isAlive()) {
+		if (key == KEY_PRESS_DOWN) {
+			fall(spPawn);
+			spPawn->changeActorType(Actor::ActorType::hazard);
+		}
+	}
 }
 
 void FallMovement::resetBehavior() {
@@ -508,24 +533,6 @@ void Squirt::doSomething() {
 	self.reset();
 }
 
-void Boulder::fall() {
-	int y = getY();
-	checkIceBelow();
-	if (y == 0)
-		return;
-	else if (t == 0) 
-		moveTo(getX(), getY() - 1);
-	
-}
-
-bool Boulder::checkIceBelow() {
-	if (t != 0) 
-		t--;
-	else
-		return false;
-	
-	return false;
-}
 
 void Boulder::doSomething() {
 	if (!isAlive()) {
@@ -537,14 +544,14 @@ void Boulder::doSomething() {
 
 	bool isFalling = getWorld()->boulderFall(getX(), getY());
 
-	if (isFalling) {
-		fall();
-		changeActorType(ActorType::hazard);
-	}
+	if (isFalling && !movementBehavior)
+		movementBehavior = make_unique<FallMovement>(self, KEY_PRESS_DOWN);
 
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
-
+	
+	if(movementBehavior)
+		movementBehavior->moveThatAss();
 	collisionDetection->behaveBitches();
 
 	self.reset();
