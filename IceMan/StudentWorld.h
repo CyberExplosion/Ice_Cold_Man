@@ -53,6 +53,7 @@ public:
 		createPlayer();
 		mainCreateObjects();
 		initSpawnParameters();
+
 		return GWSTATUS_CONTINUE_GAME;
 	}
 

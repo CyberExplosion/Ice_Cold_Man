@@ -277,10 +277,10 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 		case Actor::player:
 			switch (receiver->type) {
 			case Actor::npc:
+				source->getWorld()->increaseScore(receiver->getScore());
 				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
 				break;
 			case Actor::worldStatic:
-
 				source->collisionResult = make_unique<Block>(source);
 				break;
 			case Actor::hazard:
@@ -292,6 +292,7 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
 				break;
 			case Actor::collect:
+				source->getWorld()->increaseScore(receiver->getScore());
 				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
 				break;
 			default:
@@ -390,6 +391,12 @@ bool GoldNuggets::tempTimeEnd() {
 	return false;
 }
 
+GoldNuggets::~GoldNuggets() {
+	if (pickableByPlayer) {
+		getWorld()->playSound(getDeathSound());
+	}
+}
+
 void GoldNuggets::drop() {
 }
 
@@ -434,7 +441,20 @@ void SonarKit::useSonar() {
 }
 
 void SonarKit::doSomething() {
+	if (!isAlive()) {
+		resetAllBehaviors();
+		return;
+	}
+
+	shared_ptr<Actor>self = shared_from_this();
+	if (!collisionDetection)
+		collisionDetection = make_unique<CollisionDetection>(self);
+
+	collisionDetection->behaveBitches();
+
+	self.reset();
 }
+
 
 void Water::doSomething() {
 	if (!isAlive()) {
