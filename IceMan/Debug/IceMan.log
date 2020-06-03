@@ -1,46 +1,17 @@
 ﻿  Actor.cpp
-<<<<<<< HEAD
 C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(87,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(91,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(463,12): error C2143: syntax error: missing ';' before '<'
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(463,19): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(463,32): error C2238: unexpected token(s) preceding ';'
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.cpp(439,29): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.cpp(439,19): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.cpp(520,33): error C2039: 'getIceMan': is not a member of 'GoldNuggets'
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(433): message : see declaration of 'GoldNuggets'
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.cpp(522,9): error C2065: 'm_IceMan': undeclared identifier
+C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(69,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(73,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.cpp(324,29): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.cpp(324,19): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
   StudentWorld.cpp
 C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(87,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(91,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(463,12): error C2143: syntax error: missing ';' before '<'
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(463,19): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(463,32): error C2238: unexpected token(s) preceding ';'
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(172,24): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(173,25): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(217,24): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(218,25): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(252,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(323,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(69,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(73,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
+C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(163,25): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(210,24): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(211,25): warning C4018: '<': signed/unsigned mismatch
+C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(249,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(320,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   Generating Code...
-=======
-A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(69,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(73,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(324,29): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.cpp(324,19): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-  StudentWorld.cpp
-A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(69,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-A:\Comp Sci\Ice_Cold_Man\IceMan\Actor.h(73,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(161,24): warning C4018: '<': signed/unsigned mismatch
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(162,25): warning C4018: '<': signed/unsigned mismatch
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(206,24): warning C4018: '<': signed/unsigned mismatch
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(207,25): warning C4018: '<': signed/unsigned mismatch
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(245,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(317,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-  Generating Code...
-  IceMan.vcxproj -> A:\Comp Sci\Ice_Cold_Man\Debug\IceMan.exe
->>>>>>> e8561a10cb73f9ade75cc8cb04273f88d0646e66
+  IceMan.vcxproj -> C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\Debug\IceMan.exe

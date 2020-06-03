@@ -90,13 +90,10 @@ public:
 	std::vector<std::weak_ptr<Actor>> iceCollideWithActor(std::shared_ptr<Actor> actor);
 	std::vector<std::weak_ptr<Actor>> actorsCollideWithMe(std::shared_ptr<Actor> actor);
 	bool createSquirt();
+	void dropGold();
 
 	template<typename T>
 	bool createObjects(int x, int y);
-<<<<<<< HEAD
-private:
-=======
->>>>>>> e8561a10cb73f9ade75cc8cb04273f88d0646e66
 
 private:
 	// Data Structures

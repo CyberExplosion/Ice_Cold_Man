@@ -23,7 +23,7 @@ void Destroy::response() {
 	if (target && !target->isAlive()) {
 		target->resetAllBehaviors();
 	}
-	cout << "In here" << endl;
+	
 	target.reset();
 }
 
@@ -108,6 +108,7 @@ bool IceMan::useGoodies(int key) {
 			shootSquirt();
 			return true;
 		case KEY_PRESS_TAB:
+			getWorld()->dropGold();
 			return true;
 		case KEY_PRESS_ESCAPE:
 			return true;
@@ -124,22 +125,6 @@ void IceMan::dmgActor(int amt) {
 	Actor::dmgActor(amt);
 	getWorld()->playSound(dmgSound);
 }
-
-void IceMan::drop()
-{
-	//
-	//if (goldVec.size() == 0)
-	//	return;
-	if (goldCount == 0)
-		return;
-
-	getGoldNuggets()->setPickable(false);
-	getWorld()->createObjects<GoldNuggets>(getX(), getY());
-	getGoldNuggets()->setPickable(true);
-	//Recreate your own createObjects...
-	
-}
-
 
 void Protesters::doSomething() {
 }
@@ -368,33 +353,18 @@ void OilBarrels::doSomething() {
 }
 
 bool GoldNuggets::tempTimeEnd() {
-	return false;
-}
-
-GoldNuggets::~GoldNuggets()
-{
-	if (pickableByPlayer) // Successfully adds score everytime you pick up but the initial counter is incorrect.
-		getWorld()->increaseScore(10);
-	drop();
-}
-
-void GoldNuggets::drop() {
-	/*
-		If the player pressed TAB or T this function should drop gold on the ground.
-		We need to remove gold from player's inventory.
-	*/
-	if (getIceMan()->getGoldNum() == 0)
-		return;
-
-
+	if(tempTime == 0)
+		return false;
+	return true;
 }
 
 void GoldNuggets::doSomething() {
 	if (!isAlive()) {
+		cout << "Here" << endl;
 		resetAllBehaviors();
 		return;
 	}
-
+	
 	shared_ptr<Actor> self = shared_from_this();
 
 	//Create behavior
@@ -409,8 +379,13 @@ void GoldNuggets::doSomething() {
 		detectBehavior = make_unique<RadarLikeDetection>(self, self->getDetectRange());
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
-	
+	if (!tempTimeEnd()) {
+		if (self->isAlive()) {
+			self->dmgActor(9999);
+		}
+	}
 	//Use the behavior
+	tempTime--;
 	displayBehavior->showYourself();
 	detectBehavior->behaveBitches();
 	collisionDetection->behaveBitches();
@@ -513,29 +488,29 @@ void Boulder::fallTimer() {
 }
 
 void Boulder::doSomething() {
-<<<<<<< HEAD
-	/*
-		Boulder falls but we need to make it disappear ! ! !
-		
-	*/
-	if (!isAlive()) // If the boulder already fell, there's nothing we need to do.
-		return;
 
-	shared_ptr<Actor>mySelf = shared_from_this();
+	///*
+	//	Boulder falls but we need to make it disappear ! ! !
+	//	
+	//*/
+	//if (!isAlive()) // If the boulder already fell, there's nothing we need to do.
+	//	return;
 
-	if (!displayBehavior)
-		displayBehavior = make_unique<ExistPermanently>();
+	//shared_ptr<Actor>mySelf = shared_from_this();
 
-	// Reset cycle of collision result and detection
-	collisionResult.reset();
-	collisionDetection = make_unique<CollisionDetection>(mySelf, this->getCollisionRange());
-	collisionDetection->behaveBitches();	//If there's a detection then a response is already made automatically
-	
-	displayBehavior->showYourself();
-	movementBehavior->moveThatAss();
+	//if (!displayBehavior)
+	//	displayBehavior = make_unique<ExistPermanently>();
+
+	//// Reset cycle of collision result and detection
+	//collisionResult.reset();
+	//collisionDetection = make_unique<CollisionDetection>(mySelf, this->getCollisionRange());
+	//collisionDetection->behaveBitches();	//If there's a detection then a response is already made automatically
+	//
+	//displayBehavior->showYourself();
+	//movementBehavior->moveThatAss();
 
 	// Checks to see if there's ice below the boulder, if there isn't it will return true.
-=======
+
 	if (!isAlive()) {
 		resetAllBehaviors();
 		return;
@@ -543,18 +518,13 @@ void Boulder::doSomething() {
 	
 	shared_ptr<Actor> self = shared_from_this();
 
->>>>>>> e8561a10cb73f9ade75cc8cb04273f88d0646e66
 	bool isFalling = getWorld()->boulderFall(getX(), getY());
 
 	// Initiates the falling.
-	if (isFalling) 
+	if (isFalling) {
 		fall();
-<<<<<<< HEAD
-	
-=======
 		changeActorType(ActorType::hazard);
 	}
->>>>>>> e8561a10cb73f9ade75cc8cb04273f88d0646e66
 
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self, self->getCollisionRange());
@@ -591,6 +561,7 @@ void Ice::doSomething() {
 }
 
 void ExistTemporary::showYourself() {
+	timeTillDeath = 20;
 }
 
 void ExistTemporary::resetBehavior() {
@@ -628,7 +599,7 @@ void ControlledMovement::moveThatAss() {
 						break;
 					else {
 						//Testing purposes
-						cerr << key << " ";
+						
 
 						spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
 					}

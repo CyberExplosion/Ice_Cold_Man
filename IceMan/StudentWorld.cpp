@@ -19,7 +19,6 @@ GameWorld* createStudentWorld(string assetDir)
 // Students:  Add code to this file (if you wish), StudentWorld.h, Actor.h and Actor.cpp
 
 int StudentWorld::move() {
-	cout << ticksBeforeSpawn << endl;
 	ticksBeforeSpawn--;
 	updateStatus();
 	createProtesters();
@@ -153,7 +152,7 @@ bool StudentWorld::boulderFall(int x, int y)
 	*/
 
 	int targetY = y - 1; // The height one below the boulder.
-	int tx1 = x; int tx2 = x + 1; int tx3 = x + 2; int tx4 = x + 3; // We need to check the width of the 
+	int targetX1 = x; int targetX2 = x + 1; int targetX3 = x + 2; int targetX4 = x + 3; // We need to check the width of the 
 																	// boulder at a height just below it for ice.
 
 	bool flag1 = true, flag2 = true, flag3 = true, flag4 = true;	// Each flag indicates if there is snow under the boulder. 
@@ -161,34 +160,36 @@ bool StudentWorld::boulderFall(int x, int y)
 																	// If all four flags are false then there is no 
 																	// ice underneath the boulder and we should let it fall!
 
-	for (int row = 0; row < ice_array.size(); row++) {
-		for (int col = 0; col < ice_array[row].size(); col++) {
-			if (row == targetY && col == tx1) {
-				if (ice_array[row][col] == nullptr) {
-					flag1 = false;
-					continue;
+		for (int col = 0; col < ice_array[targetY].size(); col++) {
+			if (flag1 || flag2 || flag3 || flag4) {
+				if (col == targetX1) {
+					if (ice_array[targetY][col] == nullptr) {
+						flag1 = false;
+						continue;
+					}
+				}
+				if (col == targetX2) {
+					if (ice_array[targetY][col] == nullptr) {
+						flag2 = false;
+						continue;
+					}
+				}
+				if (col == targetX3) {
+					if (ice_array[targetY][col] == nullptr) {
+						flag3 = false;
+						continue;
+					}
+				}
+				if (col == targetX4) {
+					if (ice_array[targetY][col] == nullptr) {
+						flag4 = false;
+						continue;
+					}
 				}
 			}
-			if (row == targetY && col == tx2) {
-				if (ice_array[row][col] == nullptr) {
-					flag2 = false;
-					continue;
-				}
-			}
-			if (row == targetY && col == tx3) {
-				if (ice_array[row][col] == nullptr) {
-					flag3 = false;
-					continue;
-				}
-			}
-			if (row == targetY && col == tx4) {
-				if (ice_array[row][col] == nullptr) {
-					flag4 = false;
-					continue;
-				}
-			}
+			else
+				break;
 		}
-	}
 
 	if (flag1 == false && flag2 == false && flag3 == false && flag4 == false) {
 		return true;
@@ -196,8 +197,8 @@ bool StudentWorld::boulderFall(int x, int y)
 	return false;
 }
 
-//Return a pointer to the whole vector of actors
 vector<shared_ptr<Actor>> StudentWorld::getAllActors() {
+	//Return a pointer to the whole vector of actors
 	return vector<shared_ptr<Actor>>(actor_vec);
 }
 
@@ -451,6 +452,19 @@ bool StudentWorld::createSquirt() {
 		}
 	}
 	return false;
+}
+
+void StudentWorld::dropGold()
+{
+	if (player->getGoldNum() == 0)
+		return;
+
+	player->setGoldNum(player->getGoldNum() - 1);
+
+	auto droppedGold = make_shared<GoldNuggets>(this, player->getX(), player->getY(), GraphObject::right, 1.0, 2U, 1, 0, 3.0, 4.0, false);
+	droppedGold->changeActorType(Actor::dropByPlayer);
+	actor_vec.push_back(droppedGold);
+
 }
 
 void StudentWorld::cleanUp() {

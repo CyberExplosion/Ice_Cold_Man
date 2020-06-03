@@ -30,8 +30,8 @@ public:
 private:
 	int hitpoints;
 	int strength;
-	double collisionRange;
-	double detectionRange;
+	double collisionRange; 
+	double detectionRange; // If you enter this object's range then it will trigger other behaviors. Eg. If a player walks near gold the it will appear.
 	StudentWorld* m_sw;
 	int death_sound;
 	//double centerX = 0;
@@ -48,8 +48,8 @@ public:
 	//Store the result in this
 	std::unique_ptr<IActorResponse> collisionResult;
 	//Determine what method of detection the actor would use
-	std::unique_ptr<IDetectionBehavior>detectBehavior;
-	std::unique_ptr<IDetectionBehavior>collisionDetection;
+	std::unique_ptr<IDetectionBehavior>detectBehavior; // Player and NPC have this.
+	std::unique_ptr<IDetectionBehavior>collisionDetection; // Class to determine if an actor has collided. If yes, it will cause a collisionResult.
 
 	//This is for all the usage of shared_ptr in them behaviors. This is bad but I blame due date
 	virtual void resetAllBehaviors();
@@ -220,6 +220,7 @@ private:
 public:
 	void showYourself() override;
 	void resetBehavior() override;
+	void setTimeTillDeath(int time) { timeTillDeath = time; }
 };
 
 class ExistPermanently : public IExistenceBehavior{
@@ -238,8 +239,8 @@ protected:
 
 public:
 	//The source is npc or objects. Intruder will be the player
-	std::weak_ptr<Actor> wp_source;
-	std::vector<std::weak_ptr<Actor>> wp_intruders;
+	std::weak_ptr<Actor> wp_source; // Object doing the detecting.
+	std::vector<std::weak_ptr<Actor>> wp_intruders; // Object being detected.
 	IDetectionBehavior(std::weak_ptr<Actor> t_source) : wp_source(t_source) {};
 	IDetectionBehavior(std::weak_ptr<Actor> t_source, std::vector<std::weak_ptr<Actor>> t_intruder) : wp_source(t_source), wp_intruders(t_intruder) {};
 	
@@ -316,11 +317,11 @@ public:
 class IceMan : public Characters {
 private:
 	int dmgSound = SOUND_PLAYER_ANNOYED;
-	std::vector<std::shared_ptr<SonarKit>>sonarVec;
-	//std::vector<std::shared_ptr<GoldNuggets>>goldVec;
+
 	int goldCount = 1;
-	std::vector<std::shared_ptr<Squirt>>squirtVec;
-	GoldNuggets* m_gold;
+	int sonarCount = 0; // Change this value when implementing sonar
+	int squirtCount = 0; // Same here
+	
 	//This function find the player actor type in the whole list of actors
 	//Function for users goodies usage
 	bool shootSquirt();
@@ -331,22 +332,21 @@ public:
 	void dmgActor(int amt) override;
 
 	int getSonarNum() {
-		return sonarVec.size();
+		return sonarCount;
 	}
 
 	int getSquirtNum() {
-		return squirtVec.size();
+		return squirtCount;
 	}
 
 	int getGoldNum() {
 		return goldCount;
 	}
 
-	void drop();
-
-	GoldNuggets* getGoldNuggets() {
-		return m_gold;
+	void setGoldNum(int num) {
+		goldCount = num;
 	}
+
 };
 
 class Protesters : public Characters{
@@ -432,22 +432,21 @@ private:
 	//Function
 	//Determine if the time for the Temporary gold exist ran out
 	bool tempTimeEnd();
+	int tempTime;
 	IceMan * m_IM;
 public:
-	virtual ~GoldNuggets() override;
-
 	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true) : Collectable(world, true, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range), pickableByPlayer(t_pickable) {
 
 		if (pickableByPlayer) {
 			existBehavior = std::make_unique<ExistPermanently>();
 		}
 		else {
+			tempTime = 20;
 			existBehavior = std::make_unique<ExistTemporary>();
 			setDeathSound(SOUND_PROTESTER_FOUND_GOLD);	//Change into sound of protesters when not pickable by player
 			changeActorType(dropByPlayer);
 		}
 	};
-	void drop();
 
 	bool getStage() {
 		return pickableByPlayer;
