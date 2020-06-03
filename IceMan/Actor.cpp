@@ -18,7 +18,7 @@ void Destroy::resetBehavior() {
 void Destroy::response() {
 	shared_ptr<Actor> target = wp_target.lock();
 
-	if(target && target->isAlive())
+	if (target && target->isAlive())
 		target->dmgActor(dmgTaken);
 	if (target && !target->isAlive()) {
 		target->resetAllBehaviors();
@@ -89,7 +89,7 @@ void IceMan::doSomething() {
 	}
 	//This certainly will cause problem in the future. TOO BAD
 	weak_ptr<Actor> mySelf = getWorld()->getPlayer();
-	
+
 	//shared_ptr<Actor>temp = mySelf.lock();
 
 	int keyPressed;
@@ -112,7 +112,7 @@ void IceMan::doSomething() {
 		detectBehavior = make_unique<RadarLikeDetection>(mySelf, true);
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(mySelf);
-	
+
 	useGoodies(keyPressed);
 	movementBehavior->moveThatAss();
 	//The collision need to be executed AFTER the movement for this to works
@@ -123,31 +123,32 @@ void IceMan::doSomething() {
 
 //Functions return true if the user using goodies instead of moving
 bool IceMan::useGoodies(int key) {
-		switch (key) {
-		case KEY_PRESS_SPACE:
-			if (numSquirt > 0) {
-				shootSquirt();
-				--numSquirt;
-				return true;
-			}
-			return false;
-		case KEY_PRESS_TAB:
-			if (numGold > 0) {
-				--numGold;
-				return true;
-			}
-			return false;
-		case KEY_PRESS_ESCAPE:
+	switch (key) {
+	case KEY_PRESS_SPACE:
+		if (numSquirt > 0) {
+			shootSquirt();
+			--numSquirt;
 			return true;
-		case 'Z':
-		case 'z':
-			if (numSonar > 0) {
-				--numSonar;
-				return true;
-			}
-			return false;
-		default:
-			break;
+		}
+		return false;
+	case KEY_PRESS_TAB:
+		if (numGold > 0) {
+			--numGold;
+			return true;
+		}
+		return false;
+	case KEY_PRESS_ESCAPE:
+		return true;
+	case 'Z':
+	case 'z':
+		getWorld()->useSonar();
+		if (numSonar > 0) {
+			--numSonar;
+			return true;
+		}
+		return false;
+	default:
+		break;
 	}
 	return false;
 }
@@ -192,26 +193,26 @@ std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedOthers(bool radarMod
 void RadarLikeDetection::checkSurrounding(std::weak_ptr<Actor> t_source, bool radarMode) {
 	std::shared_ptr<Actor> temp = t_source.lock();
 	if (temp) {
-			vector<weak_ptr<Actor>> temp;
+		vector<weak_ptr<Actor>> temp;
 
-			if(radarMode)
-				//Radar mode
-				temp = std::move(sensedOthers(true));
-			else {
-				//Collision mode
-				temp = std::move(sensedOthers());
-				vector<weak_ptr<Actor >> temp_ice = std::move(sensedIce());
-				temp.insert(end(temp), begin(temp_ice), end(temp_ice));	//Concatenate the ice into temp
-			}
-			wp_intruders = std::move(temp);	//Move the thing into intruders set
+		if (radarMode)
+			//Radar mode
+			temp = std::move(sensedOthers(true));
+		else {
+			//Collision mode
+			temp = std::move(sensedOthers());
+			vector<weak_ptr<Actor >> temp_ice = std::move(sensedIce());
+			temp.insert(end(temp), begin(temp_ice), end(temp_ice));	//Concatenate the ice into temp
+		}
+		wp_intruders = std::move(temp);	//Move the thing into intruders set
 	}
 }
 
 //Collision is just a radar like detection but only cover a small radius
 bool RadarLikeDetection::collisionHappen() {
-/*****************************
-Then a collision happen and you should produce a collision result
-*****************************/
+	/*****************************
+	Then a collision happen and you should produce a collision result
+	*****************************/
 	shared_ptr<Actor> source = wp_source.lock();
 	shared_ptr<Actor> perp;
 	if (source) {
@@ -363,7 +364,7 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 		default:
 			break;
 		}
-	}	
+	}
 }
 
 
@@ -401,7 +402,7 @@ void OilBarrels::doSomething() {
 		resetAllBehaviors();
 		return;
 	}
-	
+
 	shared_ptr<Actor>self = shared_from_this();
 
 	//Create the behavior
@@ -444,17 +445,17 @@ void GoldNuggets::doSomething() {
 	}
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
-		
+
 	//Use the behavior
-	if(existBehavior)
+	if (existBehavior)
 		existBehavior->showYourself();
 	collisionDetection->behaveBitches();
 
 	//Reward for player
 	if (!isAlive() && self->getScore() != 0) {
-			self->getWorld()->getPlayer()->pickUpGold();
-			self->getWorld()->increaseScore(self->getScore());
-			self->getWorld()->playSound(self->getDeathSound());
+		self->getWorld()->getPlayer()->pickUpGold();
+		self->getWorld()->increaseScore(self->getScore());
+		self->getWorld()->playSound(self->getDeathSound());
 	}
 
 	self.reset();
@@ -477,7 +478,7 @@ void SonarKit::doSomething() {
 		return;
 	}
 	shared_ptr<Actor>self = shared_from_this();
-	
+
 	if (!existBehavior) {
 		int curLvl = getWorld()->getLevel();
 		int timer = max(100, 300 - 10 * curLvl);
@@ -555,6 +556,10 @@ void Squirt::doSomething() {
 	movementBehavior->moveThatAss();
 	collisionDetection->behaveBitches();
 
+	//Reward
+	if (!isAlive())
+		getWorld()->playSound(getDeathSound());
+
 	self.reset();
 }
 
@@ -564,7 +569,7 @@ void Boulder::doSomething() {
 		resetAllBehaviors();
 		return;
 	}
-	
+
 	shared_ptr<Actor> self = shared_from_this();
 
 	bool isFalling = getWorld()->boulderFall(getX(), getY());
@@ -574,8 +579,8 @@ void Boulder::doSomething() {
 
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
-	
-	if(movementBehavior)
+
+	if (movementBehavior)
 		movementBehavior->moveThatAss();
 	collisionDetection->behaveBitches();
 
@@ -590,10 +595,12 @@ void Ice::doSomething() {
 	*********************************/
 	if (isAlive()) {
 		
-		if(collisionResult)
+		if (collisionResult)
 			collisionResult->response();
 
 		//self.reset();
+		if (!isAlive())
+			getWorld()->playSound(getDeathSound());
 	}
 	else
 		resetAllBehaviors();
@@ -633,68 +640,68 @@ void ControlledMovement::moveThatAss() {
 	First you have to turn the character to face the direction you move
 	If the characters already facing the direction you move, then move it toward that direction 1 square
 	*****************************/
-		shared_ptr<Actor>spPawn = pawn.lock();
+	shared_ptr<Actor>spPawn = pawn.lock();
 
-		//if (spPawn && spPawn->isAlive()) {
-		//	if (!spPawn->getWorld()->getKey(key))
-		//		key = INVALID_KEY;
+	//if (spPawn && spPawn->isAlive()) {
+	//	if (!spPawn->getWorld()->getKey(key))
+	//		key = INVALID_KEY;
 
-		if (key != INVALID_KEY) {
-			switch (key) {
-			case KEY_PRESS_DOWN:
-				if (spPawn->getDirection() != GraphObject::Direction::down)
-					spPawn->setDirection(GraphObject::Direction::down);
+	if (key != INVALID_KEY) {
+		switch (key) {
+		case KEY_PRESS_DOWN:
+			if (spPawn->getDirection() != GraphObject::Direction::down)
+				spPawn->setDirection(GraphObject::Direction::down);
+			else {
+				if (spPawn->getY() - 1 < 0)
+					break;
 				else {
-					if (spPawn->getY() - 1 < 0)
-						break;
-					else {
-						if(canMove())
-							spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
-					}
+					if (canMove())
+						spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
 				}
-				break;
-			case KEY_PRESS_UP:
-				if (spPawn->getDirection() != GraphObject::Direction::up)
-					spPawn->setDirection(GraphObject::Direction::up);
-				else {
-					if (spPawn->getY() + 1 > ROW_NUM)
-						break;
-					else {
-						if(canMove())
-							spPawn->moveTo(spPawn->getX(), spPawn->getY() + 1);
-					}
-				}
-				break;
-			case KEY_PRESS_RIGHT:
-				if (spPawn->getDirection() != GraphObject::Direction::right)
-					spPawn->setDirection(GraphObject::Direction::right);
-				else {
-					if (spPawn->getX() + 1 > COL_NUM - OBJECT_LENGTH)
-						break;
-					else {
-						if(canMove())
-							spPawn->moveTo(spPawn->getX() + 1, spPawn->getY());
-					}
-				}
-				break;
-			case KEY_PRESS_LEFT:
-				if (spPawn->getDirection() != GraphObject::Direction::left)
-					spPawn->setDirection(GraphObject::Direction::left);
-				else {
-					if (spPawn->getX() - 1 < 0)
-						break;
-					else {
-						if(canMove())
-							spPawn->moveTo(spPawn->getX() - 1, spPawn->getY());
-					}
-				}
-				break;
-			default:
-				break;
 			}
+			break;
+		case KEY_PRESS_UP:
+			if (spPawn->getDirection() != GraphObject::Direction::up)
+				spPawn->setDirection(GraphObject::Direction::up);
+			else {
+				if (spPawn->getY() + 1 > ROW_NUM)
+					break;
+				else {
+					if (canMove())
+						spPawn->moveTo(spPawn->getX(), spPawn->getY() + 1);
+				}
+			}
+			break;
+		case KEY_PRESS_RIGHT:
+			if (spPawn->getDirection() != GraphObject::Direction::right)
+				spPawn->setDirection(GraphObject::Direction::right);
+			else {
+				if (spPawn->getX() + 1 > COL_NUM - OBJECT_LENGTH)
+					break;
+				else {
+					if (canMove())
+						spPawn->moveTo(spPawn->getX() + 1, spPawn->getY());
+				}
+			}
+			break;
+		case KEY_PRESS_LEFT:
+			if (spPawn->getDirection() != GraphObject::Direction::left)
+				spPawn->setDirection(GraphObject::Direction::left);
+			else {
+				if (spPawn->getX() - 1 < 0)
+					break;
+				else {
+					if (canMove())
+						spPawn->moveTo(spPawn->getX() - 1, spPawn->getY());
+				}
+			}
+			break;
+		default:
+			break;
 		}
+	}
 
-		spPawn.reset();
+	spPawn.reset();
 }
 
 void PursuingMovement::moveThatAss() {
@@ -705,7 +712,7 @@ void PursuingMovement::resetBehavior() {
 
 void SquirtMovement::moveThatAss() {
 	shared_ptr<Actor> pawn = squirt.lock();
-	
+
 	if (pawn && pawn->isAlive()) {
 		if (travelDist <= 0) {	//The distance it can travel expired
 			pawn->dmgActor(9999);
@@ -752,18 +759,18 @@ void SquirtMovement::resetBehavior() {
 
 
 void Actor::resetAllBehaviors() {
-	if(movementBehavior)
+	if (movementBehavior)
 		movementBehavior->resetBehavior();
-	if(collisionResult)
+	if (collisionResult)
 		collisionResult->resetBehavior();
-	if(detectBehavior)
+	if (detectBehavior)
 		detectBehavior->resetBehavior();
-	if(collisionDetection)
+	if (collisionDetection)
 		collisionDetection->resetBehavior();
 }
 
 void shout(Actor::Direction dir) {
-	
+
 }
 
 void doSomething() {
