@@ -22,6 +22,7 @@ GameWorld* createStudentWorld(string assetDir)
 
 // Students:  Add code to this file (if you wish), StudentWorld.h, Actor.h and Actor.cpp
 
+
 int StudentWorld::move() {
 	ticksBeforeSpawn--;
 	auto fut = async(launch::async, &StudentWorld::findEmptyIce, this);	//Could take a long time so we create another thread
@@ -29,6 +30,7 @@ int StudentWorld::move() {
 	updateStatus();
 	createProtesters();
 	createGoodies(fut.get());	//Give in the location here
+
 	int status_of_game = doThings();
 
 	deleteFinishedObjects();

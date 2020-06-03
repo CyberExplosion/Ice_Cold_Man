@@ -39,7 +39,7 @@ public:
 	Actor(StudentWorld* world, ActorType t_type, bool visibility, int imgID, int startX, int startY, Direction dir = right, double t_size = 1.0, unsigned int depth = 0, int t_hp = 1, int t_strength = 0, double col_range = 0, double detect_range = 0, int t_sound = SOUND_NONE, int t_score = 0) : GraphObject(imgID, startX, startY, dir, t_size, depth), hitpoints(t_hp), strength(t_strength), collisionRange(col_range), detectionRange(detect_range), type(t_type), m_sw(world), death_sound(t_sound), size(t_size), score(t_score) {
 		setVisible(visibility);
 	};
-	virtual ~Actor();
+	virtual ~Actor() {};
 
 	std::unique_ptr<IExistenceBehavior> displayBehavior;
 	std::unique_ptr<IMovementBehavior> movementBehavior;
@@ -352,14 +352,26 @@ public:
 class IceMan : public Characters {
 private:
 	int dmgSound = SOUND_PLAYER_ANNOYED;
-	//This function find the player actor type in the whole list of actors
-	//Function for users goodies usage
+	int numGold = 0;
+	int numSquirt = 5;
+	int numSonar = 1;
 	bool shootSquirt();
 public:
 	IceMan(StudentWorld* world, int startX = 30, int startY = 60) : Characters(world, player, IID_PLAYER, startX, startY, right, 10, 999, 3, 4, SOUND_PLAYER_GIVE_UP, 0) {};
 	void doSomething() override;
 	bool useGoodies(int key);
 	void dmgActor(int amt) override;
+	
+	//Function for goodies
+	void pickUpWater(int amt = 1) {
+		numSquirt += amt;
+	}
+	void pickUpSonar(int amt = 1) {
+		numSonar += amt;
+	}
+	void pickUpGold(int amt = 1) {
+		numGold += amt;
+	}
 };
 
 class Protesters : public Characters{
@@ -429,7 +441,7 @@ private:
 	//Functions
 	void doSomething() override;
 public:
-	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, int t_sound = SOUND_FOUND_OIL, int t_score = 1000) : Collectable(world, false, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
+	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, int t_sound = SOUND_FOUND_OIL, int t_score = 1000) : Collectable(world, true, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
 	};
 };
 
@@ -442,7 +454,6 @@ private:
 
 public:
 	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true, int t_sound = SOUND_GOT_GOODIE, int t_score = 50) : Collectable(world, false, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score), pickableByPlayer(t_pickable) {};
-	~GoldNuggets() override;
 
 	void drop();
 	bool getStage() {

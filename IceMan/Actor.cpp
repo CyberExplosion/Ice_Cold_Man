@@ -128,15 +128,27 @@ void IceMan::doSomething() {
 bool IceMan::useGoodies(int key) {
 		switch (key) {
 		case KEY_PRESS_SPACE:
-			shootSquirt();
-			return true;
+			if (numSquirt > 0) {
+				shootSquirt();
+				--numSquirt;
+				return true;
+			}
+			return false;
 		case KEY_PRESS_TAB:
-			return true;
+			if (numGold > 0) {
+				--numGold;
+				return true;
+			}
+			return false;
 		case KEY_PRESS_ESCAPE:
 			return true;
 		case 'Z':
 		case 'z':
-			break;
+			if (numSonar > 0) {
+				--numSonar;
+				return true;
+			}
+			return false;
 		default:
 			break;
 	}
@@ -302,7 +314,6 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 		case Actor::player:
 			switch (receiver->type) {
 			case Actor::npc:
-				source->getWorld()->increaseScore(receiver->getScore());
 				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
 				break;
 			case Actor::worldStatic:
@@ -317,7 +328,6 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
 				break;
 			case Actor::collect:
-				source->getWorld()->increaseScore(receiver->getScore());
 				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
 				break;
 			default:
@@ -408,6 +418,12 @@ void OilBarrels::doSomething() {
 	existBehavior->showYourself();
 	collisionDetection->behaveBitches();
 
+	//Reward for player
+	if (!isAlive()) {
+		self->getWorld()->playSound(getDeathSound());
+		self->getWorld()->decrementOil();
+		self->getWorld()->increaseScore(getScore());
+	}
 	self.reset();
 }
 
@@ -416,11 +432,6 @@ bool GoldNuggets::tempTimeEnd() {
 	return false;
 }
 
-GoldNuggets::~GoldNuggets() {
-	if (pickableByPlayer) {
-		getWorld()->playSound(getDeathSound());
-	}
-}
 
 void GoldNuggets::drop() {
 }
@@ -451,6 +462,13 @@ void GoldNuggets::doSomething() {
 	displayBehavior->showYourself();
 	collisionDetection->behaveBitches();
 
+	//Reward for player
+	if (!isAlive()) {
+			self->getWorld()->getPlayer()->pickUpGold();
+			self->getWorld()->increaseScore(self->getScore());
+			self->getWorld()->playSound(self->getDeathSound());
+	}
+
 	self.reset();
 }
 
@@ -477,6 +495,13 @@ void SonarKit::doSomething() {
 
 	collisionDetection->behaveBitches();
 
+	//Reward for player
+	if (!isAlive()) {
+		self->getWorld()->getPlayer()->pickUpSonar();
+		self->getWorld()->playSound(getDeathSound());
+		self->getWorld()->increaseScore(getScore());
+	}
+
 	self.reset();
 }
 
@@ -498,6 +523,13 @@ void Water::doSomething() {
 	//Use the behaviors
 	existBehavior->showYourself();
 	collisionDetection->behaveBitches();
+
+	//Reward for player
+	if (!isAlive()) {
+		self->getWorld()->getPlayer()->pickUpWater();
+		self->getWorld()->playSound(self->getDeathSound());
+		self->getWorld()->increaseScore(self->getScore());
+	}
 
 	self.reset();
 }
@@ -714,9 +746,6 @@ void SquirtMovement::resetBehavior() {
 	SquirtMovement::squirt.reset();
 }
 
-Actor::~Actor() {
-	m_sw->playSound(death_sound);
-}
 
 void Actor::resetAllBehaviors() {
 	if(movementBehavior)
