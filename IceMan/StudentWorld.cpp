@@ -25,6 +25,12 @@ GameWorld* createStudentWorld(string assetDir)
 
 int StudentWorld::move() {
 	ticksBeforeSpawn--;
+	tickSonar--;	//added by nelson
+	if (tickSonar == 0) {
+		TurnOffPowerDetectionRange();
+	}
+
+
 	auto fut = async(launch::async, &StudentWorld::findEmptyIce, this);	//Could take a long time so we create another thread
 
 	updateStatus();
@@ -36,7 +42,7 @@ int StudentWorld::move() {
 	deleteFinishedObjects();
 	increaseEmptyIce();	//Increase the possible location that water can spawn
 
-	switch (status_of_game) 
+	switch (status_of_game)
 	{
 	case 0:
 		return GWSTATUS_PLAYER_DIED;
@@ -50,7 +56,7 @@ int StudentWorld::move() {
 	default:
 		return GWSTATUS_LEVEL_ERROR;
 	}
-	
+
 	/* ADD STUFF FOR PART 2*/
 	/*
 		Add new actors during each tick.
@@ -63,8 +69,8 @@ int StudentWorld::updateStatus() {
 	string lvl, lives, health, wtr, gld, oil, sonar, score;
 	ostringstream stream;
 
-	lvl = to_string(getLevel()); 
-	score = to_string(getScore()); 
+	lvl = to_string(getLevel());
+	score = to_string(getScore());
 	lives = to_string(getLives());
 
 	if (player) {
@@ -84,7 +90,7 @@ int StudentWorld::updateStatus() {
 	/********************************************
 	MAKE TEXT BE AT THE EDGE
 	*******************************************/
-	stream << "Lvl: " << setw(2) << lvl << ' ' ;
+	stream << "Lvl: " << setw(2) << lvl << ' ';
 	stream << "Lives: " << lives << ' ';
 	stream << "Hlth: " << setw(3) << health << "% ";
 	stream << "Wtr: " << setw(2) << wtr << ' ';
@@ -136,7 +142,7 @@ void StudentWorld::deleteFinishedObjects() {
 		}
 		return false;
 		}), end(actor_vec));
-	
+
 
 	for (auto& rowIter : ice_array) {	//Remove the ice actor if not alive
 		for (auto& colIter : rowIter) {
@@ -267,7 +273,7 @@ void StudentWorld::mainCreateObjects() {
 
 	//numbers in the range [M, N] could be generated with something like
 	//M + rand() / (RAND_MAX / (N - M + 1) + 1)
-	
+
 	//Test
 	//cerr << "Boulder: \n";
 	for (; numBoulder > 0; numBoulder--) {
@@ -326,7 +332,7 @@ void StudentWorld::initSpawnParameters() {
 		These formulas are provided by the PDF.
 	*/
 	int currentLV = getLevel();
-	ticksBeforeSpawn = max(25, 200 - currentLV); 
+	ticksBeforeSpawn = max(25, 200 - currentLV);
 	protesterSpawnLimit = min(15, 2 + int(currentLV * 1.5));
 
 }
@@ -364,7 +370,7 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::iceCollideWithActor(std::shared_
 	if (!ice_array.empty() && actor && actor->isAlive()) {
 		//Ice array
 		//array<array<shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_arr = std::move(source->getWorld()->getIceArr());
-		
+
 		//Player collision range is the size of the player
 		int playerColRange = actor->getCollisionRange();	//Collision range from the lower left corner toward the positive y and x
 		int localX = actor->getX();
@@ -393,9 +399,9 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::iceCollideWithActor(std::shared_
 }
 
 std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_ptr<Actor> actor, bool radarMode) {
-	
+
 	vector<weak_ptr<Actor>> intruders;
-	
+
 	if (!actor_vec.empty() && actor && actor->isAlive()) {
 		for (auto& each : actor_vec) {
 			int playerRange;
@@ -425,7 +431,7 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_
 			//for (; spotNegativeX < 0; spotNegativeX++);
 			//for (; spotPositiveY >= ROW_NUM; spotPositiveY--);
 			//for (; spotNegativeY < 0; spotNegativeY++);
-			
+
 			if (each != actor) {
 				//Get the intruders in the proximity
 				for (int i = spotNegativeY; i <= spotPositiveY; i++) {
@@ -472,7 +478,7 @@ bool StudentWorld::createSquirt() {
 			return false;
 		else {
 			for (int row = localY; row <= localY + squirtColRange && row < ROW_NUM; row++)
-				for (int col = localX; col <= localX + squirtColRange && col < COL_NUM; col++)	
+				for (int col = localX; col <= localX + squirtColRange && col < COL_NUM; col++)
 					if (ice_array[row][col])	//If there are ice in the way
 						return false;
 
@@ -554,6 +560,19 @@ std::pair<int, int> StudentWorld::findEmptyIce() {
 	return make_pair(INVALID_LOCAL, INVALID_LOCAL);	//Should throw some error here instead, but meh
 }
 
+void StudentWorld::useSonar()
+{
+	//call player, player calls power function
+	playSound(SOUND_SONAR);
+	player->setDetectRange(8);	//increase
+	tickSonar = 1;
+}
+
+void StudentWorld::TurnOffPowerDetectionRange()
+{
+	player->setDetectRange(4);
+}
+
 
 void StudentWorld::cleanUp() {
 	//erase everything from vector
@@ -562,7 +581,7 @@ void StudentWorld::cleanUp() {
 
 	for (auto& rowIter : ice_array) {
 		for (auto& colIter : rowIter) {
-			if(colIter)
+			if (colIter)
 				colIter->resetAllBehaviors();
 			colIter.reset();
 		}
@@ -571,4 +590,3 @@ void StudentWorld::cleanUp() {
 	if (player)
 		player.reset();
 }
-

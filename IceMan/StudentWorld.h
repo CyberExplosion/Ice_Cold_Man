@@ -38,8 +38,8 @@ public:
 		: GameWorld(assetDir) {
 	};
 
-	//Your init() method is responsible for creating the current level혖fs oil field and populating
-	//	it with Ice, Boulders, Barrels of Oil, and Gold Nuggets(we혖fll show you how below),
+	//Your init() method is responsible for creating the current level갽s oil field and populating
+	//	it with Ice, Boulders, Barrels of Oil, and Gold Nuggets(we갽ll show you how below),
 	//	and constructing a virtual representation of the current level in your StudentWorld class,
 	//	using one or more data structures that you come up with.This function must return the
 	//	value GWSTATUS_CONTINUE_GAME(defined in GameConstants.h).
@@ -59,31 +59,31 @@ public:
 
 
 	// Each time your move() method is called, it must run a single tick
-	//of the game.This means that it is responsible for asking each of the game혖s actors
+	//of the game.This means that it is responsible for asking each of the game걌 actors
 	//to try to do
 	//	something: e.g., move themselves and/or perform their specified behavior. Finally, this
 	//	method is responsible for disposing of(i.e., deleting) actors(e.g., a Squirt from the
-	//		Iceman혖fs squirt gun that has run its course, a Regular Protester who has left the oil field,
+	//		Iceman갽s squirt gun that has run its course, a Regular Protester who has left the oil field,
 	//		a Boulder that has fallen and crashed into Ice below, etc.) that need to disappear during a given tick
 	virtual int move();
-		//For example, if a Boulder has completed its fall and disintegrated in the Ice
-		//	below, then its state should be set to 혖dead, 혖hand the after all of the actors in the game
-		//	get a chance to do something during the tick, the move() method should remove that
-		//	Boulder from the game world(by deleting its object and removing any reference to the
-		//		object from the StudentWorld혖fs data structures)
+	//For example, if a Boulder has completed its fall and disintegrated in the Ice
+	//	below, then its state should be set to 갺ead, 갿and the after all of the actors in the game
+	//	get a chance to do something during the tick, the move() method should remove that
+	//	Boulder from the game world(by deleting its object and removing any reference to the
+	//		object from the StudentWorld갽s data structures)
 
 
-		// This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
-		// Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
+	// This code is here merely to allow the game to build, run, and terminate after you hit enter a few times.
+	// Notice that the return value GWSTATUS_PLAYER_DIED will cause our framework to end the current level.
 
-		//decLives();
-		//return GWSTATUS_PLAYER_DIED;
+	//decLives();
+	//return GWSTATUS_PLAYER_DIED;
 
 
-	//The cleanup() method is responsible for
-	//	freeing all actors that are currently active in the game. This includes all
-	//	actors created during either the init() method or introduced during subsequent game ticks
-	//	that have not yet been removed from the game.
+//The cleanup() method is responsible for
+//	freeing all actors that are currently active in the game. This includes all
+//	actors created during either the init() method or introduced during subsequent game ticks
+//	that have not yet been removed from the game.
 	virtual void cleanUp();
 
 	std::vector<std::shared_ptr<Actor>> StudentWorld::getAllActors();
@@ -108,6 +108,11 @@ public:
 	std::pair<int, int> findEmptyIce();	//Don't know why but my guess it's that async doesn't allow member function
 	template<typename T>
 	bool createObjects(int x, int y);
+
+	//added by nelson
+	void useSonar();
+	void TurnOffPowerDetectionRange();
+
 private:
 	// Data Structures
 	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
@@ -119,14 +124,14 @@ private:
 	int updateStatus(); // Updates the status at the top of the screen. (Health, lives, gold, etc.)
 	int doThings(); // Asks the player and actor objects to doSomething() each tick.
 	void deleteFinishedObjects(); // Checks to see if an object has finished its task. (Eg. if a boulder has fallen, delete it from game.)
-	
+
 	// Functions for init()
 	void populateIce();
 	void createPlayer();
 	void mainCreateObjects();
 	void createProtesters();
 	void initSpawnParameters();
-	
+
 	// Private Variables
 	int ticksBeforeSpawn; // # of ticks before a protester can spawn on the field.
 	int protesterSpawnLimit; // # of protestors allowed per level.
@@ -136,6 +141,10 @@ private:
 
 	//Function for move
 	void createNPC();
+
+	//sonar
+	int tickSonar;	//added by nelson
+
 
 };
 
@@ -148,7 +157,7 @@ bool StudentWorld::createObjects(int x, int y) {
 	************************************/
 	//Test
 	//cerr << "x :" << x << " || " << "y: " << y << "\n";
- 	
+
 	for (auto const& each : actor_vec) {
 		int distance = sqrt(pow(each->getX() - x, 2) + pow(each->getY() - y, 2));
 		if (distance < DIST_ALLOW_BETW_SPAWN)
