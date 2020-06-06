@@ -2,16 +2,4 @@
 C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
 C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(69,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
 C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(73,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.cpp(324,29): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.cpp(324,19): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-  StudentWorld.cpp
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(41,481): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(69,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\Actor.h(73,10): warning C4244: 'return': conversion from 'double' to 'int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(163,25): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(210,24): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(211,25): warning C4018: '<': signed/unsigned mismatch
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(249,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\IceMan\StudentWorld.cpp(320,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-  Generating Code...
   IceMan.vcxproj -> C:\Users\Kenng\OneDrive\Desktop\Ice_Cold_Man\Debug\IceMan.exe
