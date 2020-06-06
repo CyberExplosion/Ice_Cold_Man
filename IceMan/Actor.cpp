@@ -17,8 +17,8 @@ void Destroy::resetBehavior() {
 //Destroy an object or deal damage to characters
 void Destroy::response() {
 	shared_ptr<Actor> target = wp_target.lock();
-	
-	if(target && target->isAlive())
+
+	if (target && target->isAlive())
 		target->dmgActor(dmgTaken);
 	if (target && !target->isAlive()) {
 		target->resetAllBehaviors();
@@ -33,8 +33,33 @@ void FreeMovement::moveThatAss() {
 void FreeMovement::resetBehavior() {
 }
 
+bool FallMovement::checkIceBelow() {
+	if (t != 0)
+		t--;
+	else
+		return false;
+
+	return false;
+}
+
+void FallMovement::fall(shared_ptr<Actor> target) {
+	int y = target->getY();
+	checkIceBelow();
+	if (y == 0)
+		return;
+	else if (t == 0)
+		target->moveTo(target->getX(), target->getY() - 1);
+}
+
 void FallMovement::moveThatAss() {
-	
+	shared_ptr<Actor> spPawn = pawn.lock();
+
+	if (spPawn && spPawn->isAlive()) {
+		if (key == KEY_PRESS_DOWN) {
+			fall(spPawn);
+			spPawn->changeActorType(Actor::ActorType::hazard);
+		}
+	}
 }
 
 void FallMovement::resetBehavior() {
@@ -48,9 +73,9 @@ bool IceMan::shootSquirt() {
 }
 
 
-////Testing purposes
-//int counter = 2;
-////////////////////
+//Testing purposes
+int counter = 2;
+//////////////////
 
 void IceMan::doSomething() {
 	/*******************************
@@ -64,7 +89,7 @@ void IceMan::doSomething() {
 	}
 	//This certainly will cause problem in the future. TOO BAD
 	weak_ptr<Actor> mySelf = getWorld()->getPlayer();
-	
+
 	//shared_ptr<Actor>temp = mySelf.lock();
 
 	int keyPressed;
@@ -72,12 +97,13 @@ void IceMan::doSomething() {
 	if (!getWorld()->getKey(keyPressed))
 		keyPressed = INVALID_KEY;
 
-	/////////////Test
-	//keyPressed = KEY_PRESS_RIGHT;
-	//////////////////
+	///////////////Test
+	//counter--;
+	//if (counter <= 0)
+	//	keyPressed = KEY_PRESS_LEFT;
+	////keyPressed = KEY_PRESS_RIGHT;
+	////////////////////
 
-	if (!displayBehavior)
-		displayBehavior = make_unique<ExistPermanently>(mySelf);
 	if (!movementBehavior)
 		movementBehavior = std::make_unique<ControlledMovement>(mySelf, keyPressed);
 	else
@@ -86,9 +112,8 @@ void IceMan::doSomething() {
 		detectBehavior = make_unique<RadarLikeDetection>(mySelf, true);
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(mySelf);
-	
+
 	useGoodies(keyPressed);
-	displayBehavior->showYourself();
 	movementBehavior->moveThatAss();
 	//The collision need to be executed AFTER the movement for this to works
 	detectBehavior->behaveBitches();
@@ -98,20 +123,33 @@ void IceMan::doSomething() {
 
 //Functions return true if the user using goodies instead of moving
 bool IceMan::useGoodies(int key) {
-		switch (key) {
-		case KEY_PRESS_SPACE:
+	switch (key) {
+	case KEY_PRESS_SPACE:
+		if (numSquirt > 0) {
 			shootSquirt();
+			--numSquirt;
 			return true;
-		case KEY_PRESS_TAB:
+		}
+		return false;
+	case KEY_PRESS_TAB:
+		if (numGold > 0) {
+			--numGold;
 			getWorld()->dropGold();
 			return true;
-		case KEY_PRESS_ESCAPE:
+		}
+		return false;
+	case KEY_PRESS_ESCAPE:
+		return true;
+	case 'Z':
+	case 'z':
+		getWorld()->useSonar();
+		if (numSonar > 0) {
+			--numSonar;
 			return true;
-		case 'Z':
-		case 'z':
-			break;
-		default:
-			break;
+		}
+		return false;
+	default:
+		break;
 	}
 	return false;
 }
@@ -121,7 +159,19 @@ void IceMan::dmgActor(int amt) {
 	getWorld()->playSound(dmgSound);
 }
 
+
+Protesters::Protesters(StudentWorld* world, int imgID, int startX, int startY, int hp, int t_str, double col_range, double detect_range, int t_sound, int t_score) : Characters(world, npc, imgID, startX, startY, left, hp, t_str, col_range, detect_range, t_sound, t_score) {
+	int curLvl = getWorld()->getLevel();
+	//M + rand() / (RAND_MAX / (N - M + 1) + 1)
+	numSquareToMoveCurrentDir = 8 + rand() / (RAND_MAX / (60 - 8 + 1) + 1);	//[8 - 60] is the range
+	ticksWaitBetweenMoves = std::max(0, 3 - curLvl / 4);
+}
+
 void Protesters::doSomething() {
+	if (!isAlive()) {	//This is when the protesters reach the exit place
+		resetAllBehaviors();
+		return;
+	}
 }
 
 
@@ -155,26 +205,26 @@ std::vector<std::weak_ptr<Actor>> RadarLikeDetection::sensedOthers(bool radarMod
 void RadarLikeDetection::checkSurrounding(std::weak_ptr<Actor> t_source, bool radarMode) {
 	std::shared_ptr<Actor> temp = t_source.lock();
 	if (temp) {
-			vector<weak_ptr<Actor>> temp;
+		vector<weak_ptr<Actor>> temp;
 
-			if(radarMode)
-				temp = std::move(sensedOthers(true));
-			else {
-				temp = std::move(sensedOthers());
-				vector<weak_ptr<Actor >> temp_ice = std::move(sensedIce());
-				temp.insert(end(temp), begin(temp_ice), end(temp_ice));	//Concatenate the ice into temp
-			}
-
-			wp_intruders = std::move(temp);	//Move the thing into intruders set
+		if (radarMode)
+			//Radar mode
+			temp = std::move(sensedOthers(true));
+		else {
+			//Collision mode
+			temp = std::move(sensedOthers());
+			vector<weak_ptr<Actor >> temp_ice = std::move(sensedIce());
+			temp.insert(end(temp), begin(temp_ice), end(temp_ice));	//Concatenate the ice into temp
+		}
+		wp_intruders = std::move(temp);	//Move the thing into intruders set
 	}
 }
 
 //Collision is just a radar like detection but only cover a small radius
 bool RadarLikeDetection::collisionHappen() {
-/*****************************
-**This use an entirely different detection range than the "radar" detection range so it's ok**
-Then a collision happen and you should produce a collision result
-*****************************/
+	/*****************************
+	Then a collision happen and you should produce a collision result
+	*****************************/
 	shared_ptr<Actor> source = wp_source.lock();
 	shared_ptr<Actor> perp;
 	if (source) {
@@ -233,8 +283,9 @@ void CollisionDetection::behaveBitches() {
 	shared_ptr<Actor>source = wp_source.lock();
 	if (source) {
 		checkSurrounding(source);	//Update the current location of intruders
-			if ((source->collisionResult && source->collisionResult->type == source->collisionResult->block) || collisionHappen())	//If there's a result of block type, then we need to allow it to response again. Block Behavior requires the source to look at another direction before allow him to have any other collision result
-				source->collisionResult->response();
+
+		if ((source->collisionResult && source->collisionResult->type == source->collisionResult->block) || collisionHappen())	//If there's a result of block type, then we need to allow it to response again. Block Behavior requires the source to look at another direction before allow him to have any other collision result
+			source->collisionResult->response();
 	}
 }
 
@@ -275,7 +326,6 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 				source->collisionResult = make_unique<Destroy>(source, receiver->getStrength());
 				break;
 			case Actor::worldStatic:
-
 				source->collisionResult = make_unique<Block>(source);
 				break;
 			case Actor::hazard:
@@ -318,8 +368,6 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 			case Actor::player:
 				break;
 			case Actor::npc:
-				//Destroy only the receiver
-				receiver->collisionResult = make_unique<Destroy>(receiver, source->getStrength());
 				break;
 			default:
 				break;
@@ -328,7 +376,7 @@ void CollisionDetection::collide(std::weak_ptr<Actor> wp_source, std::weak_ptr<A
 		default:
 			break;
 		}
-	}	
+	}
 }
 
 
@@ -347,6 +395,7 @@ void Block::response() {
 			currentY = 0;
 
 		target->getAnimationLocation(currentX, currentY);
+
 		if (facing != target->getDirection()) {	//If they face different direction after being blocked, they can move again
 			target->movementBehavior->enableMove(true);
 			target->movementBehavior->moveThatAss();	//Allow to move again
@@ -365,31 +414,32 @@ void OilBarrels::doSomething() {
 		resetAllBehaviors();
 		return;
 	}
-	
+
 	shared_ptr<Actor>self = shared_from_this();
 
 	//Create the behavior
-	if (!existBehavior)
-		existBehavior = make_unique<ExistPermanently>(self);
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
 
 	//Use the behavior
-	existBehavior->showYourself();
 	collisionDetection->behaveBitches();
 
+	//Reward for player
+	if (!isAlive() && self->getScore() != 0) {
+		self->getWorld()->playSound(getDeathSound());
+		self->getWorld()->decrementOil();
+		self->getWorld()->increaseScore(getScore());
+	}
 	self.reset();
 }
 
-bool GoldNuggets::tempTimeEnd() {
-	if(tempTime == 0)
-		return false;
-	return true;
+
+void GoldNuggets::drop() {
+
 }
 
 void GoldNuggets::doSomething() {
 	if (!isAlive()) {
-		cout << "Here" << endl;
 		resetAllBehaviors();
 		return;
 	}
@@ -397,28 +447,26 @@ void GoldNuggets::doSomething() {
 	shared_ptr<Actor> self = shared_from_this();
 
 	//Create behavior
-	if (!displayBehavior)
-		if (pickableByPlayer)
-			displayBehavior = make_unique<ExistPermanently>(self);
-		else {
-			displayBehavior.reset();
-			//Test using 1000 as the random timer
-			//displayBehavior = make_unique<ExistTemporary>(self, 1000);
-			displayBehavior = make_unique<ExistTemporary>();
-		}
+	//if (!existBehavior && pickableByPlayer) {
+	//	existBehavior = make_unique<ExistPermanently>();
+	//}
+	if (!existBehavior && !pickableByPlayer) {
+		existBehavior = make_unique<ExistTemporary>(self, 1000);
+	}
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
 
-	if (!tempTimeEnd()) {
-		if (self->isAlive()) {
-			self->dmgActor(9999);
-		}
-	}
-	
 	//Use the behavior
-	tempTime--;
-	displayBehavior->showYourself();
+	if (existBehavior)
+		existBehavior->showYourself();
 	collisionDetection->behaveBitches();
+
+	//Reward for player
+	if (!isAlive() && self->getScore() != 0) {
+		self->getWorld()->getPlayer()->pickUpGold();
+		self->getWorld()->increaseScore(self->getScore());
+		self->getWorld()->playSound(self->getDeathSound());
+	}
 
 	self.reset();
 }
@@ -435,7 +483,33 @@ void SonarKit::useSonar() {
 }
 
 void SonarKit::doSomething() {
+	if (!isAlive()) {
+		resetAllBehaviors();
+		return;
+	}
+	shared_ptr<Actor>self = shared_from_this();
+
+	if (!existBehavior) {
+		int curLvl = getWorld()->getLevel();
+		int timer = max(100, 300 - 10 * curLvl);
+		existBehavior = make_unique<ExistTemporary>(self, timer);
+	}
+	if (!collisionDetection)
+		collisionDetection = make_unique<CollisionDetection>(self);
+
+	existBehavior->showYourself();
+	collisionDetection->behaveBitches();
+
+	//Reward for player
+	if (!isAlive() && self->getScore() != 0) {
+		self->getWorld()->getPlayer()->pickUpSonar();
+		self->getWorld()->playSound(getDeathSound());
+		self->getWorld()->increaseScore(getScore());
+	}
+
+	self.reset();
 }
+
 
 void Water::doSomething() {
 	if (!isAlive()) {
@@ -445,15 +519,25 @@ void Water::doSomething() {
 
 	//Create behaviors
 	shared_ptr<Actor>self = shared_from_this();
-	if (!existBehavior)
-		//Just some testing time of 1000
-		existBehavior = make_unique<ExistTemporary>(self, 1000);
+
+	if (!existBehavior) {
+		int curLvl = getWorld()->getLevel();
+		int timer = max(100, 300 - 10 * curLvl);
+		existBehavior = make_unique<ExistTemporary>(self, timer);
+	}
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
 
 	//Use the behaviors
 	existBehavior->showYourself();
 	collisionDetection->behaveBitches();
+
+	//Reward for player
+	if (!isAlive() && self->getScore() != 0) {
+		self->getWorld()->getPlayer()->pickUpWater(5);
+		self->getWorld()->playSound(self->getDeathSound());
+		self->getWorld()->increaseScore(self->getScore());
+	}
 
 	self.reset();
 }
@@ -473,45 +557,20 @@ void Squirt::doSomething() {
 
 	shared_ptr<Actor> self = shared_from_this();
 
-	if (!displayBehavior)
-		//Testing time of 1000
-		displayBehavior = make_unique<ExistTemporary>(self, 1000);
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
 	if (!movementBehavior)
 		movementBehavior = make_unique<SquirtMovement>(self);
 
 	//Always execute movement first before collision detection so that if collision is <Block> it can catch the movement
-	displayBehavior->showYourself();
 	movementBehavior->moveThatAss();
 	collisionDetection->behaveBitches();
 
-	self.reset();
+	//Reward
+	if (!isAlive())
+		getWorld()->playSound(getDeathSound());
 }
 
-void Boulder::fall() {
-	int y = getY();
-	fallTimer(); // According to documentation there needs to be time between when the player 
-				 // destroys the ice below the boulder and when it falls. 
-				 // This function serves as a counter for that purpose.
-
-	if (y == 0) {
-		changeActorType(ActorType::hazard);
-		return;
-	}
-
-	else if (t == 0) 
-		moveTo(getX(), getY() - 1);
-}
-
-void Boulder::fallTimer() {
-	if (t != 0)
-		t--;
-	else
-		return;
-	
-	return;
-}
 
 void Boulder::doSomething() {
 
@@ -541,20 +600,19 @@ void Boulder::doSomething() {
 		resetAllBehaviors();
 		return;
 	}
-	
+
 	shared_ptr<Actor> self = shared_from_this();
 
 	bool isFalling = getWorld()->boulderFall(getX(), getY());
 
-	// Initiates the falling.
-	if (isFalling) {
-		fall();
-		changeActorType(ActorType::hazard);
-	}
+	if (isFalling && !movementBehavior)
+		movementBehavior = make_unique<FallMovement>(self, KEY_PRESS_DOWN);
 
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
 
+	if (movementBehavior)
+		movementBehavior->moveThatAss();
 	collisionDetection->behaveBitches();
 
 	self.reset();
@@ -568,10 +626,12 @@ void Ice::doSomething() {
 	*********************************/
 	if (isAlive()) {
 		
-		if(collisionResult)
+		if (collisionResult)
 			collisionResult->response();
 
 		//self.reset();
+		if (!isAlive())
+			getWorld()->playSound(getDeathSound());
 	}
 	else
 		resetAllBehaviors();
@@ -583,7 +643,17 @@ ExistTemporary::ExistTemporary()
 }
 
 void ExistTemporary::showYourself() {
-	
+	std::shared_ptr<Actor> spPawn = pawn.lock();
+
+	if (spPawn && spPawn->isAlive()) {
+		if (deathTimer > 0) {
+			--deathTimer;
+		}
+		else {
+			spPawn->dmgActor(9999);
+			spPawn->setScore(0);
+		}
+	}
 }
 
 void ExistTemporary::resetBehavior() {
@@ -609,68 +679,68 @@ void ControlledMovement::moveThatAss() {
 	First you have to turn the character to face the direction you move
 	If the characters already facing the direction you move, then move it toward that direction 1 square
 	*****************************/
-		shared_ptr<Actor>spPawn = pawn.lock();
+	shared_ptr<Actor>spPawn = pawn.lock();
 
-		//if (spPawn && spPawn->isAlive()) {
-		//	if (!spPawn->getWorld()->getKey(key))
-		//		key = INVALID_KEY;
+	//if (spPawn && spPawn->isAlive()) {
+	//	if (!spPawn->getWorld()->getKey(key))
+	//		key = INVALID_KEY;
 
-		if (key != INVALID_KEY) {
-			switch (key) {
-			case KEY_PRESS_DOWN:
-				if (spPawn->getDirection() != GraphObject::Direction::down)
-					spPawn->setDirection(GraphObject::Direction::down);
+	if (key != INVALID_KEY) {
+		switch (key) {
+		case KEY_PRESS_DOWN:
+			if (spPawn->getDirection() != GraphObject::Direction::down)
+				spPawn->setDirection(GraphObject::Direction::down);
+			else {
+				if (spPawn->getY() - 1 < 0)
+					break;
 				else {
-					if (spPawn->getY() - 1 < 0)
-						break;
-					else {
-						if(canMove())
-							spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
-					}
+					if (canMove())
+						spPawn->moveTo(spPawn->getX(), spPawn->getY() - 1);
 				}
-				break;
-			case KEY_PRESS_UP:
-				if (spPawn->getDirection() != GraphObject::Direction::up)
-					spPawn->setDirection(GraphObject::Direction::up);
-				else {
-					if (spPawn->getY() + 1 > 60)
-						break;
-					else {
-						if(canMove())
-							spPawn->moveTo(spPawn->getX(), spPawn->getY() + 1);
-					}
-				}
-				break;
-			case KEY_PRESS_RIGHT:
-				if (spPawn->getDirection() != GraphObject::Direction::right)
-					spPawn->setDirection(GraphObject::Direction::right);
-				else {
-					if (spPawn->getX() + 1 > 60)
-						break;
-					else {
-						if(canMove())
-							spPawn->moveTo(spPawn->getX() + 1, spPawn->getY());
-					}
-				}
-				break;
-			case KEY_PRESS_LEFT:
-				if (spPawn->getDirection() != GraphObject::Direction::left)
-					spPawn->setDirection(GraphObject::Direction::left);
-				else {
-					if (spPawn->getX() - 1 < 0)
-						break;
-					else {
-						if(canMove())
-							spPawn->moveTo(spPawn->getX() - 1, spPawn->getY());
-					}
-				}
-				break;
-			default:
-				break;
 			}
+			break;
+		case KEY_PRESS_UP:
+			if (spPawn->getDirection() != GraphObject::Direction::up)
+				spPawn->setDirection(GraphObject::Direction::up);
+			else {
+				if (spPawn->getY() + 1 > ROW_NUM)
+					break;
+				else {
+					if (canMove())
+						spPawn->moveTo(spPawn->getX(), spPawn->getY() + 1);
+				}
+			}
+			break;
+		case KEY_PRESS_RIGHT:
+			if (spPawn->getDirection() != GraphObject::Direction::right)
+				spPawn->setDirection(GraphObject::Direction::right);
+			else {
+				if (spPawn->getX() + 1 > COL_NUM - OBJECT_LENGTH)
+					break;
+				else {
+					if (canMove())
+						spPawn->moveTo(spPawn->getX() + 1, spPawn->getY());
+				}
+			}
+			break;
+		case KEY_PRESS_LEFT:
+			if (spPawn->getDirection() != GraphObject::Direction::left)
+				spPawn->setDirection(GraphObject::Direction::left);
+			else {
+				if (spPawn->getX() - 1 < 0)
+					break;
+				else {
+					if (canMove())
+						spPawn->moveTo(spPawn->getX() - 1, spPawn->getY());
+				}
+			}
+			break;
+		default:
+			break;
 		}
+	}
 
-		spPawn.reset();
+	spPawn.reset();
 }
 
 void PursuingMovement::moveThatAss() {
@@ -681,7 +751,7 @@ void PursuingMovement::resetBehavior() {
 
 void SquirtMovement::moveThatAss() {
 	shared_ptr<Actor> pawn = squirt.lock();
-	
+
 	if (pawn && pawn->isAlive()) {
 		if (travelDist <= 0) {	//The distance it can travel expired
 			pawn->dmgActor(9999);
@@ -720,30 +790,26 @@ void SquirtMovement::moveThatAss() {
 		}
 	}
 	pawn.reset();
-	return;
 }
 
 void SquirtMovement::resetBehavior() {
 	SquirtMovement::squirt.reset();
 }
 
-Actor::~Actor() {
-	m_sw->playSound(death_sound);
-}
 
 void Actor::resetAllBehaviors() {
-	if(movementBehavior)
+	if (movementBehavior)
 		movementBehavior->resetBehavior();
-	if(collisionResult)
+	if (collisionResult)
 		collisionResult->resetBehavior();
-	if(detectBehavior)
+	if (detectBehavior)
 		detectBehavior->resetBehavior();
-	if(collisionDetection)
+	if (collisionDetection)
 		collisionDetection->resetBehavior();
 }
 
 void shout(Actor::Direction dir) {
-	
+
 }
 
 void doSomething() {
