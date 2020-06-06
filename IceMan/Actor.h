@@ -176,9 +176,10 @@ public:
 
 class PursuingMovement : public IMovementBehavior {
 private:
-
+	std::weak_ptr<Actor>pawn;
+	std::pair<int, int> destination;
 public:
-	PursuingMovement() : IMovementBehavior(INVALID_KEY) {};
+	PursuingMovement(std::weak_ptr<Actor> target, std::pair<int, int> t_dest) : IMovementBehavior(INVALID_KEY), pawn(target), destination(t_dest) {};
 	//This is for whenever NPC chasing after a location
 	void moveThatAss() override;
 	void resetBehavior() override;
@@ -393,10 +394,11 @@ private:
 	bool outOfField = false;
 	int annoyed_sound = SOUND_PROTESTER_GIVE_UP;
 	int yell_sound = SOUND_PROTESTER_YELL;
+protected:
+	int numSquareToMoveCurrentDir;
+	int ticksWaitBetweenMoves;
 public:
-	Protesters(StudentWorld* world, int imgID = IID_PROTESTER, int startX = 60, int startY = 60, int hp = 5, int t_str = 2, double col_range = 4, double detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED, int t_score = 0) : Characters(world, npc, imgID, startX, startY, left, hp, t_str, col_range, detect_range, t_sound, t_score) {
-		movementBehavior = std::make_unique<FreeMovement>();
-	}
+	Protesters(StudentWorld* world, int imgID = IID_PROTESTER, int startX = 60, int startY = 60, int hp = 5, int t_str = 2, double col_range = 4, double detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED, int t_score = 0);
 	virtual ~Protesters() override {};
 
 	//Functions
@@ -404,17 +406,14 @@ public:
 		movementBehavior.reset();
 	}
 	void chase() {
-		movementBehavior = std::make_unique<PursuingMovement>();
 	}
 	void shout(Direction dir);
 	bool annoyed() {
-		if (isAlive())
-			outOfField = true;
+		outOfField = true;
 		return outOfField;
 	}
 	void bribed() {
 		//Pursuing toward the exit
-		movementBehavior = std::make_unique<PursuingMovement>();
 	}
 	void doSomething() override;
 };

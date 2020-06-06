@@ -7,6 +7,8 @@
 #include <vector>
 #include <array>
 #include <future>
+#include <mutex>
+#include <map>
 #include "Actor.h"
 
 // Students:  Add code to this file, StudentWorld.cpp, Actor.h, and Actor.cpp
@@ -30,6 +32,42 @@ shaftXoffsetR = 33,
 shaftYoffsetD = 4,	//All inclusive
 shaftYoffsetU = 60;
 
+///////////////////////////////////////////	CLASS FOR GRAPH
+//Hash functor for unordered_map
+struct pairHash {
+	std::size_t operator()(std::pair<int, int> val) const {	//Function need to be const for unordered map to reconized
+		return static_cast<std::size_t>(sizeof(int) + sizeof(int));	//Return the size of a pair of integers
+	}
+};
+
+//Implementing vertices and edges for path finding
+class Graph {
+private:
+	//Adjacent graph
+	struct Vertice {
+		int distance;
+		std::pair<int, int>location;
+		Vertice(int d, std::pair<int, int>l) : distance(d), location(std::move(l)) {};
+	};
+
+	//StudentWorld* m_sw;
+	const int IFN = 9999;	//Dummy value for infinite distance
+	std::vector<std::list<Vertice>> m_graph;
+	std::mutex locker;
+	
+	//Function
+	void createEdge();
+	void populateGraph(std::vector<std::pair<int, int>> emptyIce_vec);
+
+public:
+	Graph(std::vector<std::pair<int, int>> emptyIce) {
+		populateGraph(emptyIce);
+	};
+	void addNewVertice(std::pair<int, int> location);
+	std::unordered_map<std::pair<int, int>, int, pairHash> distValueGenerate(std::pair<int, int> start);
+};
+////////////////////////////////////////////
+
 class StudentWorld : public GameWorld
 {
 public:
@@ -50,6 +88,7 @@ public:
 	virtual int init()
 	{
 		populateIce();
+		initNPCPath();
 		createPlayer();
 		mainCreateObjects();
 		initSpawnParameters();
@@ -119,6 +158,9 @@ private:
 	std::vector<std::pair<int, int>>empty_iceLocal;
 	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
 	std::shared_ptr<IceMan> player;
+	std::unique_ptr<Graph> graph;
+	std::future<std::unordered_map<std::pair<int, int>, int, pairHash>> mapDistToPlayer;
+	std::future<std::unordered_map<std::pair<int, int>, int, pairHash>> mapDistToExit;
 
 	// Functions for move()
 	int updateStatus(); // Updates the status at the top of the screen. (Health, lives, gold, etc.)
@@ -131,6 +173,7 @@ private:
 	void mainCreateObjects();
 	void createProtesters();
 	void initSpawnParameters();
+	void initNPCPath();
 
 	// Private Variables
 	int ticksBeforeSpawn; // # of ticks before a protester can spawn on the field.

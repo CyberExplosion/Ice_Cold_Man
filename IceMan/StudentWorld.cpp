@@ -3,12 +3,13 @@
 #include <string>
 #include <time.h>
 #include <stdlib.h>
-#include <type_traits>
+//#include <type_traits>
 #include <iomanip>
-#include <sstream>
 #include <cmath>
 #include <future>
+#include <list>
 #include <iostream>
+#include <execution>
 using namespace std;
 
 //testing variable
@@ -46,8 +47,19 @@ int StudentWorld::move() {
 	{
 	case 0:
 		return GWSTATUS_PLAYER_DIED;
-	case 1:
+	case 1: {
+		//Update the graph in case we need to calculate path
+		double localX, localY;
+		pair<int, int> location;
+
+		player->getAnimationLocation(localX, localY);
+
+		location.first = static_cast<int>(localX);
+		location.second = static_cast<int>(localY);
+		graph->addNewVertice(location);
+
 		return GWSTATUS_CONTINUE_GAME;
+	}
 	case 2:
 		return GWSTATUS_PLAYER_WON;
 	case 3:
@@ -230,7 +242,7 @@ void StudentWorld::populateIce() {
 			}
 		}
 	}
-	for (int i = shaftYoffsetD; i <= shaftYoffsetU; i++) {
+	for (int i = shaftYoffsetU; i >= shaftYoffsetD; i--) {
 		empty_iceLocal.emplace_back(shaftXoffsetL, i);	//Put the whole shaft as location for empty ice that water can fit in
 	}
 }
@@ -337,6 +349,10 @@ void StudentWorld::initSpawnParameters() {
 
 }
 
+void StudentWorld::initNPCPath() {
+	graph = make_unique<Graph>(empty_iceLocal);
+}
+
 void StudentWorld::createNPC() {
 	/****************************
 	Use a random number to determine the odds
@@ -346,6 +362,9 @@ void StudentWorld::createNPC() {
 	int currentLvl = getLevel();
 	int probOfHardcore = min(90, currentLvl * 10 + 30);
 	bool spawnHardcore = (rand() % 100) < probOfHardcore;	//If smaller than the prob then it fall into that probability
+
+
+
 	if (spawnHardcore) {
 		actor_vec.emplace_back(make_shared<Protesters>(this));
 	}
@@ -589,4 +608,96 @@ void StudentWorld::cleanUp() {
 
 	if (player)
 		player.reset();
+}
+
+void Graph::createEdge() {
+	vector<Vertice> neighbor_vec;
+	for (auto& verticle : m_graph) {
+		for_each(begin(m_graph), end(m_graph),
+			[&](list<Vertice> neighborList) {	//If there are vertices that are adjacent then create an edge for them
+				if ((neighborList.front().location.first == verticle.front().location.first + OBJECT_LENGTH) || (neighborList.front().location.first == verticle.front().location.first - OBJECT_LENGTH) || (neighborList.front().location.second == verticle.front().location.second + OBJECT_LENGTH) || (neighborList.front().location.second == verticle.front().location.second - OBJECT_LENGTH))
+					neighbor_vec.push_back(neighborList.front());	//Push the neighbor into the vector
+			});
+
+		for (auto& neighbor : neighbor_vec) {
+			verticle.push_back(neighbor);	//Add the neighbor into your list of many neighbors
+		}
+		neighbor_vec.clear();	//Prepare for another neighbor_vec
+	}
+}
+
+void Graph::populateGraph(vector<pair<int, int>> emptyIce_vec) {
+	for (auto& val : emptyIce_vec) {
+		Vertice vert(IFN, val);	//Set the distance of the graph at infinity
+		list<Vertice> vertice;
+		vertice.push_front(std::move(vert));
+
+		m_graph.push_back(std::move(vertice));	//Push the vertice into the graph
+	}
+	createEdge();	//Create edges after making all vertices
+}
+
+//Create another vertice and add edges to if automatically
+void Graph::addNewVertice(std::pair<int, int> location) {
+	Vertice vert(IFN, std::move(location));
+	list<Vertice> vertList;
+	vertList.push_front(std::move(vert));
+
+	//Add edges to the new vertices
+	vector<Vertice> neighbor_vec;
+	for_each(begin(m_graph), end(m_graph),
+		[&neighbor_vec, vertList](list<Vertice> neighborList) {
+			if ((neighborList.front().location.first == vertList.front().location.first + 4) || (neighborList.front().location.first == vertList.front().location.first - 4) || (neighborList.front().location.second == vertList.front().location.second + 4) || (neighborList.front().location.second == vertList.front().location.second - 4))
+				neighbor_vec.push_back(vertList.front());	//Find all possible edges
+		});
+	for (auto& neighbor : neighbor_vec) {	//Add edges here
+		vertList.push_back(neighbor);
+	}
+
+	m_graph.push_back(std::move(vertList));	//Put the new vertice with edges into the graph
+}
+
+//The function return an map of all location with there respective "cost" to travel to
+unordered_map<std::pair<int, int>, int, pairHash> Graph::distValueGenerate(std::pair<int, int> source) {
+	auto start = find_if(execution::par, begin(m_graph), end(m_graph),	//Start will return the iterator to the starting Vertices List
+		[&source](list<Vertice> vert) {
+			return vert.front().location == source;	//Find the correct verticle to start from
+		});
+
+	//Create a map to store the distance needs to arrive at a particular vertice(location)
+	unordered_map<pair<int, int>, int, pairHash> distTravel;
+
+	scoped_lock<mutex> betterLock(locker);	//All of next step is critical
+
+	if (start != end(m_graph)) {
+		//Create a queue for breadth first search. It will hold the neighbors
+		queue<list<Vertice>> que;
+
+		//Set the start node distance and preliminary stuff
+		start->front().distance = 0;
+		que.push(*start);	//Push the starting Vertice as the first victim
+		distTravel[start->front().location] = 0;	//Set the distance traveling to starting location be 0
+
+		//Going through all the neighbor vertices
+		while (!que.empty()) {
+			//Pop the vertice out to work with it
+			auto neighbors = que.front();	//If just start the loop, then ** neighbors == start **
+			que.pop();
+
+			//Get all adjacent vertices, if it's not visited then mark it's visited then push it to the queue
+			for (auto& next_neighbor : neighbors) {
+				if (distTravel.count(next_neighbor.location) == 0) {	//If we haven't visited this neighbor yet --> The distance to the neighbor not exist
+
+					next_neighbor.distance = distTravel[neighbors.front().location] + 1;	//Distance from the first neighbor to the next one is an increase of 1
+					distTravel[next_neighbor.location] = next_neighbor.distance;	//Update the travel distance to "this" neighbor
+
+					//Find the neighbor's list of neighbors to continue expanding
+					auto next = find_if(execution::par, begin(m_graph), end(m_graph), [next_neighbor](list<Vertice> val) {return val.front().location == next_neighbor.location; });
+					if (next != end(m_graph))
+						que.push(*next);
+				}
+			}
+		}
+	}
+	return distTravel;
 }
