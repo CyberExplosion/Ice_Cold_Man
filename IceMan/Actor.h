@@ -477,7 +477,7 @@ private:
 	//Determine if the time for the Temporary gold exist ran out
 	IceMan * m_IM;
 public:
-	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true, int t_sound = SOUND_GOT_GOODIE, int t_score = 50) : Collectable(world, false, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {};
+	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true, int t_sound = SOUND_GOT_GOODIE, int t_score = 25) : Collectable(world, false, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {};
 
 	void drop();
 
@@ -490,6 +490,8 @@ public:
 	void setPickable(bool temp) {
 		pickableByPlayer = temp;
 	}
+
+
 };
 
 class SonarKit : public Collectable {

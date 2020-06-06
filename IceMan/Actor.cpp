@@ -451,7 +451,7 @@ void GoldNuggets::doSomething() {
 	//	existBehavior = make_unique<ExistPermanently>();
 	//}
 	if (!existBehavior && !pickableByPlayer) {
-		existBehavior = make_unique<ExistTemporary>(self, 1000);
+		existBehavior = make_unique<ExistTemporary>(self, 100);
 	}
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
@@ -644,7 +644,6 @@ ExistTemporary::ExistTemporary()
 
 void ExistTemporary::showYourself() {
 	std::shared_ptr<Actor> spPawn = pawn.lock();
-
 	if (spPawn && spPawn->isAlive()) {
 		if (deathTimer > 0) {
 			--deathTimer;

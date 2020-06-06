@@ -518,8 +518,9 @@ void StudentWorld::dropGold()
 		return;
 
 	//auto droppedGold = make_shared<GoldNuggets>(this, player->getX(), player->getY(), GraphObject::right, 1.0, 2U, 1, 0, 3.0, 4.0, false);
-	auto droppedGold = make_shared<GoldNuggets>(this, player->getX(), player->getY());//, GraphObject::right, 1.0, 2, 1, 0, 3, 4, false, SOUND_GOT_GOODIE, 50);
+	auto droppedGold = make_shared<GoldNuggets>(this, player->getX(), player->getY(), GraphObject::right, 1.0, 2, 1, 0, 3, 50, true, SOUND_GOT_GOODIE, 50);
 	droppedGold->setPickable(false);
+	droppedGold->setVisible(true);
 	droppedGold->changeActorType(Actor::dropByPlayer);
 	actor_vec.push_back(droppedGold);
 	
