@@ -158,8 +158,18 @@ void IceMan::dmgActor(int amt) {
 	getWorld()->playSound(dmgSound);
 }
 
+Protesters::Protesters(StudentWorld* world, int imgID, int startX, int startY, int hp, int t_str, double col_range, double detect_range, int t_sound, int t_score) : Characters(world, npc, imgID, startX, startY, left, hp, t_str, col_range, detect_range, t_sound, t_score) {
+	int curLvl = getWorld()->getLevel();
+	//M + rand() / (RAND_MAX / (N - M + 1) + 1)
+	numSquareToMoveCurrentDir = 8 + rand() / (RAND_MAX / (60 - 8 + 1) + 1);	//[8 - 60] is the range
+	ticksWaitBetweenMoves = std::max(0, 3 - curLvl / 4);
+}
 
 void Protesters::doSomething() {
+	if (!isAlive()) {	//This is when the protesters reach the exit place
+		resetAllBehaviors();
+		return;
+	}
 }
 
 
