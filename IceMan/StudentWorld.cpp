@@ -476,7 +476,7 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_
 }
 
 bool StudentWorld::createSquirt() {
-	if (player && player->isAlive() && player->getX() != 60) {
+	if (player && player->isAlive()) {
 		GraphObject::Direction sqrtDir = player->getDirection();
 		int localX = player->getX();
 		int localY = player->getY();
@@ -497,7 +497,10 @@ bool StudentWorld::createSquirt() {
 			localX -= squirtColRange + 1;
 			break;
 		case GraphObject::right:
-			localX += playerColRange + 1;
+			if (player->getX() != 60)
+				localX += playerColRange + 1;
+			else
+				return false;
 			break;
 		default:
 			break;
