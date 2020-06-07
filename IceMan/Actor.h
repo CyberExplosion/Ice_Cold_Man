@@ -398,7 +398,7 @@ protected:
 	int numSquareToMoveCurrentDir;
 	int ticksWaitBetweenMoves;
 public:
-	Protesters(StudentWorld* world, int imgID = IID_PROTESTER, int startX = 60, int startY = 60, int hp = 5, int t_str = 2, double col_range = 4, double detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED, int t_score = 0);
+	Protesters(StudentWorld* world, int imgID = IID_PROTESTER, int startX = 60, int startY = 60, int hp = 5, int t_str = 0, double col_range = 4, double detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED, int t_score = 0);
 	virtual ~Protesters() override {};
 
 	//Functions

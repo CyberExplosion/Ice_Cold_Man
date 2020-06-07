@@ -10,11 +10,16 @@
 #include <list>
 #include <iostream>
 #include <execution>
+
+#include <windows.h>
+#include <processthreadsapi.h>
+
 using namespace std;
 
 //testing variable
 //int collectableLeft;
 const int INVALID_LOCAL = -1;
+int Tcount = 80;
 
 GameWorld* createStudentWorld(string assetDir)
 {
@@ -31,32 +36,35 @@ int StudentWorld::move() {
 		TurnOffPowerDetectionRange();
 	}
 
+	//Could take a long time so we create another thread
+	//auto fut = async(launch::async, &StudentWorld::findEmptyIce, this);
 
-	auto fut = async(launch::async, &StudentWorld::findEmptyIce, this);	//Could take a long time so we create another thread
+	////So if the thread is Indicate that it's used, then on the "next" move the path will be calculate
+
+	fut_pathToExit = async(launch::deferred, &Graph::distValueGenerate, this->graph.get(), EXIT);	//Deferred because we don't want to do the calculation now
+	if (player && player->isAlive()) {
+		pair<int, int> location = make_pair(player->getX(), player->getY());
+		fut_pathToPlayer = async(launch::deferred, &Graph::distValueGenerate, this->graph.get(), std::move(location));
+	}
 
 	updateStatus();
-	createProtesters();
-	createGoodies(fut.get());	//Give in the location here
+	//createProtesters();
+	//createGoodies(fut.get());	//Give in the location here
+
+	//pathToExit = mapDistToExit.get();
+	//pathToPlayer = mapDistToPlayer.get();
 
 	int status_of_game = doThings();
 
 	deleteFinishedObjects();
-	increaseEmptyIce();	//Increase the possible location that water can spawn
 
 	switch (status_of_game)
 	{
 	case 0:
 		return GWSTATUS_PLAYER_DIED;
 	case 1: {
-		//Update the graph in case we need to calculate path
-		double localX, localY;
-		pair<int, int> location;
 
-		player->getAnimationLocation(localX, localY);
-
-		location.first = static_cast<int>(localX);
-		location.second = static_cast<int>(localY);
-		graph->addNewVertice(location);
+		graph->createNewVertice(make_pair(player->getX(), player->getY()));	//Let the npc move to this location -> Has to call AFTER the player made a move and ice is broke
 
 		return GWSTATUS_CONTINUE_GAME;
 	}
@@ -119,8 +127,9 @@ int StudentWorld::updateStatus() {
 }
 
 int StudentWorld::doThings() {
-	if (player && player->isAlive())
+	if (player && player->isAlive()) {
 		player->doSomething(); // If the player is still alive, have them do something.
+	}
 	else
 		return GWSTATUS_PLAYER_DIED; // If the player has died, return the appropriate status.
 
@@ -155,15 +164,27 @@ void StudentWorld::deleteFinishedObjects() {
 		return false;
 		}), end(actor_vec));
 
+	for (int y = 0; y < ROW_NUM; y++) {	//Remove ice not alive
+		for (int x = 0; x < COL_NUM; x++) {
+			if (ice_array[y][x] && !ice_array[y][x]->isAlive()) {	//If there's no ice exist in this block -> Traversable
+				empty_iceLocal.emplace_back(x, y);
+				
+				ice_array[y][x]->resetAllBehaviors();
+				ice_array[y][x].reset();
 
-	for (auto& rowIter : ice_array) {	//Remove the ice actor if not alive
-		for (auto& colIter : rowIter) {
-			if (colIter && !colIter->isAlive()) {
-				colIter->resetAllBehaviors();
-				colIter.reset();
 			}
 		}
 	}
+
+	//for (auto& rowIter : ice_array) {	//Remove the ice actor if not alive
+	//	for (auto& colIter : rowIter) {
+	//		if (colIter && !colIter->isAlive()) {
+
+	//			colIter->resetAllBehaviors();
+	//			colIter.reset();
+	//		}
+	//	}
+	//}
 
 	if (player && !player->isAlive())
 		player.reset();
@@ -234,21 +255,36 @@ void StudentWorld::populateIce() {
 	*********************************/
 	for (int row = 0; row < ice_array.size(); row++) {
 		for (int col = 0; col < ice_array[row].size(); col++) {
-			if (col <= shaftXoffsetR && col >= shaftXoffsetL && row >= shaftYoffsetD && row < shaftYoffsetU) {
+			
+			//if (col <= shaftXoffsetR && col >= shaftXoffsetL && row >= shaftYoffsetD && row < shaftYoffsetU) {
+			//	ice_array[row][col] = nullptr;	//Don't add ice in cols and rows between those range
+			//	empty_iceLocal.emplace_back(col, row);
+			//}
+			//else {
+			//	ice_array[row][col] = make_shared<Ice>(this, true, col, row);	//Cols is the x location and row is the y location in Cartesian coordinate
+			//}
+
+			////Test
+			//ice_array[row][col] = make_shared<Ice>(this, true, col, row);
+			//////////
+
+				if (col <= 50 && col >= 20 && row >= shaftYoffsetD && row < shaftYoffsetU) {
 				ice_array[row][col] = nullptr;	//Don't add ice in cols and rows between those range
+				empty_iceLocal.emplace_back(col, row);
 			}
 			else {
 				ice_array[row][col] = make_shared<Ice>(this, true, col, row);	//Cols is the x location and row is the y location in Cartesian coordinate
 			}
+
 		}
 	}
-	for (int i = shaftYoffsetU; i >= shaftYoffsetD; i--) {
-		empty_iceLocal.emplace_back(shaftXoffsetL, i);	//Put the whole shaft as location for empty ice that water can fit in
-	}
+	//for (int i = shaftYoffsetU; i >= shaftYoffsetD; i--) {
+	//	empty_iceLocal.emplace_back(shaftXoffsetL, i);	//Put the whole shaft as location for empty ice
+	//}
 }
 
 void StudentWorld::createPlayer() {
-	player = make_shared<IceMan>(this);
+	player = make_shared<IceMan>(this, 30, 30);
 	//actor_vec.push_back(player);
 }
 
@@ -280,8 +316,6 @@ void StudentWorld::mainCreateObjects() {
 	//Seed the random
 	srand(time(0));
 	int localX, localY;
-
-	createNPC();
 
 	//numbers in the range [M, N] could be generated with something like
 	//M + rand() / (RAND_MAX / (N - M + 1) + 1)
@@ -350,7 +384,7 @@ void StudentWorld::initSpawnParameters() {
 }
 
 void StudentWorld::initNPCPath() {
-	graph = make_unique<Graph>(empty_iceLocal);
+	graph = make_unique<Graph>(ice_array, this);
 }
 
 void StudentWorld::createNPC() {
@@ -363,10 +397,11 @@ void StudentWorld::createNPC() {
 	int probOfHardcore = min(90, currentLvl * 10 + 30);
 	bool spawnHardcore = (rand() % 100) < probOfHardcore;	//If smaller than the prob then it fall into that probability
 
+	//Test
+	spawnHardcore = false;
 
-
-	if (spawnHardcore) {
-		actor_vec.emplace_back(make_shared<Protesters>(this));
+	if (!spawnHardcore) {
+		actor_vec.emplace_back(make_shared<Protesters>(this, IID_PROTESTER, 0, 60));
 	}
 	else
 		actor_vec.emplace_back(make_shared<HardcoreProtesters>(this));
@@ -544,36 +579,56 @@ bool StudentWorld::createGoodies(pair<int, int> locale) {
 	return false;
 }
 
-//The function put in location that the player traveled as possible empty ice place
-void StudentWorld::increaseEmptyIce() {
-	if (player && player->isAlive()) {
-		double localX, localY;
-		player->getAnimationLocation(localX, localY);
-		if (localX > 0 && localX < COL_NUM - OBJECT_LENGTH && localY > 0 && localY < ROW_NUM - OBJECT_LENGTH) {	//Make sure it's in the ice field
-			for (int i = localY; i < ROW_NUM && i < localY + OBJECT_LENGTH; i++) {	//Check the surrounding ice to make sure there's none exist in 4x4 radius
-				for (int k = localX; k < COL_NUM && k < localX + OBJECT_LENGTH; k++) {
-					if (ice_array[i][k])	//If there's an ice exist in an area, then it's not qualified
-						return;
-				}
-			}
-			empty_iceLocal.emplace_back(localX, localY);
-		}
-	}
-}
+////The function put in location that the player traveled as possible empty ice place
+//void StudentWorld::increaseEmptyIce() {
+//	if (player && player->isAlive()) {
+//		double localX, localY;
+//		player->getAnimationLocation(localX, localY);
+//		if (localX > 0 && localX < COL_NUM - OBJECT_LENGTH && localY > 0 && localY < ROW_NUM - OBJECT_LENGTH) {	//Make sure it's in the ice field
+//
+//			for (int i = localY; i < ROW_NUM && i < localY + OBJECT_LENGTH; i++) {	//Check the surrounding ice to make sure there's none exist in 4x4 radius
+//				for (int k = localX; k < COL_NUM && k < localX + OBJECT_LENGTH; k++) {
+//					if (ice_array[i][k])	//If there's an ice exist in an area, then it's not qualified --> Can't travel to this block
+//						return;
+//				}
+//			}
+//			empty_iceLocal.emplace_back(localX, localY);
+//
+//			graph->addNewVertice(make_pair(localX, localY));	//Can travel to this new location
+//		}
+//	}
+//}
 
 //Function will return a random pair of location for possible water spawning place
 std::pair<int, int> StudentWorld::findEmptyIce() {
-	if (player && player->isAlive()) {
-		while (!empty_iceLocal.empty()) {
-			//numbers in the range [M, N] could be generated with something like
-			//M + rand() / (RAND_MAX / (N - M + 1) + 1)
+	if (empty_iceLocal.size() != 0) {
+		if (player && player->isAlive()) {
+			bool again;
 
-			int theOne = rand() / (RAND_MAX / (empty_iceLocal.size() - 0) + 1);
-			pair<int, int> locale = empty_iceLocal[theOne];
+			do {
+				again = false;
+				//numbers in the range [M, N] could be generated with something like
+				//M + rand() / (RAND_MAX / (N - M + 1) + 1)
 
-			int distance = sqrt(pow(locale.first - player->getX(), 2) + pow(locale.second - player->getY(), 2));
-			if (distance >= DIST_ALLOW_BETW_SPAWN)	//Return the location if it's different than where the player is
-				return locale;
+				int theOne = rand() / (RAND_MAX / (empty_iceLocal.size() - 0) + 1);
+				pair<int, int> locale = empty_iceLocal[theOne];
+
+				for (int i = locale.second; i < ROW_NUM && i < locale.second + OBJECT_LENGTH; i++) {
+					for (int k = locale.first; k < COL_NUM && k < locale.first + OBJECT_LENGTH; k++) {
+						if (ice_array[i][k]) {
+							again = true;	//Make the loop again for another location
+							break;
+						}
+					}
+					if (again)
+						break;
+				}
+				int distance = sqrt(pow(locale.first - player->getX(), 2) + pow(locale.second - player->getY(), 2));
+				if (distance >= DIST_ALLOW_BETW_SPAWN)	//Return the location if it's different than where the player is
+					return locale;
+				else
+					again = true;
+			} while (again);
 		}
 	}
 	return make_pair(INVALID_LOCAL, INVALID_LOCAL);	//Should throw some error here instead, but meh
@@ -590,6 +645,20 @@ void StudentWorld::useSonar()
 void StudentWorld::TurnOffPowerDetectionRange()
 {
 	player->setDetectRange(4);
+}
+
+void StudentWorld::needPathToExit() {
+	if (fut_pathToExit.valid()) {
+		pathToExit = std::move(fut_pathToExit.get());
+	}
+	//graph->threadExitUsed = true;
+}
+
+void StudentWorld::needPathToPlayer() {
+	if (fut_pathToPlayer.valid()) {
+		pathToPlayer = std::move(fut_pathToPlayer.get());
+	}
+	//graph->threadPlayerUsed = true;
 }
 
 
@@ -612,11 +681,24 @@ void StudentWorld::cleanUp() {
 
 void Graph::createEdge() {
 	vector<Vertice> neighbor_vec;
+
 	for (auto& verticle : m_graph) {
 		for_each(begin(m_graph), end(m_graph),
-			[&](list<Vertice> neighborList) {	//If there are vertices that are adjacent then create an edge for them
-				if ((neighborList.front().location.first == verticle.front().location.first + OBJECT_LENGTH) || (neighborList.front().location.first == verticle.front().location.first - OBJECT_LENGTH) || (neighborList.front().location.second == verticle.front().location.second + OBJECT_LENGTH) || (neighborList.front().location.second == verticle.front().location.second - OBJECT_LENGTH))
-					neighbor_vec.push_back(neighborList.front());	//Push the neighbor into the vector
+			[&](list<Vertice>& neighborList) {
+				//If there are vertices that are adjacent then create an edge for them
+				if ((neighborList.front().location.first == verticle.front().location.first + 1) || (neighborList.front().location.first == verticle.front().location.first - 1)) {
+					if ((neighborList.front().location.second == verticle.front().location.second)) {
+						neighbor_vec.push_back(neighborList.front());	//Push the neighbor into the vector
+						//neighborList.push_back(verticle.front());	//Push yourself as your neighbor next door	//Don't know why but this cause duplication edges
+						return;
+					}
+				}
+				if ((neighborList.front().location.second == verticle.front().location.second + 1) || (neighborList.front().location.second == verticle.front().location.second - 1)) {
+					if ((neighborList.front().location.first == verticle.front().location.first)) {
+						neighbor_vec.push_back(neighborList.front());	//Push the neighbor into the vector
+						//neighborList.push_back(verticle.front());	//Push yourself as your neighbor next door
+					}
+				}
 			});
 
 		for (auto& neighbor : neighbor_vec) {
@@ -626,78 +708,263 @@ void Graph::createEdge() {
 	}
 }
 
-void Graph::populateGraph(vector<pair<int, int>> emptyIce_vec) {
-	for (auto& val : emptyIce_vec) {
-		Vertice vert(IFN, val);	//Set the distance of the graph at infinity
-		list<Vertice> vertice;
-		vertice.push_front(std::move(vert));
+void Graph::populateGraph(std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM>& ice_arr) {
+	//Put ice location that is the shaft
+	for (int y = shaftYoffsetD; y < ROW_NUM && y <= shaftYoffsetU; y++) {
+		for (int x = shaftXoffsetL; x < COL_NUM && x <= shaftXoffsetR; x += OBJECT_LENGTH) {
+			if (!ice_arr[y][x]) {
+				pair<int, int> location(x, y);	//x-y coordinate
+				Vertice vert(IFN, location);
+				list<Vertice> verticeList;
+				verticeList.push_front(std::move(vert));
 
-		m_graph.push_back(std::move(vertice));	//Push the vertice into the graph
-	}
-	createEdge();	//Create edges after making all vertices
-}
-
-//Create another vertice and add edges to if automatically
-void Graph::addNewVertice(std::pair<int, int> location) {
-	Vertice vert(IFN, std::move(location));
-	list<Vertice> vertList;
-	vertList.push_front(std::move(vert));
-
-	//Add edges to the new vertices
-	vector<Vertice> neighbor_vec;
-	for_each(begin(m_graph), end(m_graph),
-		[&neighbor_vec, vertList](list<Vertice> neighborList) {
-			if ((neighborList.front().location.first == vertList.front().location.first + 4) || (neighborList.front().location.first == vertList.front().location.first - 4) || (neighborList.front().location.second == vertList.front().location.second + 4) || (neighborList.front().location.second == vertList.front().location.second - 4))
-				neighbor_vec.push_back(vertList.front());	//Find all possible edges
-		});
-	for (auto& neighbor : neighbor_vec) {	//Add edges here
-		vertList.push_back(neighbor);
-	}
-
-	m_graph.push_back(std::move(vertList));	//Put the new vertice with edges into the graph
-}
-
-//The function return an map of all location with there respective "cost" to travel to
-unordered_map<std::pair<int, int>, int, pairHash> Graph::distValueGenerate(std::pair<int, int> source) {
-	auto start = find_if(execution::par, begin(m_graph), end(m_graph),	//Start will return the iterator to the starting Vertices List
-		[&source](list<Vertice> vert) {
-			return vert.front().location == source;	//Find the correct verticle to start from
-		});
-
-	//Create a map to store the distance needs to arrive at a particular vertice(location)
-	unordered_map<pair<int, int>, int, pairHash> distTravel;
-
-	scoped_lock<mutex> betterLock(locker);	//All of next step is critical
-
-	if (start != end(m_graph)) {
-		//Create a queue for breadth first search. It will hold the neighbors
-		queue<list<Vertice>> que;
-
-		//Set the start node distance and preliminary stuff
-		start->front().distance = 0;
-		que.push(*start);	//Push the starting Vertice as the first victim
-		distTravel[start->front().location] = 0;	//Set the distance traveling to starting location be 0
-
-		//Going through all the neighbor vertices
-		while (!que.empty()) {
-			//Pop the vertice out to work with it
-			auto neighbors = que.front();	//If just start the loop, then ** neighbors == start **
-			que.pop();
-
-			//Get all adjacent vertices, if it's not visited then mark it's visited then push it to the queue
-			for (auto& next_neighbor : neighbors) {
-				if (distTravel.count(next_neighbor.location) == 0) {	//If we haven't visited this neighbor yet --> The distance to the neighbor not exist
-
-					next_neighbor.distance = distTravel[neighbors.front().location] + 1;	//Distance from the first neighbor to the next one is an increase of 1
-					distTravel[next_neighbor.location] = next_neighbor.distance;	//Update the travel distance to "this" neighbor
-
-					//Find the neighbor's list of neighbors to continue expanding
-					auto next = find_if(execution::par, begin(m_graph), end(m_graph), [next_neighbor](list<Vertice> val) {return val.front().location == next_neighbor.location; });
-					if (next != end(m_graph))
-						que.push(*next);
-				}
+				m_graph.push_back(std::move(verticeList));
 			}
 		}
 	}
-	return distTravel;
+
+	//Put the area above the ice in also
+	for (int i = 0; i <= COL_NUM - OBJECT_LENGTH; i++) {
+		pair<int, int> location(i, ROW_NUM);	//x-y coordinate
+		Vertice vert(IFN, location);
+		list<Vertice> verticeList;
+		verticeList.push_front(std::move(vert));
+
+		m_graph.push_back(std::move(verticeList));
+	}
+
+	createEdge();	//Create edges after making all vertices
+}
+
+void Graph::addVertice(std::list<Vertice> verticeList) {
+	m_sw->pathToExit.clear();	//When a new vertice is add, the old path wouldn't work no more
+	m_sw->pathToPlayer.clear();
+	m_graph.push_back(std::move(verticeList));	//Put the new vertice with edges into the graph
+}
+
+
+Graph::Graph(std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> emptyIce, StudentWorld* sw) : m_sw(sw) {
+		populateGraph(std::move(emptyIce));
+
+		//m_sw->pathToExit = std::move(distValueGenerate(EXIT));
+		//if (m_sw->getPlayer() && m_sw->getPlayer()->isAlive()) {
+		//	int playerX = m_sw->getPlayer()->getX();
+		//	int playerY = m_sw->getPlayer()->getY();
+		//	m_sw->pathToPlayer = std::move(distValueGenerate(std::make_pair(playerX, playerY)));
+		//}
+		threadPlayerUsed = true;	//Initiate to both true so new threads can be made
+		threadExitUsed = true;
+}
+
+//Create another vertice and add edges to if automatically. This requires an already existing pathway already made
+void Graph::createNewVertice(std::pair<int, int> location) {
+	for (int y = location.second; y < ROW_NUM && y < location.second + OBJECT_LENGTH; y++) {
+		for (int x = location.first; x < COL_NUM && x < location.first + OBJECT_LENGTH; x++) {
+			if (m_sw->ice_array[y][x])
+				return;	//Cannot travel to the location
+		}
+	}
+
+	//Only make a new vertice if there's not one already exist with same location and it's adjacent with exiting vertices
+	auto iter = find_if(execution::par, begin(m_graph), end(m_graph),
+		[&location](list<Vertice>& each) {
+			return each.front().location == location;
+		});
+	if (iter != end(m_graph)) {
+		//finishedUsingGraph = false;
+		//cond.notify_all();
+		return;
+	}
+
+	//Find adjacent location
+	array<pair<int, int>, 4> adj;
+	for (auto& k : adj) {
+		k = location;
+	}
+	adj[0].first -= 1;	//Left
+	adj[1].first += 1;	//Right
+	adj[2].second -= 1;	//Down
+	adj[3].second += 1;	//Up
+	
+	for(auto& val : adj){
+
+		auto it = find_if(execution::par, begin(m_graph), end(m_graph),
+			[&val](list<Vertice>& each) {
+				return val == each.front().location;
+			});
+
+		if (it == end(m_graph)) {	//This adjacent is not in the graph
+			continue;
+		}
+
+			////Invalid the current path made because there's a new vertice coming in
+			//m_sw->pathToExit.clear();
+			//m_sw->pathToPlayer.clear();
+
+			Vertice vert(IFN, std::move(location));
+			list<Vertice> vertList;
+			vertList.push_front(std::move(vert));
+
+			//Add edges to the new vertices
+			vector<Vertice> neighbor_vec;
+			for_each(begin(m_graph), end(m_graph),
+				[&neighbor_vec, &vertList](list<Vertice>& neighborList) {
+					if ((neighborList.front().location.first == vertList.front().location.first + 1) || (neighborList.front().location.first == vertList.front().location.first - 1)) {
+						if (neighborList.front().location.second == vertList.front().location.second) {
+							neighbor_vec.push_back(neighborList.front());	//Push the neighbor as your next door
+							neighborList.push_back(vertList.front());	//Push yourself as your neighbor next door
+							return;
+						}
+					}
+					if ((neighborList.front().location.second == vertList.front().location.second + 1) || (neighborList.front().location.second == vertList.front().location.second - 1)) {
+						if (neighborList.front().location.first == vertList.front().location.first) {
+							neighbor_vec.push_back(neighborList.front());
+							neighborList.push_back(vertList.front());	//Push yourself as your neighbor next door
+							return;
+						}
+					}
+				});
+
+			for (auto& neighbor : neighbor_vec) {	//Add edges here
+				vertList.push_back(neighbor);
+			}
+
+			scoped_lock<mutex> hardLock(locker);
+			addVertice(std::move(vertList));
+			//finishedUsingGraph = false;
+			//cond.notify_all();
+			return;
+	}
+	//finishedUsingGraph = false;
+	//cond.notify_all();
+}
+
+
+
+//Version using the map path
+
+////Create another vertice and add edges to if automatically. This requires an already existing pathway already made
+//void Graph::addNewVertice(std::pair<int, int> location) {
+//
+//	for (int y = location.second; y < ROW_NUM && y < location.second + OBJECT_LENGTH; y++) {
+//		for (int x = location.first; x < COL_NUM && x < location.first + OBJECT_LENGTH; x++) {
+//			if (m_sw->ice_array[y][x])
+//				return;	//Cannot travel to the location
+//		}
+//	}
+//
+//	//Only make a new vertice if there's not one already exist with same location and it's adjacent with exiting vertices
+//	//auto i = m_sw->pathToExit.find(location);
+//	if (m_sw->pathToExit.count(location) > 0) {	//If there's already exist that location in the path
+//		return;
+//	}
+//
+//	//Find adjacent location
+//	array<pair<int, int>, 4> adj;
+//	for (auto& k : adj) {
+//		k = location;
+//	}
+//	adj[0].first -= 1;	//Left
+//	adj[1].first += 1;	//Right
+//	adj[2].second -= 1;	//Down
+//	adj[3].second += 1;	//Up
+//	
+//	for(auto& val : adj){
+//		//auto point = m_sw->pathToExit.find(val);
+//		if(m_sw->pathToExit.count(val) > 0){	//If the location is adjacent to one of the other location already existed in the map
+//
+//			//Invalid the current path made because there's a new vertice coming in
+//			m_sw->pathToExit.clear();
+//			m_sw->pathToPlayer.clear();
+//
+//			Vertice vert(IFN, std::move(location));
+//			list<Vertice> vertList;
+//			vertList.push_front(std::move(vert));
+//
+//			//Add edges to the new vertices
+//			vector<Vertice> neighbor_vec;
+//			for_each(begin(m_graph), end(m_graph),
+//				[&neighbor_vec, &vertList](list<Vertice>& neighborList) {
+//					if ((neighborList.front().location.first == vertList.front().location.first + 1) || (neighborList.front().location.first == vertList.front().location.first - 1)) {
+//						if (neighborList.front().location.second == vertList.front().location.second) {
+//							neighbor_vec.push_back(neighborList.front());	//Push the neighbor as your next door
+//							neighborList.push_back(vertList.front());	//Push yourself as your neighbor next door
+//							return;
+//						}
+//					}
+//					if ((neighborList.front().location.second == vertList.front().location.second + 1) || (neighborList.front().location.second == vertList.front().location.second - 1)) {
+//						if (neighborList.front().location.first == vertList.front().location.first) {
+//							neighbor_vec.push_back(neighborList.front());
+//							neighborList.push_back(vertList.front());	//Push yourself as your neighbor next door
+//							return;
+//						}
+//					}
+//				});
+//
+//			for (auto& neighbor : neighbor_vec) {	//Add edges here
+//				vertList.push_back(neighbor);
+//			}
+//			m_graph.push_back(std::move(vertList));	//Put the new vertice with edges into the graph
+//			return;
+//		}
+//	}
+//}
+
+//The function return an map of all location with there respective "cost" to travel to. Call before adding new vertex so a path can be made
+unordered_map<std::pair<int, int>, int, pairHash> Graph::distValueGenerate(std::pair<int, int> source) {
+	//Thread name
+	HRESULT r;
+	r = SetThreadDescription(
+		GetCurrentThread(),
+		L"Distance Generator!"
+	);
+
+		//Create a map to store the distance needs to arrive at a particular vertice(location)
+		unordered_map<pair<int, int>, int, pairHash> distTravel;
+
+
+		auto start = find_if(execution::par, begin(m_graph), end(m_graph),	//Start will return the iterator to the starting Vertices List
+			[&source](list<Vertice>& vert) {
+				return vert.front().location == source;	//Find the correct verticle to start from
+			});
+
+
+		if (start != end(m_graph)) {
+
+			//Create a queue for breadth first search. It will hold the neighbors
+			queue<list<Vertice>> que;
+
+			//Set the start node distance and preliminary stuff
+			start->front().distance = 0;
+			que.push(*start);	//Push the starting Vertice as the first victim
+			distTravel[start->front().location] = 0;	//Set the distance traveling to starting location be 0
+
+			//Going through all the neighbor vertices
+			while (!que.empty()) {
+				//Pop the vertice out to work with it
+				auto neighbors = que.front();	//If just start the loop, then ** neighbors == start **
+				que.pop();
+
+				//Get all adjacent vertices, if it's not visited then mark it's visited then push it to the queue
+				for (auto& next_neighbor : neighbors) {
+					if (distTravel.count(next_neighbor.location) == 0) {	//If we haven't visited this neighbor yet --> The distance to the neighbor not exist
+
+						next_neighbor.distance = distTravel[neighbors.front().location] + 1;	//Distance from the first neighbor to the next one is an increase of 1
+						distTravel[next_neighbor.location] = next_neighbor.distance;	//Update the travel distance to "this" neighbor
+
+
+						//while (!finishedUsingGraph) {
+						//	cond.wait(betterLock);
+						//}
+
+						scoped_lock<mutex> better(locker);	//Big problem here, im shooting in dark with this lock
+						auto next = find_if(execution::par, begin(m_graph), end(m_graph), [&next_neighbor](list<Vertice>& val) {return val.front().location == next_neighbor.location; });	 						//Find the neighbor's list of neighbors to continue expanding
+						if (next != end(m_graph))
+							que.push(*next);
+					}
+				}
+			}
+		}
+		//finishedUsingGraph = false;
+		return distTravel;
 }
