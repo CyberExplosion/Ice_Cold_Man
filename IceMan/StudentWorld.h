@@ -134,7 +134,7 @@ public:
 	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> getIceArr() {
 		return ice_array;
 	}
-	bool boulderFall(int x, int y);
+	bool boulderFall(int x, int y, bool & atBottom);
 	// Functions for interfaces
 	std::vector<std::weak_ptr<Actor>> iceCollideWithActor(std::shared_ptr<Actor> actor, bool radarMode = false);
 	std::vector<std::weak_ptr<Actor>> actorsCollideWithMe(std::shared_ptr<Actor> actor, bool radarMode = false);

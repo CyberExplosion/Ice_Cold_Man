@@ -1,0 +1,2 @@
+- water right corner shoot endlessely [FIXED]
+- boulder doesn't dissapear when fall out of map [FIXED]

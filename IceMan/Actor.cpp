@@ -573,29 +573,6 @@ void Squirt::doSomething() {
 
 
 void Boulder::doSomething() {
-
-	///*
-	//	Boulder falls but we need to make it disappear ! ! !
-	//	
-	//*/
-	//if (!isAlive()) // If the boulder already fell, there's nothing we need to do.
-	//	return;
-
-	//shared_ptr<Actor>mySelf = shared_from_this();
-
-	//if (!displayBehavior)
-	//	displayBehavior = make_unique<ExistPermanently>();
-
-	//// Reset cycle of collision result and detection
-	//collisionResult.reset();
-	//collisionDetection = make_unique<CollisionDetection>(mySelf, this->getCollisionRange());
-	//collisionDetection->behaveBitches();	//If there's a detection then a response is already made automatically
-	//
-	//displayBehavior->showYourself();
-	//movementBehavior->moveThatAss();
-
-	// Checks to see if there's ice below the boulder, if there isn't it will return true.
-
 	if (!isAlive()) {
 		resetAllBehaviors();
 		return;
@@ -603,8 +580,13 @@ void Boulder::doSomething() {
 
 	shared_ptr<Actor> self = shared_from_this();
 
-	bool isFalling = getWorld()->boulderFall(getX(), getY());
+	bool isFalling = getWorld()->boulderFall(getX(), getY(), atBottom);
 
+	if (atBottom == true) {
+		dmgActor(9999);
+		return;
+	}
+	
 	if (isFalling && !movementBehavior)
 		movementBehavior = make_unique<FallMovement>(self, KEY_PRESS_DOWN);
 

@@ -546,8 +546,10 @@ public:
 private:
 
 	BoulderState state = stable;
+
 	int fall_sound = SOUND_FALLING_ROCK;
 
+	bool atBottom = false;
 	//Functions
 	void doSomething() override;
 public:

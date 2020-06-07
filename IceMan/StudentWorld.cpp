@@ -169,7 +169,7 @@ void StudentWorld::deleteFinishedObjects() {
 		player.reset();
 }
 
-bool StudentWorld::boulderFall(int x, int y)
+bool StudentWorld::boulderFall(int x, int y, bool& atBottom)
 {
 	/*
 		This function checks to see if there is ice underneath a boulder.
@@ -178,8 +178,15 @@ bool StudentWorld::boulderFall(int x, int y)
 		Parameters:
 			x and y give us the location of the boulder.
 	*/
+	int targetY;
+	if (y > 0) 
+		targetY = y - 1; // The height one below the boulder.
 
-	int targetY = y - 1; // The height one below the boulder.
+	else {
+		atBottom = true;
+		return false;
+	}
+
 	int targetX1 = x; int targetX2 = x + 1; int targetX3 = x + 2; int targetX4 = x + 3; // We need to check the width of the 
 																	// boulder at a height just below it for ice.
 
@@ -469,7 +476,7 @@ std::vector<std::weak_ptr<Actor>> StudentWorld::actorsCollideWithMe(std::shared_
 }
 
 bool StudentWorld::createSquirt() {
-	if (player && player->isAlive()) {
+	if (player && player->isAlive() && player->getX() != 60) {
 		GraphObject::Direction sqrtDir = player->getDirection();
 		int localX = player->getX();
 		int localY = player->getY();
@@ -517,14 +524,14 @@ void StudentWorld::dropGold()
 	if (player->getGold() == 0)
 		return;
 
-	//auto droppedGold = make_shared<GoldNuggets>(this, player->getX(), player->getY(), GraphObject::right, 1.0, 2U, 1, 0, 3.0, 4.0, false);
 	auto droppedGold = make_shared<GoldNuggets>(this, player->getX(), player->getY(), GraphObject::right, 1.0, 2, 1, 0, 3, 50, true, SOUND_GOT_GOODIE, 50);
+
 	droppedGold->setPickable(false);
 	droppedGold->setVisible(true);
 	droppedGold->changeActorType(Actor::dropByPlayer);
+
 	actor_vec.push_back(droppedGold);
 	
-
 }
 
 
