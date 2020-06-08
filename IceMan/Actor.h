@@ -223,7 +223,7 @@ private:
 	std::weak_ptr<Actor>wp_target;
 public:
 	void resetBehavior() override;
-	Block(std::weak_ptr<Actor> t_target) : IActorResponse(block), wp_target(t_target) {
+	Block(std::weak_ptr<Actor> t_target) : IActorResponse(ResponseType::block), wp_target(t_target) {
 		std::shared_ptr<Actor>temp = wp_target.lock();
 		if (temp)
 			facing = temp->getDirection();
@@ -238,7 +238,7 @@ private:
 	int dmgTaken;
 public:
 	void resetBehavior() override;
-	Destroy(std::weak_ptr<Actor> t_target, int dmgTook) : IActorResponse(destroy), wp_target(t_target), dmgTaken(dmgTook) {};
+	Destroy(std::weak_ptr<Actor> t_target, int dmgTook) : IActorResponse(ResponseType::destroy), wp_target(t_target), dmgTaken(dmgTook) {};
 	//Object will be force to reduce their health by an amount
 	void response() override;
 };
@@ -248,7 +248,7 @@ class Appear : public IActorResponse {
 private:
 	std::weak_ptr<Actor>target;
 public:
-	Appear(std::weak_ptr<Actor> wp_target) : IActorResponse(appear), target(wp_target) {};
+	Appear(std::weak_ptr<Actor> wp_target) : IActorResponse(ResponseType::appear), target(wp_target) {};
 	void resetBehavior() override;
 	void response() override;
 };
@@ -397,6 +397,9 @@ public:
 
 class Protesters : public Characters {
 private:
+	const int restShoutTick = 15;
+	int tickToShout = 0;
+	int tickCounter = 0;
 	bool outOfField = false;
 	int annoyed_sound = SOUND_PROTESTER_GIVE_UP;
 	int yell_sound = SOUND_PROTESTER_YELL;
@@ -467,7 +470,7 @@ private:
 	//Functions
 	void doSomething() override;
 public:
-	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, int t_sound = SOUND_FOUND_OIL, int t_score = 1000) : Collectable(world, true, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
+	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, int t_sound = SOUND_FOUND_OIL, int t_score = 1000) : Collectable(world, false, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
 	};
 };
 
