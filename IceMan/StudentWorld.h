@@ -8,9 +8,6 @@
 #include <array>
 #include <future>
 #include <mutex>
-//#include <shared_mutex>
-//#include <atomic>
-//#include <condition_variable>
 #include <map>
 #include "Actor.h"
 
@@ -22,7 +19,6 @@
 class Actor;
 class IceMan;
 class Ice;
-class StudentWorld;
 
 const int COL_NUM = 64,
 ROW_NUM = 60;
@@ -35,7 +31,6 @@ const int shaftXoffsetL = 30,
 shaftXoffsetR = 33,
 shaftYoffsetD = 4,	//All inclusive
 shaftYoffsetU = 60;
-const std::pair<int, int>EXIT = std::make_pair(60, 60);	//Exit point
 
 ///////////////////////////////////////////	CLASS FOR GRAPH
 //Hash functor for unordered_map
@@ -55,22 +50,20 @@ private:
 		Vertice(int d, std::pair<int, int>l) : distance(d), location(std::move(l)) {};
 	};
 
-	StudentWorld* m_sw;
+	//StudentWorld* m_sw;
+	const int IFN = 9999;	//Dummy value for infinite distance
 	std::vector<std::list<Vertice>> m_graph;
 	std::mutex locker;
 
 	//Function
 	void createEdge();
-	void populateGraph(std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM>& ice_arr);
-	void addVertice(std::list<Vertice> verticeList);
+	void populateGraph(std::vector<std::pair<int, int>> emptyIce_vec);
+
 public:
-	const int IFN = 9999;	//Dummy value for infinite distance
-
-	std::atomic<bool> threadExitUsed;	//Flag for when a new thread calculating the optimal path is allowed
-	std::atomic<bool> threadPlayerUsed;
-
-	Graph(std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> emptyIce, StudentWorld* sw);
-	void createNewVertice(std::pair<int, int> location);
+	Graph(std::vector<std::pair<int, int>> emptyIce) {
+		populateGraph(emptyIce);
+	};
+	void addNewVertice(std::pair<int, int> location);
 	std::unordered_map<std::pair<int, int>, int, pairHash> distValueGenerate(std::pair<int, int> start);
 };
 ////////////////////////////////////////////
@@ -97,7 +90,6 @@ public:
 		populateIce();
 		initNPCPath();
 		createPlayer();
-		createNPC();
 		mainCreateObjects();
 		initSpawnParameters();
 
@@ -142,17 +134,21 @@ public:
 	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> getIceArr() {
 		return ice_array;
 	}
-	bool boulderFall(int x, int y);
+	bool boulderFall(int x, int y, bool& atBottom);
 	// Functions for interfaces
 	std::vector<std::weak_ptr<Actor>> iceCollideWithActor(std::shared_ptr<Actor> actor, bool radarMode = false);
 	std::vector<std::weak_ptr<Actor>> actorsCollideWithMe(std::shared_ptr<Actor> actor, bool radarMode = false);
 	bool createSquirt();
+	void dropGold();
+
+
 	bool createGoodies(std::pair<int, int>);
 	void decrementOil() {
 		--oilsLeft;
 	}
 	void increaseEmptyIce();	//Call this function at the end to populate the location where water can spawn
 	std::pair<int, int> findEmptyIce();	//Don't know why but my guess it's that async doesn't allow member function
+
 	template<typename T>
 	bool createObjects(int x, int y);
 
@@ -160,22 +156,15 @@ public:
 	void useSonar();
 	void TurnOffPowerDetectionRange();
 
-	//Initiate the call to path calculation thread
-	void needPathToExit();
-	void needPathToPlayer();
-
-	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
-	std::unordered_map<std::pair<int, int>, int, pairHash> pathToPlayer;
-	std::unordered_map<std::pair<int, int>, int, pairHash> pathToExit;
-	std::future< std::unordered_map<std::pair<int, int>, int, pairHash>> fut_pathToPlayer;
-	std::future< std::unordered_map<std::pair<int, int>, int, pairHash>> fut_pathToExit;
 private:
 	// Data Structures
-	std::vector<std::pair<int, int>>empty_iceLocal;	//Location that actor can exist/travel to
+	std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> ice_array; // 2D array holding ice on screen. One holding columns, one holding rows.
+	std::vector<std::pair<int, int>>empty_iceLocal;
 	std::vector<std::shared_ptr<Actor>>actor_vec; // Holds all actor objects (ie. boulders, gold, protesters)
 	std::shared_ptr<IceMan> player;
 	std::unique_ptr<Graph> graph;
-
+	std::future<std::unordered_map<std::pair<int, int>, int, pairHash>> mapDistToPlayer;
+	std::future<std::unordered_map<std::pair<int, int>, int, pairHash>> mapDistToExit;
 
 	// Functions for move()
 	int updateStatus(); // Updates the status at the top of the screen. (Health, lives, gold, etc.)
