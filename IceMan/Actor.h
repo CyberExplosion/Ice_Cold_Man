@@ -29,8 +29,8 @@ public:
 private:
 	int hitpoints;
 	int strength;
-	double collisionRange; 
-	double detectionRange; // If you enter this object's range then it will trigger other behaviors. Eg. If a player walks near gold the it will appear.
+	double collisionRange;
+	double detectionRange;
 	StudentWorld* m_sw;
 	int death_sound;
 	int score;
@@ -111,7 +111,6 @@ public:
 	void changeActorType(ActorType t_type) {
 		type = t_type;
 	}
-
 };
 
 //Movement Strategy
@@ -223,7 +222,7 @@ private:
 	std::weak_ptr<Actor>wp_target;
 public:
 	void resetBehavior() override;
-	Block(std::weak_ptr<Actor> t_target) : IActorResponse(block), wp_target(t_target) {
+	Block(std::weak_ptr<Actor> t_target) : IActorResponse(ResponseType::block), wp_target(t_target) {
 		std::shared_ptr<Actor>temp = wp_target.lock();
 		if (temp)
 			facing = temp->getDirection();
@@ -238,7 +237,7 @@ private:
 	int dmgTaken;
 public:
 	void resetBehavior() override;
-	Destroy(std::weak_ptr<Actor> t_target, int dmgTook) : IActorResponse(destroy), wp_target(t_target), dmgTaken(dmgTook) {};
+	Destroy(std::weak_ptr<Actor> t_target, int dmgTook) : IActorResponse(ResponseType::destroy), wp_target(t_target), dmgTaken(dmgTook) {};
 	//Object will be force to reduce their health by an amount
 	void response() override;
 };
@@ -248,7 +247,7 @@ class Appear : public IActorResponse {
 private:
 	std::weak_ptr<Actor>target;
 public:
-	Appear(std::weak_ptr<Actor> wp_target) : IActorResponse(appear), target(wp_target) {};
+	Appear(std::weak_ptr<Actor> wp_target) : IActorResponse(ResponseType::appear), target(wp_target) {};
 	void resetBehavior() override;
 	void response() override;
 };
@@ -269,23 +268,20 @@ private:
 	int deathTimer;
 	std::weak_ptr<Actor> pawn;
 public:
-	ExistTemporary();
-	ExistTemporary(std::weak_ptr<Actor> target, int time) : deathTimer(time), pawn(target) {}
+	ExistTemporary(std::weak_ptr<Actor> target, int time) : deathTimer(time), pawn(target) {};
 	void showYourself() override;
 	void resetBehavior() override;
-	//void setTimeTillDeath(int time) { timeTillDeath = time; }
 };
 
 class ExistPermanently : public IExistenceBehavior {
 private:
 	std::weak_ptr<Actor>pawn;
 public:
-	ExistPermanently();
 	ExistPermanently(std::weak_ptr<Actor> target) : pawn(target) {
-		std::shared_ptr<Actor> s_target = pawn.lock();
-		if (s_target)
-			s_target->setVisible(true);
-		s_target.reset();
+		//std::shared_ptr<Actor> s_target = pawn.lock();
+		//if (s_target)
+		//	s_target->setVisible(true);
+		//s_target.reset();
 	}
 	void showYourself() override;
 	void resetBehavior() override;
@@ -298,7 +294,6 @@ class IDetectionBehavior {
 protected:
 
 public:
-
 	//The source is npc or objects. Intruders will be others actors that inside the range
 	std::weak_ptr<Actor> wp_source;
 	std::vector<std::weak_ptr<Actor>> wp_intruders;
@@ -363,7 +358,7 @@ public:
 class IceMan : public Characters {
 private:
 	int dmgSound = SOUND_PLAYER_ANNOYED;
-	int numGold = 10;
+	int numGold = 0;
 	int numSquirt = 5;
 	int numSonar = 1;
 	bool shootSquirt();
@@ -392,11 +387,13 @@ public:
 	int getSonar() {
 		return numSonar;
 	}
-
 };
 
 class Protesters : public Characters {
 private:
+	const int restShoutTick = 15;
+	int tickToShout = 0;
+	int tickCounter = 0;
 	bool outOfField = false;
 	int annoyed_sound = SOUND_PROTESTER_GIVE_UP;
 	int yell_sound = SOUND_PROTESTER_YELL;
@@ -467,7 +464,7 @@ private:
 	//Functions
 	void doSomething() override;
 public:
-	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, int t_sound = SOUND_FOUND_OIL, int t_score = 1000) : Collectable(world, true, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
+	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, int t_sound = SOUND_FOUND_OIL, int t_score = 1000) : Collectable(world, false, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
 	};
 };
 
@@ -475,23 +472,13 @@ class GoldNuggets : public Collectable {
 private:
 	//Function
 	//Determine if the time for the Temporary gold exist ran out
-	IceMan * m_IM;
+	bool tempTimeEnd();
 public:
-	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true, int t_sound = SOUND_GOT_GOODIE, int t_score = 25) : Collectable(world, false, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {};
+	GoldNuggets(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, bool t_pickable = true, int t_sound = SOUND_GOT_GOODIE, int t_score = 50) : Collectable(world, false, IID_GOLD, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {};
 
 	void drop();
 
 	void doSomething() override;
-
-	IceMan* getIceMan() {
-		return m_IM;
-	}
-
-	void setPickable(bool temp) {
-		pickableByPlayer = temp;
-	}
-
-
 };
 
 class SonarKit : public Collectable {
@@ -546,10 +533,8 @@ public:
 private:
 
 	BoulderState state = stable;
-
 	int fall_sound = SOUND_FALLING_ROCK;
 
-	bool atBottom = false;
 	//Functions
 	void doSomething() override;
 public:
@@ -567,4 +552,3 @@ public:
 };
 
 #endif // ACTOR_H_
-

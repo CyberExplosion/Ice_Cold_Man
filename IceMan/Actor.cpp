@@ -3,8 +3,8 @@
 #include "StudentWorld.h"
 #include "GameConstants.h"
 #include <cmath>
-#include <iostream>
-
+//#include <iostream>
+#include <execution>
 using namespace std;
 
 // Students:  Add code to this file (if you wish), Actor.h, StudentWorld.h, and StudentWorld.cpp
@@ -23,7 +23,7 @@ void Destroy::response() {
 	if (target && !target->isAlive()) {
 		target->resetAllBehaviors();
 	}
-	
+
 	target.reset();
 }
 
@@ -74,7 +74,7 @@ bool IceMan::shootSquirt() {
 
 
 //Testing purposes
-int counter = 2;
+int counter = 80;
 //////////////////
 
 void IceMan::doSomething() {
@@ -97,12 +97,18 @@ void IceMan::doSomething() {
 	if (!getWorld()->getKey(keyPressed))
 		keyPressed = INVALID_KEY;
 
-	///////////////Test
+	/////////Test
 	//counter--;
-	//if (counter <= 0)
+	//if (counter <= 80 && counter >= 40) {
 	//	keyPressed = KEY_PRESS_LEFT;
-	////keyPressed = KEY_PRESS_RIGHT;
-	////////////////////
+	//}
+	//else if (counter <= 40 && counter >= -20) {
+	//	keyPressed = KEY_PRESS_RIGHT;
+	//}
+	//else {
+	//	keyPressed = KEY_PRESS_UP;
+	//}
+	////////////
 
 	if (!movementBehavior)
 		movementBehavior = std::make_unique<ControlledMovement>(mySelf, keyPressed);
@@ -134,7 +140,6 @@ bool IceMan::useGoodies(int key) {
 	case KEY_PRESS_TAB:
 		if (numGold > 0) {
 			--numGold;
-			getWorld()->dropGold();
 			return true;
 		}
 		return false;
@@ -159,7 +164,6 @@ void IceMan::dmgActor(int amt) {
 	getWorld()->playSound(dmgSound);
 }
 
-
 Protesters::Protesters(StudentWorld* world, int imgID, int startX, int startY, int hp, int t_str, double col_range, double detect_range, int t_sound, int t_score) : Characters(world, npc, imgID, startX, startY, left, hp, t_str, col_range, detect_range, t_sound, t_score) {
 	int curLvl = getWorld()->getLevel();
 	//M + rand() / (RAND_MAX / (N - M + 1) + 1)
@@ -168,9 +172,66 @@ Protesters::Protesters(StudentWorld* world, int imgID, int startX, int startY, i
 }
 
 void Protesters::doSomething() {
-	if (!isAlive()) {	//This is when the protesters reach the exit place
+	shared_ptr<Actor> self = shared_from_this();
+	
+	if (!self || !isAlive()) {	//This is when the protesters reach the exit place
 		resetAllBehaviors();
 		return;
+	}
+
+	bool rest = (tickCounter == 0);
+	if (rest)
+		tickCounter--;
+	else {
+		//Reset the tick counters
+		tickCounter = ticksWaitBetweenMoves;
+		
+		if (annoyed() && !movementBehavior) {
+			//movementBehavior = make_unique<PursuingMovement>(self, EXIT);	//Causing lag because I don't know how to use the graph function concurrently without problem
+			//changeActorType(ActorType::dropByPlayer);
+		}
+
+		if (!movementBehavior) {
+
+		}
+		if (!collisionDetection)
+			collisionDetection = make_unique<CollisionDetection>(self);
+
+		if (tickToShout == 0) {
+			for (auto& intruder : collisionDetection->wp_intruders) {
+				auto spIntruder = intruder.lock();
+				if (spIntruder && spIntruder->type == ActorType::player) {	//If the intruder is player
+					switch (self->getDirection()) {	//Look at direction of the player
+					case GraphObject::Direction::left:
+						if (spIntruder->getX() <= self->getX())
+							getWorld()->playSound(yell_sound);
+						break;
+					case GraphObject::Direction::right:
+						if (spIntruder->getX() >= self->getX())
+							getWorld()->playSound(yell_sound);
+						break;
+					case GraphObject::Direction::down:
+						if (spIntruder->getY() <= self->getY())
+							getWorld()->playSound(yell_sound);
+						break;
+					case GraphObject::Direction::up:
+						if (spIntruder->getY() >= self->getY())
+							getWorld()->playSound(yell_sound);
+						break;
+					default:
+						break;
+					}
+				}
+			}
+			tickToShout = restShoutTick;	//Reset the count
+		}
+		tickToShout--;
+
+		//movementBehavior->moveThatAss();
+		collisionDetection->behaveBitches();
+
+
+		//Reward
 	}
 }
 
@@ -395,8 +456,8 @@ void Block::response() {
 			currentY = 0;
 
 		target->getAnimationLocation(currentX, currentY);
-
-		if (facing != target->getDirection()) {	//If they face different direction after being blocked, they can move again
+		
+		if (facing != target->getDirection() || target->collisionDetection->wp_intruders.empty()) {	//If they face different direction after being blocked, or there are nothing blocking them anymore
 			target->movementBehavior->enableMove(true);
 			target->movementBehavior->moveThatAss();	//Allow to move again
 			target->collisionResult.reset();
@@ -434,8 +495,12 @@ void OilBarrels::doSomething() {
 }
 
 
-void GoldNuggets::drop() {
+bool GoldNuggets::tempTimeEnd() {
+	return false;
+}
 
+
+void GoldNuggets::drop() {
 }
 
 void GoldNuggets::doSomething() {
@@ -443,15 +508,13 @@ void GoldNuggets::doSomething() {
 		resetAllBehaviors();
 		return;
 	}
-	
+
 	shared_ptr<Actor> self = shared_from_this();
 
 	//Create behavior
-	//if (!existBehavior && pickableByPlayer) {
-	//	existBehavior = make_unique<ExistPermanently>();
-	//}
 	if (!existBehavior && !pickableByPlayer) {
-		existBehavior = make_unique<ExistTemporary>(self, 100);
+		//10000 as the timer
+		existBehavior = make_unique<ExistTemporary>(self, 1000);
 	}
 	if (!collisionDetection)
 		collisionDetection = make_unique<CollisionDetection>(self);
@@ -569,6 +632,8 @@ void Squirt::doSomething() {
 	//Reward
 	if (!isAlive())
 		getWorld()->playSound(getDeathSound());
+
+	self.reset();
 }
 
 
@@ -580,13 +645,8 @@ void Boulder::doSomething() {
 
 	shared_ptr<Actor> self = shared_from_this();
 
-	bool isFalling = getWorld()->boulderFall(getX(), getY(), atBottom);
+	bool isFalling = getWorld()->boulderFall(getX(), getY());
 
-	if (atBottom == true) {
-		dmgActor(9999);
-		return;
-	}
-	
 	if (isFalling && !movementBehavior)
 		movementBehavior = make_unique<FallMovement>(self, KEY_PRESS_DOWN);
 
@@ -620,12 +680,9 @@ void Ice::doSomething() {
 
 }
 
-ExistTemporary::ExistTemporary()
-{
-}
-
 void ExistTemporary::showYourself() {
 	std::shared_ptr<Actor> spPawn = pawn.lock();
+
 	if (spPawn && spPawn->isAlive()) {
 		if (deathTimer > 0) {
 			--deathTimer;
@@ -638,10 +695,6 @@ void ExistTemporary::showYourself() {
 }
 
 void ExistTemporary::resetBehavior() {
-}
-
-ExistPermanently::ExistPermanently()
-{
 }
 
 void ExistPermanently::showYourself() {
@@ -725,6 +778,70 @@ void ControlledMovement::moveThatAss() {
 }
 
 void PursuingMovement::moveThatAss() {
+	shared_ptr<Actor> spPawn = pawn.lock();
+
+	std::unordered_map<std::pair<int, int>, int, pairHash> pathWay;
+
+	if (spPawn && spPawn->isAlive() && allowMovement) {
+
+		if (destination == EXIT) {
+			if (spPawn->getWorld()->pathToExit.empty()) {	//If the path is not made yet
+				spPawn->getWorld()->needPathToExit();
+				//return;	//Have to wait for the next move for the path to be calculated
+			}
+			pathWay = spPawn->getWorld()->pathToExit;	//Get the whole map of possible location we can travel
+		}
+		else {
+			if (spPawn->getWorld()->pathToPlayer.empty()) {	//If the path is not made yet
+				spPawn->getWorld()->needPathToPlayer();
+				//return;	//Have to wait for the next move for the path to be calculated
+			}
+			pathWay = spPawn->getWorld()->pathToPlayer;
+		}
+
+		pair<int, int> curLocal = make_pair(spPawn->getX(), spPawn->getY());
+		int lowestWeight = 9999;	//The default weight
+		pair<int, int> destLoca = curLocal;	//Destination that we want to move to
+
+		//Get adjacent locations to where we at
+		array<pair<int, int>, 4> mapMarkers;
+		for (auto& val : mapMarkers) {
+			val = make_pair(curLocal.first, curLocal.second);
+		}
+		mapMarkers[0].first -= 1;	//Left
+		mapMarkers[1].first += 1;	//Right
+		mapMarkers[2].second -= 1;	//Down
+		mapMarkers[3].second += 1;	//Up
+
+		//Find location that is adjacent to our position in the path
+		for (auto& adj : mapMarkers) {
+			auto mapLoca = pathWay.find(adj);
+			if (mapLoca != pathWay.end() && mapLoca->second <= lowestWeight) {	//Second in the map is the weight of the location
+				destLoca = mapLoca->first;
+				lowestWeight = mapLoca->second;	//New lowest weight
+			}
+		}
+		//Move to the destination
+		GraphObject::Direction dir = GraphObject::Direction::none;
+		if (destLoca.first == curLocal.first - 1) {	//To the left
+			dir = GraphObject::Direction::left;
+		}
+		if (destLoca.first == curLocal.first + 1) {	//Right
+			dir = GraphObject::Direction::right;
+		}
+		if (destLoca.first == curLocal.second - 1) {	//Down
+			dir = GraphObject::Direction::down;
+		}
+		if (destLoca.first == curLocal.second + 1) {	//Up
+			dir = GraphObject::Direction::up;
+		}
+
+		if (dir != spPawn->getDirection()) {
+			spPawn->setDirection(dir);	//Don't move just yet
+			return;
+		}
+		spPawn->moveTo(destLoca.first, destLoca.second);
+	}
 }
 
 void PursuingMovement::resetBehavior() {
