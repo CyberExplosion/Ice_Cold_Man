@@ -222,7 +222,7 @@ private:
 	std::weak_ptr<Actor>wp_target;
 public:
 	void resetBehavior() override;
-	Block(std::weak_ptr<Actor> t_target) : IActorResponse(block), wp_target(t_target) {
+	Block(std::weak_ptr<Actor> t_target) : IActorResponse(ResponseType::block), wp_target(t_target) {
 		std::shared_ptr<Actor>temp = wp_target.lock();
 		if (temp)
 			facing = temp->getDirection();
@@ -237,7 +237,7 @@ private:
 	int dmgTaken;
 public:
 	void resetBehavior() override;
-	Destroy(std::weak_ptr<Actor> t_target, int dmgTook) : IActorResponse(destroy), wp_target(t_target), dmgTaken(dmgTook) {};
+	Destroy(std::weak_ptr<Actor> t_target, int dmgTook) : IActorResponse(ResponseType::destroy), wp_target(t_target), dmgTaken(dmgTook) {};
 	//Object will be force to reduce their health by an amount
 	void response() override;
 };
@@ -247,7 +247,7 @@ class Appear : public IActorResponse {
 private:
 	std::weak_ptr<Actor>target;
 public:
-	Appear(std::weak_ptr<Actor> wp_target) : IActorResponse(appear), target(wp_target) {};
+	Appear(std::weak_ptr<Actor> wp_target) : IActorResponse(ResponseType::appear), target(wp_target) {};
 	void resetBehavior() override;
 	void response() override;
 };
@@ -391,6 +391,9 @@ public:
 
 class Protesters : public Characters {
 private:
+	const int restShoutTick = 15;
+	int tickToShout = 0;
+	int tickCounter = 0;
 	bool outOfField = false;
 	int annoyed_sound = SOUND_PROTESTER_GIVE_UP;
 	int yell_sound = SOUND_PROTESTER_YELL;
@@ -398,7 +401,7 @@ protected:
 	int numSquareToMoveCurrentDir;
 	int ticksWaitBetweenMoves;
 public:
-	Protesters(StudentWorld* world, int imgID = IID_PROTESTER, int startX = 60, int startY = 60, int hp = 5, int t_str = 0, double col_range = 4, double detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED, int t_score = 0);
+	Protesters(StudentWorld* world, int imgID = IID_PROTESTER, int startX = 60, int startY = 60, int hp = 5, int t_str = 2, double col_range = 4, double detect_range = 0, int t_sound = SOUND_PROTESTER_ANNOYED, int t_score = 0);
 	virtual ~Protesters() override {};
 
 	//Functions

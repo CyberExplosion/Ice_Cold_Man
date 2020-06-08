@@ -8,9 +8,9 @@
 #include <array>
 #include <future>
 #include <mutex>
-#include <shared_mutex>
-#include <atomic>
-#include <condition_variable>
+//#include <shared_mutex>
+//#include <atomic>
+//#include <condition_variable>
 #include <map>
 #include "Actor.h"
 
@@ -98,7 +98,7 @@ public:
 		initNPCPath();
 		createPlayer();
 		createNPC();
-		//mainCreateObjects();
+		mainCreateObjects();
 		initSpawnParameters();
 
 		return GWSTATUS_CONTINUE_GAME;

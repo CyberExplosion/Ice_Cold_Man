@@ -8,11 +8,11 @@
 #include <cmath>
 #include <future>
 #include <list>
-#include <iostream>
+//#include <iostream>
 #include <execution>
 
-#include <windows.h>
-#include <processthreadsapi.h>
+//#include <windows.h>
+//#include <processthreadsapi.h>
 
 using namespace std;
 
@@ -37,7 +37,7 @@ int StudentWorld::move() {
 	}
 
 	//Could take a long time so we create another thread
-	//auto fut = async(launch::async, &StudentWorld::findEmptyIce, this);
+	auto fut = async(launch::async, &StudentWorld::findEmptyIce, this);
 
 	////So if the thread is Indicate that it's used, then on the "next" move the path will be calculate
 
@@ -48,8 +48,8 @@ int StudentWorld::move() {
 	}
 
 	updateStatus();
-	//createProtesters();
-	//createGoodies(fut.get());	//Give in the location here
+	createProtesters();
+	createGoodies(fut.get());	//Give in the location here
 
 	//pathToExit = mapDistToExit.get();
 	//pathToPlayer = mapDistToPlayer.get();
@@ -63,7 +63,7 @@ int StudentWorld::move() {
 	case 0:
 		return GWSTATUS_PLAYER_DIED;
 	case 1: {
-
+		//Since the player cannot travel to Boudler or such places, this would account for that too
 		graph->createNewVertice(make_pair(player->getX(), player->getY()));	//Let the npc move to this location -> Has to call AFTER the player made a move and ice is broke
 
 		return GWSTATUS_CONTINUE_GAME;
@@ -256,7 +256,19 @@ void StudentWorld::populateIce() {
 	for (int row = 0; row < ice_array.size(); row++) {
 		for (int col = 0; col < ice_array[row].size(); col++) {
 			
-			//if (col <= shaftXoffsetR && col >= shaftXoffsetL && row >= shaftYoffsetD && row < shaftYoffsetU) {
+			if (col <= shaftXoffsetR && col >= shaftXoffsetL && row >= shaftYoffsetD && row < shaftYoffsetU) {
+				ice_array[row][col] = nullptr;	//Don't add ice in cols and rows between those range
+				//empty_iceLocal.emplace_back(col, row);
+			}
+			else {
+				ice_array[row][col] = make_shared<Ice>(this, true, col, row);	//Cols is the x location and row is the y location in Cartesian coordinate
+			}
+
+			////Test
+			//ice_array[row][col] = make_shared<Ice>(this, true, col, row);
+			//////////
+
+			//	if (col <= 50 && col >= 20 && row >= shaftYoffsetD && row < shaftYoffsetU) {
 			//	ice_array[row][col] = nullptr;	//Don't add ice in cols and rows between those range
 			//	empty_iceLocal.emplace_back(col, row);
 			//}
@@ -264,28 +276,16 @@ void StudentWorld::populateIce() {
 			//	ice_array[row][col] = make_shared<Ice>(this, true, col, row);	//Cols is the x location and row is the y location in Cartesian coordinate
 			//}
 
-			////Test
-			//ice_array[row][col] = make_shared<Ice>(this, true, col, row);
-			//////////
-
-				if (col <= 50 && col >= 20 && row >= shaftYoffsetD && row < shaftYoffsetU) {
-				ice_array[row][col] = nullptr;	//Don't add ice in cols and rows between those range
-				empty_iceLocal.emplace_back(col, row);
-			}
-			else {
-				ice_array[row][col] = make_shared<Ice>(this, true, col, row);	//Cols is the x location and row is the y location in Cartesian coordinate
-			}
-
 		}
 	}
-	//for (int i = shaftYoffsetU; i >= shaftYoffsetD; i--) {
-	//	empty_iceLocal.emplace_back(shaftXoffsetL, i);	//Put the whole shaft as location for empty ice
-	//}
+	for (int i = shaftYoffsetU; i >= shaftYoffsetD; i--) {
+		empty_iceLocal.emplace_back(shaftXoffsetL, i);	//Put the whole shaft as location for empty ice
+	}
 }
 
 void StudentWorld::createPlayer() {
-	player = make_shared<IceMan>(this, 30, 30);
-	//actor_vec.push_back(player);
+	player = make_shared<IceMan>(this);
+	actor_vec.push_back(player);
 }
 
 void StudentWorld::mainCreateObjects() {
@@ -397,11 +397,11 @@ void StudentWorld::createNPC() {
 	int probOfHardcore = min(90, currentLvl * 10 + 30);
 	bool spawnHardcore = (rand() % 100) < probOfHardcore;	//If smaller than the prob then it fall into that probability
 
-	//Test
-	spawnHardcore = false;
+	////Test
+	//spawnHardcore = false;
 
 	if (!spawnHardcore) {
-		actor_vec.emplace_back(make_shared<Protesters>(this, IID_PROTESTER, 0, 60));
+		actor_vec.emplace_back(make_shared<Protesters>(this));
 	}
 	else
 		actor_vec.emplace_back(make_shared<HardcoreProtesters>(this));
@@ -579,25 +579,6 @@ bool StudentWorld::createGoodies(pair<int, int> locale) {
 	return false;
 }
 
-////The function put in location that the player traveled as possible empty ice place
-//void StudentWorld::increaseEmptyIce() {
-//	if (player && player->isAlive()) {
-//		double localX, localY;
-//		player->getAnimationLocation(localX, localY);
-//		if (localX > 0 && localX < COL_NUM - OBJECT_LENGTH && localY > 0 && localY < ROW_NUM - OBJECT_LENGTH) {	//Make sure it's in the ice field
-//
-//			for (int i = localY; i < ROW_NUM && i < localY + OBJECT_LENGTH; i++) {	//Check the surrounding ice to make sure there's none exist in 4x4 radius
-//				for (int k = localX; k < COL_NUM && k < localX + OBJECT_LENGTH; k++) {
-//					if (ice_array[i][k])	//If there's an ice exist in an area, then it's not qualified --> Can't travel to this block
-//						return;
-//				}
-//			}
-//			empty_iceLocal.emplace_back(localX, localY);
-//
-//			graph->addNewVertice(make_pair(localX, localY));	//Can travel to this new location
-//		}
-//	}
-//}
 
 //Function will return a random pair of location for possible water spawning place
 std::pair<int, int> StudentWorld::findEmptyIce() {
@@ -613,16 +594,16 @@ std::pair<int, int> StudentWorld::findEmptyIce() {
 				int theOne = rand() / (RAND_MAX / (empty_iceLocal.size() - 0) + 1);
 				pair<int, int> locale = empty_iceLocal[theOne];
 
-				for (int i = locale.second; i < ROW_NUM && i < locale.second + OBJECT_LENGTH; i++) {
-					for (int k = locale.first; k < COL_NUM && k < locale.first + OBJECT_LENGTH; k++) {
-						if (ice_array[i][k]) {
-							again = true;	//Make the loop again for another location
-							break;
-						}
-					}
-					if (again)
-						break;
-				}
+				//for (int i = locale.second; i < ROW_NUM && i < locale.second + OBJECT_LENGTH; i++) {
+				//	for (int k = locale.first; k < COL_NUM && k < locale.first + OBJECT_LENGTH; k++) {
+				//		if (ice_array[i][k]) {
+				//			again = true;	//Make the loop again for another location
+				//			break;
+				//		}
+				//	}
+				//	if (again)
+				//		break;
+				//}
 				int distance = sqrt(pow(locale.first - player->getX(), 2) + pow(locale.second - player->getY(), 2));
 				if (distance >= DIST_ALLOW_BETW_SPAWN)	//Return the location if it's different than where the player is
 					return locale;
@@ -756,7 +737,7 @@ Graph::Graph(std::array<std::array<std::shared_ptr<Ice>, COL_NUM>, ROW_NUM> empt
 		threadExitUsed = true;
 }
 
-//Create another vertice and add edges to if automatically. This requires an already existing pathway already made
+//Create another vertice and add edges to if automatically.
 void Graph::createNewVertice(std::pair<int, int> location) {
 	for (int y = location.second; y < ROW_NUM && y < location.second + OBJECT_LENGTH; y++) {
 		for (int x = location.first; x < COL_NUM && x < location.first + OBJECT_LENGTH; x++) {
@@ -912,12 +893,12 @@ void Graph::createNewVertice(std::pair<int, int> location) {
 
 //The function return an map of all location with there respective "cost" to travel to. Call before adding new vertex so a path can be made
 unordered_map<std::pair<int, int>, int, pairHash> Graph::distValueGenerate(std::pair<int, int> source) {
-	//Thread name
-	HRESULT r;
-	r = SetThreadDescription(
-		GetCurrentThread(),
-		L"Distance Generator!"
-	);
+	////Thread name
+	//HRESULT r;
+	//r = SetThreadDescription(
+	//	GetCurrentThread(),
+	//	L"Distance Generator!"
+	//);
 
 		//Create a map to store the distance needs to arrive at a particular vertice(location)
 		unordered_map<pair<int, int>, int, pairHash> distTravel;

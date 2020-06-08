@@ -8,7 +8,7 @@ A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(256,24): warning C4018: '<': si
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(257,25): warning C4018: '<': signed/unsigned mismatch
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(317,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(395,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(626,18): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(607,18): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.h(220,16): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
 A:\Comp Sci\Ice_Cold_Man\IceMan\StudentWorld.cpp(335): message : see reference to function template instantiation 'bool StudentWorld::createObjects<Boulder>(int,int)' being compiled
   IceMan.vcxproj -> A:\Comp Sci\Ice_Cold_Man\Debug\IceMan.exe

@@ -3,7 +3,7 @@
 #include "StudentWorld.h"
 #include "GameConstants.h"
 #include <cmath>
-#include <iostream>
+//#include <iostream>
 #include <execution>
 using namespace std;
 
@@ -179,10 +179,60 @@ void Protesters::doSomething() {
 		return;
 	}
 
-	if (!movementBehavior)
-		movementBehavior = make_unique<PursuingMovement>(self, EXIT);
+	bool rest = (tickCounter == 0);
+	if (rest)
+		tickCounter--;
+	else {
+		//Reset the tick counters
+		tickCounter = ticksWaitBetweenMoves;
+		
+		if (annoyed() && !movementBehavior) {
+			//movementBehavior = make_unique<PursuingMovement>(self, EXIT);	//Causing lag because I don't know how to use the graph function concurrently without problem
+			//changeActorType(ActorType::dropByPlayer);
+		}
 
-	movementBehavior->moveThatAss();
+		if (!movementBehavior) {
+
+		}
+		if (!collisionDetection)
+			collisionDetection = make_unique<CollisionDetection>(self);
+
+		if (tickToShout == 0) {
+			for (auto& intruder : collisionDetection->wp_intruders) {
+				auto spIntruder = intruder.lock();
+				if (spIntruder && spIntruder->type == ActorType::player) {	//If the intruder is player
+					switch (self->getDirection()) {	//Look at direction of the player
+					case GraphObject::Direction::left:
+						if (spIntruder->getX() <= self->getX())
+							getWorld()->playSound(yell_sound);
+						break;
+					case GraphObject::Direction::right:
+						if (spIntruder->getX() >= self->getX())
+							getWorld()->playSound(yell_sound);
+						break;
+					case GraphObject::Direction::down:
+						if (spIntruder->getY() <= self->getY())
+							getWorld()->playSound(yell_sound);
+						break;
+					case GraphObject::Direction::up:
+						if (spIntruder->getY() >= self->getY())
+							getWorld()->playSound(yell_sound);
+						break;
+					default:
+						break;
+					}
+				}
+			}
+			tickToShout = restShoutTick;	//Reset the count
+		}
+		tickToShout--;
+
+		//movementBehavior->moveThatAss();
+		collisionDetection->behaveBitches();
+
+
+		//Reward
+	}
 }
 
 
@@ -406,8 +456,8 @@ void Block::response() {
 			currentY = 0;
 
 		target->getAnimationLocation(currentX, currentY);
-
-		if (facing != target->getDirection()) {	//If they face different direction after being blocked, they can move again
+		
+		if (facing != target->getDirection() || target->collisionDetection->wp_intruders.empty()) {	//If they face different direction after being blocked, or there are nothing blocking them anymore
 			target->movementBehavior->enableMove(true);
 			target->movementBehavior->moveThatAss();	//Allow to move again
 			target->collisionResult.reset();
@@ -732,7 +782,7 @@ void PursuingMovement::moveThatAss() {
 
 	std::unordered_map<std::pair<int, int>, int, pairHash> pathWay;
 
-	if (spPawn && spPawn->isAlive()) {
+	if (spPawn && spPawn->isAlive() && allowMovement) {
 
 		if (destination == EXIT) {
 			if (spPawn->getWorld()->pathToExit.empty()) {	//If the path is not made yet
@@ -772,6 +822,24 @@ void PursuingMovement::moveThatAss() {
 			}
 		}
 		//Move to the destination
+		GraphObject::Direction dir = GraphObject::Direction::none;
+		if (destLoca.first == curLocal.first - 1) {	//To the left
+			dir = GraphObject::Direction::left;
+		}
+		if (destLoca.first == curLocal.first + 1) {	//Right
+			dir = GraphObject::Direction::right;
+		}
+		if (destLoca.first == curLocal.second - 1) {	//Down
+			dir = GraphObject::Direction::down;
+		}
+		if (destLoca.first == curLocal.second + 1) {	//Up
+			dir = GraphObject::Direction::up;
+		}
+
+		if (dir != spPawn->getDirection()) {
+			spPawn->setDirection(dir);	//Don't move just yet
+			return;
+		}
 		spPawn->moveTo(destLoca.first, destLoca.second);
 	}
 }
