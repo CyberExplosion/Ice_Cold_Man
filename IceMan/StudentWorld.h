@@ -151,7 +151,7 @@ public:
 	void decrementOil() {
 		--oilsLeft;
 	}
-	//void increaseEmptyIce();	//Call this function at the end to populate the location where water can spawn
+	void increaseEmptyIce();	//Call this function at the end to populate the location where water can spawn
 	std::pair<int, int> findEmptyIce();	//Don't know why but my guess it's that async doesn't allow member function
 	template<typename T>
 	bool createObjects(int x, int y);

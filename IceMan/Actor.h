@@ -464,7 +464,7 @@ private:
 	//Functions
 	void doSomething() override;
 public:
-	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, int t_sound = SOUND_FOUND_OIL, int t_score = 1000) : Collectable(world, true, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
+	OilBarrels(StudentWorld* world, int startX, int startY, Direction dir = right, double size = 1.0, unsigned depth = 2.0, int hp = 1, int strength = 0, double col_range = 3, double detect_range = 4, int t_sound = SOUND_FOUND_OIL, int t_score = 1000) : Collectable(world, false, IID_BARREL, startX, startY, dir, size, depth, hp, strength, col_range, detect_range, t_sound, t_score) {
 	};
 };
 

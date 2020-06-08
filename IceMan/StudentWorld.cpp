@@ -57,7 +57,7 @@ int StudentWorld::move() {
 	int status_of_game = doThings();
 
 	deleteFinishedObjects();
-
+	increaseEmptyIce();
 	switch (status_of_game)
 	{
 	case 0:
@@ -167,7 +167,7 @@ void StudentWorld::deleteFinishedObjects() {
 	for (int y = 0; y < ROW_NUM; y++) {	//Remove ice not alive
 		for (int x = 0; x < COL_NUM; x++) {
 			if (ice_array[y][x] && !ice_array[y][x]->isAlive()) {	//If there's no ice exist in this block -> Traversable
-				empty_iceLocal.emplace_back(x, y);
+				//empty_iceLocal.emplace_back(x, y);
 				
 				ice_array[y][x]->resetAllBehaviors();
 				ice_array[y][x].reset();
@@ -278,7 +278,7 @@ void StudentWorld::populateIce() {
 
 		}
 	}
-	for (int i = shaftYoffsetU; i >= shaftYoffsetD; i--) {
+	for (int i = shaftYoffsetU; i >= shaftYoffsetD; i-=4) {
 		empty_iceLocal.emplace_back(shaftXoffsetL, i);	//Put the whole shaft as location for empty ice
 	}
 }
@@ -382,6 +382,24 @@ void StudentWorld::initSpawnParameters() {
 	protesterSpawnLimit = min(15, 2 + int(currentLV * 1.5));
 
 }
+
+//The function put in location that the player traveled as possible empty ice place
+void StudentWorld::increaseEmptyIce() {
+	if (player && player->isAlive()) {
+		double localX, localY;
+		player->getAnimationLocation(localX, localY);
+		if (localX > 0 && localX < COL_NUM - OBJECT_LENGTH && localY > 0 && localY < ROW_NUM - OBJECT_LENGTH) {	//Make sure it's in the ice field
+			for (int i = localY; i < ROW_NUM && i < localY + OBJECT_LENGTH; i++) {	//Check the surrounding ice to make sure there's none exist in 4x4 radius
+				for (int k = localX; k < COL_NUM && k < localX + OBJECT_LENGTH; k++) {
+					if (ice_array[i][k])	//If there's an ice exist in an area, then it's not qualified
+						return;
+				}
+			}
+			empty_iceLocal.emplace_back(localX, localY);
+		}
+	}
+}
+
 
 void StudentWorld::initNPCPath() {
 	graph = make_unique<Graph>(ice_array, this);
@@ -620,7 +638,7 @@ void StudentWorld::useSonar()
 	//call player, player calls power function
 	playSound(SOUND_SONAR);
 	player->setDetectRange(8);	//increase
-	tickSonar = 1;
+	tickSonar = 2;
 }
 
 void StudentWorld::TurnOffPowerDetectionRange()
