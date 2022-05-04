@@ -7,8 +7,6 @@
 #include <execution>
 using namespace std;
 
-// Students:  Add code to this file (if you wish), Actor.h, StudentWorld.h, and StudentWorld.cpp
-
 
 void Destroy::resetBehavior() {
 	wp_target.reset();
@@ -27,7 +25,7 @@ void Destroy::response() {
 	target.reset();
 }
 
-void FreeMovement::moveThatAss() {
+void FreeMovement::moveIt() {
 }
 
 void FreeMovement::resetBehavior() {
@@ -51,7 +49,7 @@ void FallMovement::fall(shared_ptr<Actor> target) {
 		target->moveTo(target->getX(), target->getY() - 1);
 }
 
-void FallMovement::moveThatAss() {
+void FallMovement::moveIt() {
 	shared_ptr<Actor> spPawn = pawn.lock();
 
 	if (spPawn && spPawn->isAlive()) {
@@ -87,7 +85,6 @@ void IceMan::doSomething() {
 		resetAllBehaviors();
 		return;
 	}
-	//This certainly will cause problem in the future. TOO BAD
 	weak_ptr<Actor> mySelf = getWorld()->getPlayer();
 
 	//shared_ptr<Actor>temp = mySelf.lock();
@@ -97,18 +94,6 @@ void IceMan::doSomething() {
 	if (!getWorld()->getKey(keyPressed))
 		keyPressed = INVALID_KEY;
 
-	/////////Test
-	//counter--;
-	//if (counter <= 80 && counter >= 40) {
-	//	keyPressed = KEY_PRESS_LEFT;
-	//}
-	//else if (counter <= 40 && counter >= -20) {
-	//	keyPressed = KEY_PRESS_RIGHT;
-	//}
-	//else {
-	//	keyPressed = KEY_PRESS_UP;
-	//}
-	////////////
 
 	if (!movementBehavior)
 		movementBehavior = std::make_unique<ControlledMovement>(mySelf, keyPressed);
@@ -120,7 +105,7 @@ void IceMan::doSomething() {
 		collisionDetection = make_unique<CollisionDetection>(mySelf);
 
 	useGoodies(keyPressed);
-	movementBehavior->moveThatAss();
+	movementBehavior->moveIt();
 	//The collision need to be executed AFTER the movement for this to works
 	detectBehavior->behaveBitches();
 	collisionDetection->behaveBitches();	//If there's a detection then a response is already made automatically
@@ -168,7 +153,6 @@ void IceMan::dmgActor(int amt) {
 
 Protesters::Protesters(StudentWorld* world, int imgID, int startX, int startY, int hp, int t_str, double col_range, double detect_range, int t_sound, int t_score) : Characters(world, npc, imgID, startX, startY, left, hp, t_str, col_range, detect_range, t_sound, t_score) {
 	int curLvl = getWorld()->getLevel();
-	//M + rand() / (RAND_MAX / (N - M + 1) + 1)
 	numSquareToMoveCurrentDir = 8 + rand() / (RAND_MAX / (60 - 8 + 1) + 1);	//[8 - 60] is the range
 	ticksWaitBetweenMoves = std::max(0, 3 - curLvl / 4);
 }
@@ -189,8 +173,6 @@ void Protesters::doSomething() {
 		tickCounter = ticksWaitBetweenMoves;
 		
 		if (annoyed() && !movementBehavior) {
-			//movementBehavior = make_unique<PursuingMovement>(self, EXIT);	//Causing lag because I don't know how to use the graph function concurrently without problem
-			//changeActorType(ActorType::dropByPlayer);
 		}
 
 		if (!movementBehavior) {
@@ -461,7 +443,7 @@ void Block::response() {
 		
 		if (facing != target->getDirection() || target->collisionDetection->wp_intruders.empty()) {	//If they face different direction after being blocked, or there are nothing blocking them anymore
 			target->movementBehavior->enableMove(true);
-			target->movementBehavior->moveThatAss();	//Allow to move again
+			target->movementBehavior->moveIt();	//Allow to move again
 			target->collisionResult.reset();
 		}
 		else
@@ -626,7 +608,7 @@ void Squirt::doSomething() {
 		movementBehavior = make_unique<SquirtMovement>(self);
 
 	//Always execute movement first before collision detection so that if collision is <Block> it can catch the movement
-	movementBehavior->moveThatAss();
+	movementBehavior->moveIt();
 	collisionDetection->behaveBitches();
 
 	//Reward
@@ -657,7 +639,7 @@ void Boulder::doSomething() {
 		collisionDetection = make_unique<CollisionDetection>(self);
 
 	if (movementBehavior)
-		movementBehavior->moveThatAss();
+		movementBehavior->moveIt();
 	collisionDetection->behaveBitches();
 
 	self.reset();
@@ -717,7 +699,7 @@ void ControlledMovement::resetBehavior() {
 	pawn.reset();
 }
 
-void ControlledMovement::moveThatAss() {
+void ControlledMovement::moveIt() {
 	/****************************
 	This tells where the character that being controlled should move
 	First you have to turn the character to face the direction you move
@@ -787,7 +769,7 @@ void ControlledMovement::moveThatAss() {
 	spPawn.reset();
 }
 
-void PursuingMovement::moveThatAss() {
+void PursuingMovement::moveIt() {
 	shared_ptr<Actor> spPawn = pawn.lock();
 
 	std::unordered_map<std::pair<int, int>, int, pairHash> pathWay;
@@ -857,7 +839,7 @@ void PursuingMovement::moveThatAss() {
 void PursuingMovement::resetBehavior() {
 }
 
-void SquirtMovement::moveThatAss() {
+void SquirtMovement::moveIt() {
 	shared_ptr<Actor> pawn = squirt.lock();
 
 	if (pawn && pawn->isAlive()) {

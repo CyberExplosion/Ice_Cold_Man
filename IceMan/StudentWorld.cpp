@@ -26,8 +26,6 @@ GameWorld* createStudentWorld(string assetDir)
 	return new StudentWorld(assetDir);
 }
 
-// Students:  Add code to this file (if you wish), StudentWorld.h, Actor.h and Actor.cpp
-
 
 int StudentWorld::move() {
 	ticksBeforeSpawn--;
@@ -76,12 +74,6 @@ int StudentWorld::move() {
 	default:
 		return GWSTATUS_LEVEL_ERROR;
 	}
-
-	/* ADD STUFF FOR PART 2*/
-	/*
-		Add new actors during each tick.
-		Format el game stats @ the TOP TOP TOP!
-	*/
 }
 
 int StudentWorld::updateStatus() {

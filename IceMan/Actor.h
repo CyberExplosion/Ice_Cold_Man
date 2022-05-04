@@ -122,7 +122,7 @@ protected:
 public:
 	IMovementBehavior(int t_key, bool move = true) : key(t_key), allowMovement(move) {};
 	virtual ~IMovementBehavior() {};
-	virtual void moveThatAss() = 0;
+	virtual void moveIt() = 0;
 	virtual void resetBehavior() = 0;
 
 	void enableMove(bool flip) {
@@ -147,7 +147,7 @@ private:
 public:
 	FreeMovement() : IMovementBehavior(INVALID_KEY) {};
 	//This is the default movement for NPC
-	void moveThatAss() override;
+	void moveIt() override;
 	void resetBehavior() override;
 };
 
@@ -161,7 +161,7 @@ private:
 public:
 	FallMovement(std::weak_ptr<Actor> t_pawn, int key = INVALID_KEY) : IMovementBehavior(key), pawn(t_pawn) {};
 	//This is for the Boulder
-	void moveThatAss() override;
+	void moveIt() override;
 	void resetBehavior() override;
 };
 
@@ -172,7 +172,7 @@ public:
 	void resetBehavior() override;
 	ControlledMovement(std::weak_ptr<Actor> t_pawn, int t_key) : IMovementBehavior(t_key), pawn(t_pawn) {}
 	//This is for the player
-	void moveThatAss() override;
+	void moveIt() override;
 };
 
 class PursuingMovement : public IMovementBehavior {
@@ -182,7 +182,7 @@ private:
 public:
 	PursuingMovement(std::weak_ptr<Actor> target, std::pair<int, int> t_dest) : IMovementBehavior(INVALID_KEY), pawn(target), destination(t_dest) {};
 	//This is for whenever NPC chasing after a location
-	void moveThatAss() override;
+	void moveIt() override;
 	void resetBehavior() override;
 };
 
@@ -193,7 +193,7 @@ private:
 public:
 	SquirtMovement(std::weak_ptr<Actor> t_s, int distTravel = 4) : IMovementBehavior(INVALID_KEY), squirt(t_s), travelDist(distTravel) {};
 	//This is for the Squirt to travel
-	void moveThatAss() override;
+	void moveIt() override;
 	void resetBehavior() override;
 };
 
